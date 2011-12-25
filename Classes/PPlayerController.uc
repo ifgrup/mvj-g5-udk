@@ -2,5 +2,5 @@ class PPlayerController extends GamePlayerController;
 
 defaultproperties
 {
-	CameraClass = class'PlanetsGame.PPlayerCamera'
+	CameraClass = class'PGame.PPlayerCamera'
 }
