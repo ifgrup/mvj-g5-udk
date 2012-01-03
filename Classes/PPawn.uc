@@ -135,7 +135,7 @@ function bool DoJump( bool bUpdating )
  */
 state PawnFalling
 {
-	var vector FallDirection;
+	local vector FallDirection;
 
 	event BeginState(Name PrevName)
 	{
