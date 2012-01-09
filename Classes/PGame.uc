@@ -1,3 +1,7 @@
+/**
+ * Configuración general del juego
+ * */
+
 class PGame extends FrameworkGame;
 
 defaultproperties

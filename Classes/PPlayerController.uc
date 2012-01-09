@@ -1,208 +1,256 @@
+/**
+ * Controlador del personaje.
+ * Controla todas las funciones de input del jugador en el juego para interactuar con el Pawn.
+ * */
 class PPlayerController extends GamePlayerController;
 
+/**
+ * Propiedades por defecto.
+ * Configuramos que la cámara que controlará al jugador sea la nuestra (PPlayerCamera) 
+ * */
 defaultproperties
 {
-	// Configuramos que la cámara que controlará al jugador será la nuestra
 	CameraClass = class'PGame.PPlayerCamera'
 	bNotifyFallingHitWall=true
-
-	// Crawling configuration
-	bCanCrawl=true
+	
 }
 
+/**
+ * Variables globales para el control de la posición y de la cámara.
+ * */
 var vector OldFloor;
-var input bool bIsCrawling;
-var bool bCanCrawl;
 var vector ViewX, ViewY, ViewZ;
 
-exec function Crawl()
-{
-	if( bCanCrawl )
-		GotoState('PlayerSpidering');
-}
+/**
+ * Para calcular el Pitch de la cámara al mover el ratón.
+ * */
+var vector CamViewX, CamViewY, CamViewZ;
 
-exec function UnCrawl()
-{
-	if( bIsCrawling )
-	{
-		Pawn.SetPhysics(PHYS_Walking);
-		GotoState('PlayerWalking');
-	}
-}
+/**
+ * Último vector normal de "suelo" antes de saltar.
+ * */
+var vector mUltimoFloorAntesSalto;
 
-exec function ToggleCrawl()
-{
-	if( bIsCrawling )
-	{
-		Pawn.SetPhysics(PHYS_Walking);
-		GotoState('PlayerWalking');
-	}
-	else if ( bCanCrawl )
-		GotoState('PlayerSpidering');
-}
 
+/**
+ * Función para actualizar la rotación del Pawn respecto a los inputs del jugador.
+ * */
 function UpdateRotation( float DeltaTime )
 {
-        local Rotator   DeltaRot, newRotation, ViewRotation;
+	local Rotator DeltaRot, newRotation, ViewRotation;
  
-        ViewRotation = Rotation;
-        if (Pawn!=none)
-        {
-                Pawn.SetDesiredRotation(ViewRotation);
-        }
+	ClientMessage("U1 " $ DeltaTime);
+	ViewRotation = Rotation;
+	if (Pawn!=none)
+	{
+		Pawn.SetDesiredRotation(ViewRotation);
+	}
  
-        // Calculate Delta to be applied on ViewRotation
-        DeltaRot.Yaw    = PlayerInput.aTurn;
-        DeltaRot.Pitch  = PlayerInput.aLookUp;
+	// Calculate Delta to be applied on ViewRotation
+	DeltaRot.Yaw    = PlayerInput.aTurn;
+	DeltaRot.Pitch  = PlayerInput.aLookUp;
  
-        ProcessViewRotation( DeltaTime, ViewRotation, DeltaRot );
-        SetRotation(ViewRotation);
+	ProcessViewRotation( DeltaTime, ViewRotation, DeltaRot );
+	SetRotation(ViewRotation);
  
-        ViewShake( deltaTime );
+	ViewShake( deltaTime );
  
-        NewRotation = ViewRotation;
+	NewRotation = ViewRotation;
  
-        if( Rotation.Roll != 0)
-        {
-                NewRotation.Roll = Rotation.Roll - (Rotation.Roll * deltaTime * 6);
-                `log("Adjusting roll to " $ NewRotation.Roll);
-        }
-        else
-                NewRotation.Roll = 0;
- 
-        if ( Pawn != None )
-                Pawn.FaceRotation(NewRotation, deltatime);
-        SetRotation(NewRotation);
+	if( Rotation.Roll != 0)
+	{
+		NewRotation.Roll = Rotation.Roll - (Rotation.Roll * deltaTime * 6);
+		`log("Adjusting roll to " $ NewRotation.Roll);
+	}
+	else
+	{
+		NewRotation.Roll = 0;
+		`log("tus muelas " $ NewRotation.Roll);
+	}
+	
+	if( Pawn != None )
+		Pawn.FaceRotation(NewRotation, deltatime);
+
+	SetRotation(NewRotation);
 }
 
+/**
+ * Estado básico por defecto del Pawn.
+ * Nada mas entrar en este estado, le decimos que active el estado Spidering.
+ * */
 state PlayerWalking
 {
 	event BeginState(Name PreviousStateName)
 	{
 		`log("Vamos al estado Spidering");
+		ClientMessage("S1");
 		GotoState('PlayerSpidering');
 	}
 }
 
+/**
+ * Estado de spidering.
+ * Sobreescribimos la física del jugador para que se quede enganchado a cualquier superficie
+ * del mundo. Se desactiva la gravedad por defecto del Pawn.
+ * */
 state PlayerSpidering
 {
 	ignores SeePlayer, HearNoise, Bump;
 
-    event bool NotifyHitWall(vector HitNormal, actor HitActor)
-    {
-        `log("hit wall");
+    /**
+     * Actualizamos la rotación basándonos en el Floor en el que estamos actualmente.
+     * */
+	function UpdateRotation(float DeltaTime)
+	{
+		local rotator ViewRotation, CamRotation;
+		local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
+		local vector CamOldX;
+		local bool bSaltando;
+
+		//ClientMessage("UPdate Estado spider" $ DeltaTime);
  
-        Pawn.SetPhysics(PHYS_Spider);
-        Pawn.SetBase(HitActor, HitNormal);
-        return true;
-    }
- 
-        // Resume crawling after a jump lands on something else than a floor
-    event NotifyFallingHitWall(vector HitNormal, actor HitActor)
-    {
-        `log("falling hit wall");
- 
-        Pawn.SetPhysics(PHYS_Spider);
-        Pawn.SetBase(HitActor, HitNormal);
-        }
- 
-    // if crawling mode, update rotation based on floor
-    function UpdateRotation(float DeltaTime)
-    {
-        local rotator ViewRotation;
-        local vector MyFloor, CrossDir, FwdDir, OldFwdDir, OldX, RealFloor;
- 
-        if ( (Pawn.Base == None) || (Pawn.Floor == vect(0,0,0)) )
-        {
-            MyFloor = vect(0,0,1);
-        }
-        else
-        {
-            MyFloor = Pawn.Floor;
-        }
+		//Mientras salta, Pawn.Base vale None
+		//Si tiene que saltar, saltará en la vertical que YA tiene al estar caminando sobre el planeta
+		//por lo que no hay que cambiar ninguna rotación
+		if ( (Pawn.Base == None) || (Pawn.Floor == vect(0,0,0)) )
+		{
+			ClientMessage("Base "$Pawn.Base);
+			ClientMessage("Floor "$Pawn.Floor);
+
+			//MyFloor = vect(0,0,1);
+			MyFloor=Normal(mUltimoFloorAntesSalto);
+			//OldFloor=MyFloor;
+			bSaltando=True;
+			//return; //No recalculamos nada
+		}
+		else
+		{
+			MyFloor = Pawn.Floor;
+			mUltimoFloorAntesSalto=MyFloor; //porque si salta, Base es null y no podremos calcular la normal desde donde saltamos
+			bSaltando=False;
+		}
         
-		if ( MyFloor != OldFloor )
-        {
-            // smoothly transition between floors
-            RealFloor = MyFloor;
-            MyFloor = Normal(6*DeltaTime * MyFloor + (1 - 6*DeltaTime) * OldFloor);
+		//Si estoy saltando, nada de transiciones de normales, sigo teniendo como normal la vertical del salto y punto
+		if ( MyFloor != OldFloor && !bSaltando )
+		{
+			// smoothly transition between floors
+			//Para colocar al bicho en la perpendicular del suelo
+			RealFloor = MyFloor;
+			MyFloor = Normal(6*DeltaTime * MyFloor + (1 - 6*DeltaTime) * OldFloor);
  
-            if ( (RealFloor dot MyFloor) > 0.999 )
-                {
-                MyFloor = RealFloor;
-            }
-            else
-            {
-                // translate view direction
-                CrossDir = Normal(RealFloor Cross OldFloor);
-                FwdDir = CrossDir cross MyFloor;
-                OldFwdDir = CrossDir cross OldFloor;
-                ViewX = MyFloor * (OldFloor dot ViewX) + CrossDir * (CrossDir dot ViewX) + FwdDir * (OldFwdDir dot ViewX);
-                ViewX = Normal(ViewX);
-                ViewZ = MyFloor * (OldFloor dot ViewZ) + CrossDir * (CrossDir dot ViewZ) + FwdDir * (OldFwdDir dot ViewZ);
-                ViewZ = Normal(ViewZ);
-                OldFloor = MyFloor;
-                ViewY = Normal(MyFloor cross ViewX);
+			if ( (RealFloor dot MyFloor) > 0.999 )
+			{
+				MyFloor = RealFloor;
+			}
+			else
+			{
+				// translate view direction
+				CrossDir = Normal(RealFloor Cross OldFloor);
+				FwdDir = CrossDir cross MyFloor; //Hacia delante, forward
+				OldFwdDir = CrossDir cross OldFloor; //El hacia delante que tenía antes
+				ViewX = MyFloor * (OldFloor dot ViewX) + CrossDir * (CrossDir dot ViewX) + FwdDir * (OldFwdDir dot ViewX);
+				ViewX = Normal(ViewX);
+				ViewZ = MyFloor * (OldFloor dot ViewZ) + CrossDir * (CrossDir dot ViewZ) + FwdDir * (OldFwdDir dot ViewZ);
+				ViewZ = Normal(ViewZ);
+				OldFloor = MyFloor;
+				ViewY = Normal(MyFloor cross ViewX);
+				//Pawn.mesh.SetRotation(OrthoRotation(ViewX,ViewY,ViewZ));
+			}
+		}
  
-                //Pawn.mesh.SetRotation(OrthoRotation(ViewX,ViewY,ViewZ));
-            }
-        }
+		//Ahora giro de la cámara.
+		//Al girar por aTurn,sólo nos afectará la rotación sobre el eje Z.
+		//Por tanto, la Z quedará igual, la X es la que rotará, y la Y será el producto cartesiano de la nueva X por la Z que ya tenemos
+		if ( (PlayerInput.aTurn != 0) || (PlayerInput.aLookUp != 0) )
+		{
+		// adjust Yaw based on aTurn
+			if ( PlayerInput.aTurn != 0 )
+			{
+				ViewX = Normal(ViewX + 10 * ViewY * Sin(0.0005*DeltaTime*PlayerInput.aTurn));
+			}
  
-        if ( (PlayerInput.aTurn != 0) || (PlayerInput.aLookUp != 0) )
-        {
-            // adjust Yaw based on aTurn
-            if ( PlayerInput.aTurn != 0 )
-            {
-                ViewX = Normal(ViewX + 10 * ViewY * Sin(0.0005*DeltaTime*PlayerInput.aTurn));
-            }
+			// adjust CAMERA Pitch based on aLookUp
+			//Este movimiento es SOLO para la cámara, no para el controlador, no queremos que se mueva el bicho sino la cámara
+			if ( PlayerInput.aLookUp != 0 )
+			{
+				CamViewX=ViewX;
+				CamViewY=ViewY;
+				CamViewZ=ViewZ;
+				CamOldX = CamViewX;
+				
+				CamViewX = Normal(CamViewX + 10 * CamViewZ * Sin(0.0005*DeltaTime*PlayerInput.aLookUp));
+				CamViewZ = Normal(CamViewX Cross CamViewY);
  
-            // adjust Pitch based on aLookUp
-            if ( PlayerInput.aLookUp != 0 )
-            {
-                OldX = ViewX;
-                ViewX = Normal(ViewX + 10 * ViewZ * Sin(0.0005*DeltaTime*PlayerInput.aLookUp));
-                ViewZ = Normal(ViewX Cross ViewY);
+				// bound max pitch
+				if ( (CamViewZ dot MyFloor) < 0.1   )
+				{
+					CamViewX = CamOldX;
+				}
+	
+				//VMH:La Y no cambia al rotar no?....CamViewY = Normal(MyFloor cross CamViewX);
+				CamRotation=OrthoRotation(CamViewX,CamViewY,CamViewZ);
+			}
+
+			// calculate new Y axis
+			ViewY = Normal(MyFloor cross ViewX);
+		}
+
+		ViewRotation = OrthoRotation(ViewX,ViewY,ViewZ);
+		
+		SetRotation(ViewRotation);
+		if(Pawn != None)
+		{
+			Pawn.SetRotation(ViewRotation);
+			//Pawn.CylinderComponent.SetRBRotation(ViewRotation);
+		}		
+		//Pawn.CollisionComponent.Rotation=ViewRotation;
+		//Pawn.CollisionComponent.SetHidden(False);
+		//Pawn.mesh.SetRotation(ViewRotation);
+
+
+		//		 if ( PlayerInput.aLookUp != 0 )
+		//            PlayerCamera.SetRotation(camRotation);
+			  
  
-                // bound max pitch
-                if ( (ViewZ dot MyFloor) < 0.1   )
-                {
-					ViewX = OldX;
-                }
-            }
+		//SET PAWN ROTATION WITH RESPECT TO FLOOR NORMALS HERE
+		// Does not work anymore.. will need some debugging
+		//Pawn.mesh.SkeletalMesh.Rotation = Pawn.Rotation;
+	}
+
+	/**
+	 * Evento que se ejecuta cuando caes sobre algo al caminar normal (PlayerWalking).
+	 * Dentro del estado spidering nunca pasará, ya que estás pegado a las superficies y no se puede caer.
+	 * El saltar en este estado genera un evento HitWall dentro de PPawn en el estado PawnFalling. 
+	 * */
+	function bool NotifyLanded(vector HitNormal, Actor FloorActor)
+	{
+		`log("He caido sobre algo, NO despues de saltar");
+		Pawn.SetPhysics(PHYS_Spider);
+		Pawn.SetBase(FloorActor, HitNormal);
+		return bUpdating;
+	}
  
-            // calculate new Y axis
-            ViewY = Normal(MyFloor cross ViewX);
-        }
-        ViewRotation = OrthoRotation(ViewX,ViewY,ViewZ);
-        SetRotation(ViewRotation);
-        if(Pawn != None)
-                Pawn.SetRotation(ViewRotation);
+	/**
+	 * Comprobamos si cambiamos de Volumen de físicas.
+	 * Ahora mismo sólo comprobamos si estamos dentro de agua, para no engancharnos a nada y poder nadar 
+	 * */
+	event NotifyPhysicsVolumeChange( PhysicsVolume NewVolume )
+	{
+		if ( NewVolume.bWaterVolume )
+		{
+		GotoState(Pawn.WaterMovementState);
+		}
+	}
  
-        //SET PAWN ROTATION WITH RESPECT TO FLOOR NORMALS HERE
-                // Does not work anymore.. will need some debugging
-        //Pawn.mesh.SkeletalMesh.Rotation = Pawn.Rotation;
- 
-    }
- 
-    // Resume crawling after a jump lands on a floor
-    function bool NotifyLanded(vector HitNormal, Actor FloorActor)
-    {
-        `log("landed");
-        Pawn.SetPhysics(PHYS_Spider);
-        return bUpdating;
-    }
- 
-	// Do not use crawling while in water
-    event NotifyPhysicsVolumeChange( PhysicsVolume NewVolume )
-    {
-        if ( NewVolume.bWaterVolume )
-        {
-            GotoState(Pawn.WaterMovementState);
-        }
-    }
- 
+	/**
+	 * Función para procesar los movimientos generados en PlayerMove.
+	 * Actualmente únicamente controlamos:
+	 * - Aceleración del personaje.
+	 * - Salto del personaje.
+	 * */
     function ProcessMove(float DeltaTime, vector NewAccel, eDoubleClickDir DoubleClickMove, rotator DeltaRot)
     {
+		
 		if ( Pawn != None )
 		{
 			if ( Pawn.Acceleration != NewAccel )
@@ -212,24 +260,31 @@ state PlayerSpidering
 
 			if ( bPressedJump )
 			{
+				`Log("Va a saltar");
 				Pawn.DoJump(bUpdating);
 			}
 		}
     }
 
+	/**
+	 * Función para controlar el movimiento del personaje.
+	 * */
     function PlayerMove( float DeltaTime )
     {
         local vector NewAccel;
         local eDoubleClickDir DoubleClickMove;
         local rotator OldRotation, ViewRotation;
         local bool  bSaveJump;
- 
+  
+        
         GroundPitch = 0;
         ViewRotation = Rotation;
 		
         // Update rotation.
         SetRotation(ViewRotation);
         OldRotation = Rotation;
+       
+        //Giramos al pawn para que esté siempre perpendicular al suelo
         UpdateRotation(DeltaTime);
  
         // Update acceleration.
@@ -251,37 +306,37 @@ state PlayerSpidering
         DoubleClickMove = DCLICK_None;
         ProcessMove(DeltaTime, NewAccel, DoubleClickMove, OldRotation - Rotation);
         bPressedJump = bSaveJump;
-    }
- 
-    event BeginState(Name PreviousStateName)
-    {
-        OldFloor = vect(0,0,1);
-        GetAxes(Rotation,ViewX,ViewY,ViewZ);
-        DoubleClickDir = DCLICK_None;
-        Pawn.ShouldCrouch(false);
-        bPressedJump = false;
- 
-        if (Pawn.Physics != PHYS_Falling)
-        {
-			Pawn.SetPhysics(PHYS_Spider);
-        }
- 
-        GroundPitch = 0;
-        Pawn.bCrawler = true;
-        bIsCrawling = true;
+		
     }
 
+	/**
+	 * Inicialización del estado.
+	 * */
+	event BeginState(Name PreviousStateName)
+	{
+		OldFloor = vect(0,0,1);
+
+		GetAxes(Rotation,ViewX,ViewY,ViewZ);
+
+		DoubleClickDir = DCLICK_None;
+		Pawn.ShouldCrouch(false);
+		bPressedJump = false;
+ 
+		if (Pawn.Physics != PHYS_Falling)
+		{
+			Pawn.SetPhysics(PHYS_Spider);
+		}
+ 
+		GroundPitch = 0;
+	}
+
+	/**
+	 * Fin del estado.
+	 * */
     event EndState(Name NextStateName)
     {
         `log("unspider with roll" $ Rotation.Roll);
 		`log("Nuevo estado " $NextStateName);
 		SetPhysics(PHYS_Spider);
-        /*GroundPitch = 0;
-        if ( Pawn != None )
-        {
-            Pawn.ShouldCrouch(false);
-            Pawn.bCrawler = Pawn.default.bCrawler;
-        }*/
-        bIsCrawling = false;
     }
 }

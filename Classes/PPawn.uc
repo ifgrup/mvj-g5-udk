@@ -12,9 +12,10 @@
 // Siempre debemos derivar nuestra clase Pawn de GamePawn
 class PPawn extends GamePawn;
 
+
 // Para que a nuestro Pawn le afecte la iluminación
 var DynamicLightEnvironmentComponent LightEnvironment;
-
+var vector FallDirection;
 defaultproperties
 {
 	/** Propiedades que daremos por defecto
@@ -32,7 +33,12 @@ defaultproperties
 	CrouchHeight=29.0
 	CrouchRadius=21.0
 	WalkableFloorZ=0.78
+
+	bRollToDesired=True
 	
+	//VMH
+	bUseCylinderCollision=True
+
 	// No sé que es esto :D
 	Components.Remove(Sprite)
 
@@ -87,6 +93,11 @@ defaultproperties
 		RBDominanceGroup=20
 		bUseOnePassLightingOnTranslucency=TRUE
 		bPerBoneMotionBlur=true
+		HiddenGame=False
+		BlockNonZeroExtent=True
+		BlockZeroExtent=True
+		BlockActors=True
+		CollideActors=True
 	End Object
 
 	// Lo añadimos al motor
@@ -97,10 +108,17 @@ defaultproperties
 	Begin Object Name=CollisionCylinder
 		CollisionRadius=+0021.000000
 		CollisionHeight=+0044.000000
+		BlockNonZeroExtent=True
+		BlockZeroExtent=True
+		BlockActors=True
+		CollideActors=True
 	End Object
 
 	// Lo añadimos al motor
-	CylinderComponent=CollisionCylinder
+	//CylinderComponent=CollisionCylinder
+	CollisionComponent=WPawnSkeletalMeshComponent
+    Components.Add(CollisionComponent);
+	
 }
 
 /** Función DoJump
@@ -135,7 +153,7 @@ function bool DoJump( bool bUpdating )
  */
 state PawnFalling
 {
-	local vector FallDirection;
+
 
 	event BeginState(Name PrevName)
 	{
@@ -150,6 +168,8 @@ state PawnFalling
 
 		// flying instead of Falling as flying allows for custom gravity
 		SetPhysics(PHYS_Flying);
+		
+		
 	}
 
 	event Tick(float DeltaTime)
@@ -173,12 +193,17 @@ state PawnFalling
 	}
 
 	// called when the pawn lands or hits another surface
+	
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
 		// switch pawn back to standard state
+		local PPlayerController PC;
 		GotoState('');
+		PC = PPlayerController(Instigator.Controller);
+		PC.ClientMessage("HitWallPawn");
+		//SetBase(Wall, HitNormal);
 	}
-
+   
 	event EndState(Name NextState)
 	{
 		FallDirection = vect(0,0,0); // CLEAR DESTINATION FLOOR
