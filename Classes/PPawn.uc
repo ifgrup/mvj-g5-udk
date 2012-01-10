@@ -118,8 +118,21 @@ defaultproperties
 	//CylinderComponent=CollisionCylinder
 	CollisionComponent=WPawnSkeletalMeshComponent
     Components.Add(CollisionComponent);
-	
+	//VLR Inventario para el arma
+	InventoryManagerClass=class'PGame.PInventoryManager'
+
 }
+
+
+/**
+ * Añadimos el arma al inventario
+ * 
+ * */
+function AddDefaultInventory()
+{
+	InvManager.CreateInventory(class'PGame.PWeapon');
+}
+
 
 /** Función DoJump
  * Sobreescribimos la función para decirle que si estás en disposición de saltar, no estas agachado (ni agachándote) 
