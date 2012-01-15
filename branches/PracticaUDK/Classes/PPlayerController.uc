@@ -20,6 +20,8 @@ defaultproperties
  * */
 var vector OldFloor;
 var vector ViewX, ViewY, ViewZ;
+var vector OldLocation;
+var float DeltaTimeAccumulator;
 
 /**
  * Para calcular el Pitch de la cámara al mover el ratón.
@@ -227,6 +229,7 @@ state PlayerSpidering
 		`log("He caido sobre algo, NO despues de saltar");
 		Pawn.SetPhysics(PHYS_Spider);
 		Pawn.SetBase(FloorActor, HitNormal);
+
 		return bUpdating;
 	}
  
@@ -250,7 +253,6 @@ state PlayerSpidering
 	 * */
     function ProcessMove(float DeltaTime, vector NewAccel, eDoubleClickDir DoubleClickMove, rotator DeltaRot)
     {
-		
 		if ( Pawn != None )
 		{
 			if ( Pawn.Acceleration != NewAccel )
@@ -260,8 +262,34 @@ state PlayerSpidering
 
 			if ( bPressedJump )
 			{
-				`Log("Va a saltar");
+				ClientMessage("Va a saltar");
 				Pawn.DoJump(bUpdating);
+			}
+
+			/** Comprobamos cada vez que nos movemos si la última posición en la que dejamos un decal
+			 * y la posición actual, es mayor a la mitad del tamaño del decal.
+			 * Así nos aseguramos de que el próximo decal que pintemos, no se superpondrá al último decal
+			 * pintado.
+			 * */
+			if(VSize(OldLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize / 2))
+			{
+				OldLocation = Pawn.Location;
+				WorldInfo.MyDecalManager.SpawnDecal
+				(
+					DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak',	// UMaterialInstance used for this decal.
+					Pawn.Location,	                            // Decal spawned at the hit location.
+					rotator(-Pawn.Floor),	                    // Orient decal into the surface.
+					PGame(WorldInfo.Game).fDecalSize, PGame(WorldInfo.Game).fDecalSize,	                                    // Decal size in tangent/binormal directions.
+					PGame(WorldInfo.Game).fDecalSize *2,	                                        // Decal size in normal direction.
+					true,	                                        // If TRUE, use "NoClip" codepath.
+					FRand() * 360,	                                // random rotation
+					,                    
+					,
+					,
+					,
+					,
+					,100000 // Hack para que los decals tarden mucho en desaparecer... C U T R E :D
+				);
 			}
 		}
     }
@@ -275,8 +303,9 @@ state PlayerSpidering
         local eDoubleClickDir DoubleClickMove;
         local rotator OldRotation, ViewRotation;
         local bool  bSaveJump;
-  
-        
+
+	
+		DeltaTimeAccumulator += 0.001f;
         GroundPitch = 0;
         ViewRotation = Rotation;
 		

@@ -1,14 +1,10 @@
 class PWeapon extends Weapon;
 
-
-
 simulated function TimeWeaponEquipping()
 {
 	AttachWeaponTo( Instigator.Mesh,'WeaponPoint' );
 	super.TimeWeaponEquipping();
 }
-
-
 
 simulated function AttachWeaponTo(SkeletalMeshComponent MeshCpnt, optional Name SocketName)
 {
@@ -17,42 +13,7 @@ simulated function AttachWeaponTo(SkeletalMeshComponent MeshCpnt, optional Name 
 	MeshCpnt.AttachComponentToSocket(Mesh, SocketName);
 	Mesh.SetLightEnvironment(P.LightEnvironment);
 }
-/*
-simulated function DrawHUD( PHUD H )
-{
-	local float CrosshairSize;
-	super.DrawHUD(H);
 
-	H.Canvas.SetDrawColor(255,255,255,255);
-
-	CrosshairSize = 4;
-
-	H.Canvas.SetPos(H.CenterX - CrosshairSize, H.CenterY);
-	H.Canvas.DrawRect(2*CrosshairSize + 1, 1);
-
-	H.Canvas.SetPos(H.CenterX, H.CenterY - CrosshairSize);
-	H.Canvas.DrawRect(1, 2*CrosshairSize + 1);
-
-}*/
-
-/*
-simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optional int NumHits)
-{
-	local PPlayerController PC;
-	local InterpActor myActor;
-	local string nom;
-	PC = PPlayerController(Instigator.Controller);
-	PC.ClientMessage("Material: "$Impact.HitInfo.Material);
-	//nom=string(Impact.HitInfo.Material);
-//myActor = InterpActor(FindObject(nom, class'InterpActor'));
-//myActor.SetHidden(false);
-//Impact.HitActor.SetHidden(true);
-//MaterialImpactEffect
-
-
-		
-}
-*/
 simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optional int NumHits)
 {
     WorldInfo.MyDecalManager.SpawnDecal
@@ -64,9 +25,15 @@ simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optiona
 	256,	                                        // Decal size in normal direction.
 	false,	                                        // If TRUE, use "NoClip" codepath.
 	FRand() * 360,	                                // random rotation
-	Impact.HitInfo.HitComponent                     // If non-NULL, consider this component only.
-    );               
+	,                    // If non-NULL, consider this component only.
+    ,
+	,
+	,
+	,
+	,100000
+	);
 }
+
 simulated event SetPosition(PPawn Holder)
 {
     local vector FinalLocation;
@@ -76,7 +43,7 @@ simulated event SetPosition(PPawn Holder)
 	
     FinalLocation= Holder.GetPawnViewLocation(); //this is in world space.
 
-    FinalLocation= FinalLocation- Y * 12 - Z * 32; // Rough position adjustment
+    FinalLocation = FinalLocation- Y * 12 - Z * 32; // Rough position adjustment
 
     SetHidden(False);
     SetLocation(FinalLocation);
@@ -84,6 +51,7 @@ simulated event SetPosition(PPawn Holder)
 
     SetRotation(Holder.Controller.Rotation);
 }
+
 defaultproperties
 {
 	Begin Object Class=SkeletalMeshComponent Name=WeaponMesh
