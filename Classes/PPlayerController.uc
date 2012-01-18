@@ -10,7 +10,7 @@ class PPlayerController extends GamePlayerController;
  * */
 defaultproperties
 {
-	CameraClass = class'PGame.PPlayerCamera'
+	//CameraClass = class'PGame.PPlayerCamera'
 	bNotifyFallingHitWall=true
 	
 }
@@ -22,6 +22,9 @@ var vector OldFloor;
 var vector ViewX, ViewY, ViewZ;
 var vector OldLocation;
 var float DeltaTimeAccumulator;
+
+var vector mCamDirZ; //Para ir acumulando la altura de la cámara
+var float mUltimoLookup; //para guardar el ultimo aLookUp de PlayerInput, no accesible desde el evento GetPlayerViewPoint
 
 /**
  * Para calcular el Pitch de la cámara al mover el ratón.
@@ -160,6 +163,9 @@ state PlayerSpidering
 			}
 		}
  
+		//Guardamos aLookUp para GetPlayerViewPoint
+		mUltimoLookup=PlayerInput.aLookUp;
+
 		//Ahora giro de la cámara.
 		//Al girar por aTurn,sólo nos afectará la rotación sobre el eje Z.
 		//Por tanto, la Z quedará igual, la X es la que rotará, y la Y será el producto cartesiano de la nueva X por la Z que ya tenemos
@@ -218,6 +224,98 @@ state PlayerSpidering
 		// Does not work anymore.. will need some debugging
 		//Pawn.mesh.SkeletalMesh.Rotation = Pawn.Rotation;
 	}
+
+
+	//Devuelve dónde estará mirando el jugador,la cámara vamos ;)
+	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
+	{
+
+		local vector  CamDirX, CamDirY,CamDirZ, CamDir,OffsetDirZ;	
+		local vector  HitLocation, HitNormal,CamStart,tmpCamStart,tmpCamEnd;
+		local Rotator rProta;
+		local float dist,fs;
+
+		super.GetPlayerViewPoint(out_Location, out_Rotation);
+		if(Pawn != none)
+		{
+			Pawn.Mesh.SetOwnerNoSee(false);
+			CamStart=Pawn.Location;
+			rProta=PPawn(Pawn).Rotation; //Hacia donde mira el prota.La pasamos a coordenadas de mundo:
+			//rProta.Pitch+=PlayerInput.aLookUp;
+			GetAxes(rProta,CamDirX,CamDirY,CamDirz);
+			//Tenemos el vector director de hacia donde está mirando el prota,en coordenadas de mundo. Lo escalamos:
+			//Queremos que siempre esté por detrás del personaje, así que hacemos que la distancia entre el personaje y 
+			//la cámara, sea sólo de comoponente X, por lo que dejamos a Y,Z a cero.
+
+			
+			CamDirX*=100*1/VSize(CamDirX); 
+			//CamDirX*=1+Cos(0.0005*mUltimoLookup);
+			CamDirY*=0;
+			//CamDirZ*=0;//=vect(X=0.0,Y=0.0,Z=0.0);//Sin(0.0005*mUltimoLookup));
+			
+			fs=Sin(0.0005*mUltimoLookup);
+
+			OffsetDirZ=vect(0,0,1);
+			OffsetDirZ*=fs;
+			mCamDirZ+=OffsetDirZ;
+ 
+			ClientMessage("Z " $ mCamDirZ);
+			//Limite de altura. Por debajo, será el suelo y las colisiones con este.
+			if (abs(mCamDirZ.Z) > 100)
+			{
+				mCamDirZ-=OffsetDirZ;
+			}
+
+			CamDir=CamDirX+CamDirY+mCamDirZ; //Array con los componentes de la dirección de la cámara
+			
+			//A ese vector, hay que aplicarle la rotación por mouse up/down. Tenemos PlayerInput.aLookup en mUltimoLookup
+			
+			out_Location = Pawn.Location -CamDir;
+			out_Rotation = rotator(Pawn.Location - out_Location);
+			out_Rotation=Pawn.Rotation;
+
+			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
+            //Lanzamos un 'rayo' desde la cámara hasta el bicho, y si encontramos algún obstáculo por medio, ponemos la cámara
+			//donde está el obstáculo, para evitar tener esa pared en medio. Si hubiera más de dos obstáculos, el segundo nos seguiría
+			//tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
+			//utilizamos ;)
+		
+			if (Trace(HitLocation, HitNormal, out_Location, CamStart, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
+			{
+				//Hay contacto. Ponemos la cámara en el obstáculo
+				out_Location=HitLocation;
+
+				//Y ahora, como hemos hecho que la cámara se mueve más cerca del bicho, puede ser que la hayamos puesto
+				//justo encima del bicho. En tal caso, veríamos cosas raras, por lo que comprobamos si estamos dentro del bicho, y
+				//en tal caso, ocultamos el bicho para poder seguir viendo con normalidad.
+				tmpCamStart=CamStart;
+				tmpCamEnd=HitLocation;
+				//Ponemos Z's a cero, que es como proyectar al suelo la posición de la cámara y del jugador
+				tmpCamStart.Z=0;
+				tmpCamEnd.Z=0;
+				//Comprobamos si la distancia entre esas dos proyecciones, es menos que el radio de colisión + un cierto porcentaje
+				//y también si la Z del punto de colisión, vamos, la nueva cámara, está dentro del cilindro de colisión
+				dist=VSize(tmpCamEnd-tmpCamStart);
+				//`Log(dist);
+				if ( (dist < Pawn.GetCollisionRadius()*2.0) && true )
+					  //(HitLocation.Z<Pawn.Location.Z+Pawn.CylinderComponent.CollisionHeight) &&
+					  //(HitLocation.Z>Pawn.Location.Z-Pawn.CylinderComponent.CollisionHeight))
+				{
+					//Estamos dentro del bicho. Ocultamos su mesh
+					Pawn.Mesh.SetHidden(True);
+				}
+				else
+				{
+					Pawn.Mesh.SetHidden(False);
+				}
+			}//Trace para ver si hay obstáculos
+		}
+	}//GetPlayerViewPoint
+
+
+
+
+
 
 	/**
 	 * Evento que se ejecuta cuando caes sobre algo al caminar normal (PlayerWalking).
