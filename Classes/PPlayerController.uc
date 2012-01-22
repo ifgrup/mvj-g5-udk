@@ -23,7 +23,7 @@ var vector ViewX, ViewY, ViewZ;
 var vector OldLocation;
 var float DeltaTimeAccumulator;
 
-var vector mCamDirZ; //Para ir acumulando la altura de la cámara
+var float mOffsetCamaraUpDown; //Para ir acumulando la altura de la cámara
 var float mUltimoLookup; //para guardar el ultimo aLookUp de PlayerInput, no accesible desde el evento GetPlayerViewPoint
 
 /**
@@ -243,35 +243,28 @@ state PlayerSpidering
 			rProta=PPawn(Pawn).Rotation; //Hacia donde mira el prota.La pasamos a coordenadas de mundo:
 			//rProta.Pitch+=PlayerInput.aLookUp;
 			GetAxes(rProta,CamDirX,CamDirY,CamDirz);
-			//Tenemos el vector director de hacia donde está mirando el prota,en coordenadas de mundo. Lo escalamos:
-			//Queremos que siempre esté por detrás del personaje, así que hacemos que la distancia entre el personaje y 
-			//la cámara, sea sólo de comoponente X, por lo que dejamos a Y,Z a cero.
+			//Tenemos el sist.coordenadas de hacia donde está mirando el prota,en coordenadas de mundo.
+			//Como queremos estar siempre detrás, sólo nos interesa desplazar la cámara sólo en X, dejando la Y a cero
 
-			
 			CamDirX*=100*1/VSize(CamDirX); 
-			//CamDirX*=1+Cos(0.0005*mUltimoLookup);
-			CamDirY*=0;
-			//CamDirZ*=0;//=vect(X=0.0,Y=0.0,Z=0.0);//Sin(0.0005*mUltimoLookup));
+			
+			//Calculamos desplazamiento up/down de la cámara. 
+			//PlayerInput.aLookup no es absoluto, sino que depende sólo de la velocidad del movimiento del mouse.
+			//Para controlar si la cámara está más arriba o abajo, vamos acumulando el valor,
+			//modulándolo con sin 
 			
 			fs=Sin(0.0005*mUltimoLookup);
+            mOffsetCamaraUpDown+=fs;
 
-			OffsetDirZ=vect(0,0,1);
-			OffsetDirZ*=fs;
-			mCamDirZ+=OffsetDirZ;
- 
-			ClientMessage("Z " $ mCamDirZ);
-			//Limite de altura. Por debajo, será el suelo y las colisiones con este.
-			if (abs(mCamDirZ.Z) > 100)
+            //Limite de altura. Por debajo, será el suelo y las colisiones con él.
+			if (abs(mOffsetCamaraUpDown) > 100)
 			{
-				mCamDirZ-=OffsetDirZ;
+				mOffsetCamaraUpDown-=fs;
 			}
 
-			CamDir=CamDirX+CamDirY+mCamDirZ; //Array con los componentes de la dirección de la cámara
-			
 			//A ese vector, hay que aplicarle la rotación por mouse up/down. Tenemos PlayerInput.aLookup en mUltimoLookup
-			
-			out_Location = Pawn.Location -CamDir;
-			out_Rotation = rotator(Pawn.Location - out_Location);
+			//mOffsetCamaraUpDown hay que aplicarlo a la altura del bicho, por tanto a su eje Z, que tenemos en camDirZ
+			out_Location = (Pawn.Location -CamDirX)+(camDirZ*mOffsetCamaraUpDown);
 			out_Rotation=Pawn.Rotation;
 
 			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
@@ -297,9 +290,9 @@ state PlayerSpidering
 				//y también si la Z del punto de colisión, vamos, la nueva cámara, está dentro del cilindro de colisión
 				dist=VSize(tmpCamEnd-tmpCamStart);
 				//`Log(dist);
-				if ( (dist < Pawn.GetCollisionRadius()*2.0) && true )
-					  //(HitLocation.Z<Pawn.Location.Z+Pawn.CylinderComponent.CollisionHeight) &&
-					  //(HitLocation.Z>Pawn.Location.Z-Pawn.CylinderComponent.CollisionHeight))
+				if ( (dist < Pawn.GetCollisionRadius()*2.0) && 
+					  (HitLocation.Z<Pawn.Location.Z+Pawn.CylinderComponent.CollisionHeight) &&
+					  (HitLocation.Z>Pawn.Location.Z-Pawn.CylinderComponent.CollisionHeight))
 				{
 					//Estamos dentro del bicho. Ocultamos su mesh
 					Pawn.Mesh.SetHidden(True);
