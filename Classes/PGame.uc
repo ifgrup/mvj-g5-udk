@@ -1,3 +1,4 @@
+
 /**
  * Configuración general del juego
  * */
@@ -12,5 +13,5 @@ defaultproperties
 	DefaultPawnClass=class'PGame.PPawn'
 	HUDType=class'PGame.PHUD'
 	bDelayedStart=false
-	fDecalSize=128.0f	
+	fDecalSize=512.0f	
 }

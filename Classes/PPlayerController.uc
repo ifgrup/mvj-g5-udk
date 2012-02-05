@@ -44,7 +44,6 @@ function UpdateRotation( float DeltaTime )
 {
 	local Rotator DeltaRot, newRotation, ViewRotation;
  
-	ClientMessage("U1 " $ DeltaTime);
 	ViewRotation = Rotation;
 	if (Pawn!=none)
 	{
@@ -65,12 +64,10 @@ function UpdateRotation( float DeltaTime )
 	if( Rotation.Roll != 0)
 	{
 		NewRotation.Roll = Rotation.Roll - (Rotation.Roll * deltaTime * 6);
-		`log("Adjusting roll to " $ NewRotation.Roll);
 	}
 	else
 	{
 		NewRotation.Roll = 0;
-		`log("tus muelas " $ NewRotation.Roll);
 	}
 	
 	if( Pawn != None )
@@ -87,9 +84,13 @@ state PlayerWalking
 {
 	event BeginState(Name PreviousStateName)
 	{
-		`log("Vamos al estado Spidering");
-		ClientMessage("S1");
+		ClientMessage("Vamos al estado Spidering");
 		GotoState('PlayerSpidering');
+	}
+	
+	event EndState(Name NextStateName)
+	{
+		WorldInfo.Game.Broadcast(self,"Saliendo de PlayerWalking");
 	}
 }
 
@@ -119,9 +120,6 @@ state PlayerSpidering
 		//por lo que no hay que cambiar ninguna rotación
 		if ( (Pawn.Base == None) || (Pawn.Floor == vect(0,0,0)) )
 		{
-			ClientMessage("Base "$Pawn.Base);
-			ClientMessage("Floor "$Pawn.Floor);
-
 			//MyFloor = vect(0,0,1);
 			MyFloor=Normal(mUltimoFloorAntesSalto);
 			//OldFloor=MyFloor;
@@ -364,23 +362,26 @@ state PlayerSpidering
 			 * */
 			if(VSize(OldLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize / 2))
 			{
-				OldLocation = Pawn.Location;
-				WorldInfo.MyDecalManager.SpawnDecal
-				(
-					DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak',	// UMaterialInstance used for this decal.
-					Pawn.Location,	                            // Decal spawned at the hit location.
-					rotator(-Pawn.Floor),	                    // Orient decal into the surface.
-					PGame(WorldInfo.Game).fDecalSize, PGame(WorldInfo.Game).fDecalSize,	                                    // Decal size in tangent/binormal directions.
-					PGame(WorldInfo.Game).fDecalSize *2,	                                        // Decal size in normal direction.
-					true,	                                        // If TRUE, use "NoClip" codepath.
-					FRand() * 360,	                                // random rotation
-					,                    
-					,
-					,
-					,
-					,
-					,100000 // Hack para que los decals tarden mucho en desaparecer... C U T R E :D
-				);
+				if(PPaintCanvas(Pawn.Base) == none && Pawn.Base != none)
+				{
+					OldLocation = Pawn.Location;
+					WorldInfo.MyDecalManager.SpawnDecal
+					(
+						DecalMaterial'WP_BioRifle.Materials.Bio_Splat_Decal_001',	// UMaterialInstance used for this decal.
+						Pawn.Location,	                            // Decal spawned at the hit location.
+						rotator(-Pawn.Floor),	                    // Orient decal into the surface.
+						PGame(WorldInfo.Game).fDecalSize, PGame(WorldInfo.Game).fDecalSize,	                                    // Decal size in tangent/binormal directions.
+						PGame(WorldInfo.Game).fDecalSize *2,	                                        // Decal size in normal direction.
+						true,	                                        // If TRUE, use "NoClip" codepath.
+						FRand() * 360,	                                // random rotation
+						,                    
+						,
+						,
+						,
+						,
+						,100000 // Hack para que los decals tarden mucho en desaparecer... C U T R E :D
+					);
+				}
 			}
 		}
     }
@@ -455,8 +456,7 @@ state PlayerSpidering
 	 * */
     event EndState(Name NextStateName)
     {
-        `log("unspider with roll" $ Rotation.Roll);
-		`log("Nuevo estado " $NextStateName);
+		WorldInfo.Game.Broadcast(self,"Saliendo de PlayerSpidering");
 		SetPhysics(PHYS_Spider);
     }
 }
