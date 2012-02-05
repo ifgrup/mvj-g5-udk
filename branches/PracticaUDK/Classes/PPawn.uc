@@ -7,7 +7,7 @@
  * Por ejemplo: Un Pawn podría ser el personaje jugador, un enemigo, un compañero controlado por la IA 
  * o un amigo que juegue con nosotros en modo multijugador.
  * No se considera Pawn cosas como misiles, disparos, items, etc.
-*/
+ */
 
 // Siempre debemos derivar nuestra clase Pawn de GamePawn
 class PPawn extends GamePawn;
@@ -18,9 +18,7 @@ var DynamicLightEnvironmentComponent LightEnvironment;
 var vector FallDirection;
 defaultproperties
 {
-	/** Propiedades que daremos por defecto
-	 * La mayoría no sé para qué sirven :D
-	 */
+	// Propiedades que daremos por defecto
 	WalkingPct=+0.4
 	CrouchedPct=+0.4
 	BaseEyeHeight=38.0
@@ -33,16 +31,15 @@ defaultproperties
 	CrouchHeight=29.0
 	CrouchRadius=21.0
 	WalkableFloorZ=0.78
-
+	bDirectHitWall=true
 	bRollToDesired=True
 	
-	//VMH
 	bUseCylinderCollision=True
 
-	// No sé que es esto :D
+	// Elimina el sprite del editor
 	Components.Remove(Sprite)
 
-	/* Hacemos que el Pawn pueda estar afectado por la iluminación.
+	/** Hacemos que el Pawn pueda estar afectado por la iluminación.
 	 * Si no incluimos esto, el Pawn no estará iluminado y se verá totalmente oscuro.
 	 */
 	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
@@ -51,7 +48,7 @@ defaultproperties
 		bUseBooleanEnvironmentShadowing=FALSE
 	End Object
 
-	// Una vez configurada la iluminación, la añadimos al renderizador... o algo
+	// Una vez configurada la iluminación, la añadimos al renderizador...
 	Components.Add(MyLightEnvironment)
 	LightEnvironment=MyLightEnvironment
 
@@ -60,7 +57,6 @@ defaultproperties
 	 * - Modelo 3D que usará
 	 * - Set de animaciones
 	 * - Modelo físico del modelo
-	 * Y demás cosas que no acabo de ver para qué son :D
 	 */
 	Begin Object Class=SkeletalMeshComponent Name=WPawnSkeletalMeshComponent
 		//Your Mesh Properties
@@ -116,13 +112,11 @@ defaultproperties
 
 	// Lo añadimos al motor
 	//CylinderComponent=CollisionCylinder
-	CollisionComponent=WPawnSkeletalMeshComponent
+	CollisionComponent=CollisionCylinder
     Components.Add(CollisionComponent);
 	//VLR Inventario para el arma
 	InventoryManagerClass=class'PGame.PInventoryManager'
-
 }
-
 
 /**
  * Añadimos el arma al inventario
@@ -131,6 +125,32 @@ defaultproperties
 function AddDefaultInventory()
 {
 	InvManager.CreateInventory(class'PGame.PWeapon');
+}
+
+/** BaseChange
+ * Función que se llamará una única vez por Pawn cada vez que cambie el
+ * objeto físico sobre el que esté posado el Pawn.
+ * Comprobamos si el objeto es de tipo PPaintCanvas y de ser así, le decimos que
+ * tiene que cambiar de color/textura.
+ */
+singular event BaseChange()
+{
+	if(PPaintCanvas(self.Base) != none)
+	{
+		PPaintCanvas(self.Base).ChangeTexture();
+	}
+}
+
+// called when the pawn lands or hits another surface
+event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
+{
+	GotoState('');
+	SetBase(Wall, HitNormal);
+
+	if(PPaintCanvas(Wall) != none)
+	{
+		PPaintCanvas(Wall).ChangeTexture();
+	}
 }
 
 
@@ -170,10 +190,7 @@ state PawnFalling
 
 	event BeginState(Name PrevName)
 	{
-		FallDirection = vect(0,0,0);
-		
-		// If no destination pawn falls back to the same floor
-		if(FallDirection == vect(0,0,0))
+		WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
 		FallDirection = -Floor;
 
 		// Direct hit wall enabled just for the custom falling
@@ -181,8 +198,6 @@ state PawnFalling
 
 		// flying instead of Falling as flying allows for custom gravity
 		SetPhysics(PHYS_Flying);
-		
-		
 	}
 
 	event Tick(float DeltaTime)
@@ -206,7 +221,6 @@ state PawnFalling
 	}
 
 	// called when the pawn lands or hits another surface
-	
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
 		// switch pawn back to standard state
@@ -214,7 +228,11 @@ state PawnFalling
 		GotoState('');
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn");
-		//SetBase(Wall, HitNormal);
+		SetBase(Wall, HitNormal);
+		if(PPaintCanvas(Wall) != none)
+		{
+			PPaintCanvas(Wall).ChangeTexture();
+		}
 	}
    
 	event EndState(Name NextState)
