@@ -37,6 +37,14 @@ var vector CamViewX, CamViewY, CamViewZ;
 var vector mUltimoFloorAntesSalto;
 
 
+exec function ActivateDecals()
+{
+	PGame(WorldInfo.Game).bActivateDecalsOnWalk = !PGame(WorldInfo.Game).bActivateDecalsOnWalk;
+
+	ClientMessage("Estado de las decals"@PGame(WorldInfo.Game).bActivateDecalsOnWalk);
+}
+
+
 /**
  * Función para actualizar la rotación del Pawn respecto a los inputs del jugador.
  * */
@@ -360,6 +368,7 @@ state PlayerSpidering
 			 * Así nos aseguramos de que el próximo decal que pintemos, no se superpondrá al último decal
 			 * pintado.
 			 * */
+			if(PGame(WorldInfo.Game).bActivateDecalsOnWalk)
 			if(VSize(OldLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize / 2))
 			{
 				if(PPaintCanvas(Pawn.Base) == none && Pawn.Base != none)

@@ -60,7 +60,8 @@ defaultproperties
 	 */
 	Begin Object Class=SkeletalMeshComponent Name=WPawnSkeletalMeshComponent
 		//Your Mesh Properties
-		SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
+		//SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
+		SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
 		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
 		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
 		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
