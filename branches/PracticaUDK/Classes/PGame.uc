@@ -2,30 +2,18 @@
  * Configuración general del juego
  * */
 
-class PGame extends UTDeathmatch;
+class PGame extends FrameworkGame;
 
 var const float fDecalSize;
 var bool bActivateDecalsOnWalk;
 var int EnemiesLeft;
+var bool bEarthNotFlying;
+var int creditos;
 var array<PEnemySpawner> EnemySpawners;
 
 var float MinSpawnerDistance, MaxSpawnerDistance;
 
 var bool bSpawnBoss;
-
-
-defaultproperties
-{
-	PlayerControllerClass=class'PGame.PPlayerController'
-	DefaultPawnClass=class'PGame.PPawn'
-	HUDType=class'PGame.PHUD'
-    MinSpawnerDistance=1700.0
-    MaxSpawnerDistance=3000.0
-    EnemiesLeft=10
-    bScoreDeaths=false
-	fDecalSize=512.0f
-	bActivateDecalsOnWalk=false
-}
 
 simulated function PostBeginPlay()
 {
@@ -82,6 +70,12 @@ function ActivateSpawners()
     }
 }
 
+function SetCredito(int credito)
+{
+creditos=credito;
+}
+
+
 function EnemyKilled()
 {
     local int i;
@@ -102,3 +96,19 @@ function ScoreObjective(PlayerReplicationInfo Scorer, Int Score)
     super.ScoreObjective(Scorer, Score);
 }
 
+
+defaultproperties
+{
+	PlayerControllerClass=class'PGame.PPlayerController'
+	DefaultPawnClass=class'PGame.PPawn'
+	HUDType=class'PGame.PHUD'
+    MinSpawnerDistance=1700.0
+    MaxSpawnerDistance=3000.0
+    EnemiesLeft=10
+    bScoreDeaths=false
+	fDecalSize=512.0f
+	bActivateDecalsOnWalk=false
+	creditos=1000000
+	bEarthNotFlying=false
+
+}

@@ -10,7 +10,8 @@ class PPlayerController extends GamePlayerController;
  * */
 defaultproperties
 {
-	//CameraClass = class'PGame.PPlayerCamera'
+	CameraClass = class'PGame.PPlayerCamera'
+	InputClass=class'PPlayerInput'
 	bNotifyFallingHitWall=true
 	
 }
@@ -36,6 +37,20 @@ var vector CamViewX, CamViewY, CamViewZ;
  * */
 var vector mUltimoFloorAntesSalto;
 
+
+/**
+ *Gestión del ratón RR
+ * 
+ * */
+//enum para el evento del mouse
+enum EMouseEvent
+{
+	LeftMouseButton,
+	RightMouseButton,
+	MiddleMouseButton,
+	ScrollWheelUp,
+	ScrollWheelDown,
+};
 
 exec function ActivateDecals()
 {
@@ -233,86 +248,99 @@ state PlayerSpidering
 
 
 	//Devuelve dónde estará mirando el jugador,la cámara vamos ;)
-	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
-	{
+    simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
+    {
 
-		local vector  CamDirX, CamDirY,CamDirZ, CamDir,OffsetDirZ;	
-		local vector  HitLocation, HitNormal,CamStart,tmpCamStart,tmpCamEnd;
-		local Rotator rProta;
-		local float dist,fs;
+        local vector  CamDirX, CamDirY,CamDirZ, CamDir,OffsetDirZ;    
+        local vector  HitLocation, HitNormal,CamStart,tmpCamStart,tmpCamEnd;
+        local Rotator rProta;
+        local float dist,fs;
+        local bool bEnSuelo;
 
-		super.GetPlayerViewPoint(out_Location, out_Rotation);
-		if(Pawn != none)
-		{
-			Pawn.Mesh.SetOwnerNoSee(false);
-			CamStart=Pawn.Location;
-			rProta=PPawn(Pawn).Rotation; //Hacia donde mira el prota.La pasamos a coordenadas de mundo:
-			//rProta.Pitch+=PlayerInput.aLookUp;
-			GetAxes(rProta,CamDirX,CamDirY,CamDirz);
-			//Tenemos el sist.coordenadas de hacia donde está mirando el prota,en coordenadas de mundo.
-			//Como queremos estar siempre detrás, sólo nos interesa desplazar la cámara sólo en X, dejando la Y a cero
+        super.GetPlayerViewPoint(out_Location, out_Rotation);
+        if(Pawn != none)
+        {
+            Pawn.Mesh.SetOwnerNoSee(false);
+            CamStart=Pawn.Location;
+            rProta=PPawn(Pawn).Rotation; //Hacia donde mira el prota.La pasamos a coordenadas de mundo:
+            //rProta.Pitch+=PlayerInput.aLookUp;
+            GetAxes(rProta,CamDirX,CamDirY,CamDirz);
+            //Tenemos el sist.coordenadas de hacia donde está mirando el prota,en coordenadas de mundo.
+            //Como queremos estar siempre detrás, sólo nos interesa desplazar la cámara sólo en X, dejando la Y a cero
 
-			CamDirX*=100*1/VSize(CamDirX); 
-			
-			//Calculamos desplazamiento up/down de la cámara. 
-			//PlayerInput.aLookup no es absoluto, sino que depende sólo de la velocidad del movimiento del mouse.
-			//Para controlar si la cámara está más arriba o abajo, vamos acumulando el valor,
-			//modulándolo con sin 
-			
-			fs=Sin(0.0005*mUltimoLookup);
+            bEnSuelo=PGame(WorldInfo.Game).bEarthNotFlying;
+            if(bEnSuelo)
+                CamDirX*=100*1/VSize(CamDirX); 
+            else
+                CamDirZ*=500*1/VSize(CamDirZ); 
+
+            //Calculamos desplazamiento up/down de la cámara. 
+            //PlayerInput.aLookup no es absoluto, sino que depende sólo de la velocidad del movimiento del mouse.
+            //Para controlar si la cámara está más arriba o abajo, vamos acumulando el valor,
+            //modulándolo con sin 
+            
+            fs=Sin(0.0005*mUltimoLookup);
             mOffsetCamaraUpDown+=fs;
 
             //Limite de altura. Por debajo, será el suelo y las colisiones con él.
-			if (abs(mOffsetCamaraUpDown) > 100)
-			{
-				mOffsetCamaraUpDown-=fs;
-			}
+            if (abs(mOffsetCamaraUpDown) > 100)
+            {
+                mOffsetCamaraUpDown-=fs;
+            }
 
-			//A ese vector, hay que aplicarle la rotación por mouse up/down. Tenemos PlayerInput.aLookup en mUltimoLookup
-			//mOffsetCamaraUpDown hay que aplicarlo a la altura del bicho, por tanto a su eje Z, que tenemos en camDirZ
-			out_Location = (Pawn.Location -CamDirX)+(camDirZ*mOffsetCamaraUpDown);
-			out_Rotation=Pawn.Rotation;
+            //A ese vector, hay que aplicarle la rotación por mouse up/down. Tenemos PlayerInput.aLookup en mUltimoLookup
+            //mOffsetCamaraUpDown hay que aplicarlo a la altura del bicho, por tanto a su eje Z, que tenemos en camDirZ
+            
+            if(bEnSuelo)
+            {
+                out_Location = (Pawn.Location -CamDirX)+(camDirZ*mOffsetCamaraUpDown);
+                out_Rotation=Pawn.Rotation;
 
-			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
+            }
+            else
+            {
+                out_Location = (Pawn.Location + CamDirZ);
+                out_Rotation = rotator(Pawn.Location - out_Location);
+            }
+
+
+            //Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
             //Lanzamos un 'rayo' desde la cámara hasta el bicho, y si encontramos algún obstáculo por medio, ponemos la cámara
-			//donde está el obstáculo, para evitar tener esa pared en medio. Si hubiera más de dos obstáculos, el segundo nos seguiría
-			//tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
-			//utilizamos ;)
-		
-			if (Trace(HitLocation, HitNormal, out_Location, CamStart, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
-			{
-				//Hay contacto. Ponemos la cámara en el obstáculo
-				out_Location=HitLocation;
+            //donde está el obstáculo, para evitar tener esa pared en medio. Si hubiera más de dos obstáculos, el segundo nos seguiría
+            //tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
+            //utilizamos ;)
+        
+            if (Trace(HitLocation, HitNormal, out_Location, CamStart, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
+            {
+                //Hay contacto. Ponemos la cámara en el obstáculo
+                out_Location=HitLocation;
 
-				//Y ahora, como hemos hecho que la cámara se mueve más cerca del bicho, puede ser que la hayamos puesto
-				//justo encima del bicho. En tal caso, veríamos cosas raras, por lo que comprobamos si estamos dentro del bicho, y
-				//en tal caso, ocultamos el bicho para poder seguir viendo con normalidad.
-				tmpCamStart=CamStart;
-				tmpCamEnd=HitLocation;
-				//Ponemos Z's a cero, que es como proyectar al suelo la posición de la cámara y del jugador
-				tmpCamStart.Z=0;
-				tmpCamEnd.Z=0;
-				//Comprobamos si la distancia entre esas dos proyecciones, es menos que el radio de colisión + un cierto porcentaje
-				//y también si la Z del punto de colisión, vamos, la nueva cámara, está dentro del cilindro de colisión
-				dist=VSize(tmpCamEnd-tmpCamStart);
-				//`Log(dist);
-				if ( (dist < Pawn.GetCollisionRadius()*2.0) && 
-					  (HitLocation.Z<Pawn.Location.Z+Pawn.CylinderComponent.CollisionHeight) &&
-					  (HitLocation.Z>Pawn.Location.Z-Pawn.CylinderComponent.CollisionHeight))
-				{
-					//Estamos dentro del bicho. Ocultamos su mesh
-					Pawn.Mesh.SetHidden(True);
-				}
-				else
-				{
-					Pawn.Mesh.SetHidden(False);
-				}
-			}//Trace para ver si hay obstáculos
-		}
-	}//GetPlayerViewPoint
-
-
-
+                //Y ahora, como hemos hecho que la cámara se mueve más cerca del bicho, puede ser que la hayamos puesto
+                //justo encima del bicho. En tal caso, veríamos cosas raras, por lo que comprobamos si estamos dentro del bicho, y
+                //en tal caso, ocultamos el bicho para poder seguir viendo con normalidad.
+                tmpCamStart=CamStart;
+                tmpCamEnd=HitLocation;
+                //Ponemos Z's a cero, que es como proyectar al suelo la posición de la cámara y del jugador
+                tmpCamStart.Z=0;
+                tmpCamEnd.Z=0;
+                //Comprobamos si la distancia entre esas dos proyecciones, es menos que el radio de colisión + un cierto porcentaje
+                //y también si la Z del punto de colisión, vamos, la nueva cámara, está dentro del cilindro de colisión
+                dist=VSize(tmpCamEnd-tmpCamStart);
+                //`Log(dist);
+                if ( (dist < Pawn.GetCollisionRadius()*2.0) && 
+                      (HitLocation.Z<Pawn.Location.Z+Pawn.CylinderComponent.CollisionHeight) &&
+                      (HitLocation.Z>Pawn.Location.Z-Pawn.CylinderComponent.CollisionHeight))
+                {
+                    //Estamos dentro del bicho. Ocultamos su mesh
+                    Pawn.Mesh.SetHidden(True);
+                }
+                else
+                {
+                    Pawn.Mesh.SetHidden(False);
+                }
+            }//Trace para ver si hay obstáculos
+        }
+    }//GetPlayerViewPoint
 
 
 
@@ -469,3 +497,132 @@ state PlayerSpidering
 		SetPhysics(PHYS_Spider);
     }
 }
+
+
+/**
+ * Eventos de Ratón RR
+ * 
+ * 
+ * */
+
+//Tratar los inputs del mouse
+function HandleMouseInput(EMouseEvent MouseEvent, EInputEvent InputEvent)
+{
+	local PHUD pHUD;
+
+	pHUD = PHUD(myHUD);
+
+	if(pHUD != none)
+	{
+		//Detectar que tipo de input se ha realizado
+		if(InputEvent == IE_Pressed)    //Pressed event
+		{
+			switch(MouseEvent)
+			{
+				case LeftMouseButton:
+					pHUD.PendingLeftPressed = true;
+					break;
+
+				case RightMouseButton:
+					pHUD.PendingRightPressed = true;
+					break;
+
+				case MiddleMouseButton:
+					pHUD.PendingMiddlePressed = true;
+					break;
+
+				case ScrollWheelUp:
+					pHUD.PendingScrollUp = true;
+					break;
+
+				case ScrollWheelDown:
+					pHUD.PendingScrollDown = true;
+					break;
+
+				default:
+					break;
+			}
+		}
+		else if(InputEvent == IE_Released)  //Released event
+		{
+			switch(MouseEvent)
+			{
+				case LeftMouseButton:
+				pHUD.PendingLeftReleased = true;
+					break;
+
+				case RightMouseButton:
+					pHUD.PendingRightReleased = true;
+					break;
+
+				case MiddleMouseButton:
+					pHUD.PendingMiddleReleased = true;
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
+}
+
+// Called when the left mouse button is pressed
+exec function LeftMousePressed()
+{
+  HandleMouseInput(LeftMouseButton, IE_Pressed);
+}
+
+// Called when the left mouse button is released
+exec function LeftMouseReleased()
+{
+  HandleMouseInput(LeftMouseButton, IE_Released);
+}
+
+// Called when the right mouse button is pressed
+exec function RightMousePressed()
+{
+  HandleMouseInput(RightMouseButton, IE_Pressed);
+}
+
+// Called when the right mouse button is released
+exec function RightMouseReleased()
+{
+  HandleMouseInput(RightMouseButton, IE_Released);
+}
+
+// Called when the middle mouse button is pressed
+exec function MiddleMousePressed()
+{
+  HandleMouseInput(MiddleMouseButton, IE_Pressed);
+}
+
+// Called when the middle mouse button is released
+exec function MiddleMouseReleased()
+{
+  HandleMouseInput(MiddleMouseButton, IE_Released);
+}
+
+// Called when the middle mouse wheel is scrolled up
+exec function MiddleMouseScrollUp()
+{
+  HandleMouseInput(ScrollWheelUp, IE_Pressed);
+}
+
+// Called when the middle mouse wheel is scrolled down
+exec function MiddleMouseScrollDown()
+{
+  HandleMouseInput(ScrollWheelDown, IE_Pressed);
+}
+
+//Al dar al escape cerrara el juego
+exec function CloseEditorViewport()
+{
+	ConsoleCommand("show BOUNDS");
+}
+
+
+/**
+ * 
+ * AAA RR
+ * 
+ * */

@@ -16,108 +16,6 @@ class PPawn extends GamePawn;
 // Para que a nuestro Pawn le afecte la iluminación
 var DynamicLightEnvironmentComponent LightEnvironment;
 var vector FallDirection;
-defaultproperties
-{
-	// Propiedades que daremos por defecto
-	WalkingPct=+0.4
-	CrouchedPct=+0.4
-	BaseEyeHeight=38.0
-	EyeHeight=38.0
-	GroundSpeed=440.0
-	AirSpeed=440.0
-	WaterSpeed=220.0
-	AccelRate=2048.0
-	JumpZ=500.0
-	CrouchHeight=29.0
-	CrouchRadius=21.0
-	WalkableFloorZ=0.78
-	bDirectHitWall=true
-	bRollToDesired=True
-	
-	bUseCylinderCollision=True
-
-	// Elimina el sprite del editor
-	Components.Remove(Sprite)
-
-	/** Hacemos que el Pawn pueda estar afectado por la iluminación.
-	 * Si no incluimos esto, el Pawn no estará iluminado y se verá totalmente oscuro.
-	 */
-	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
-		bSynthesizeSHLight=TRUE
-		bIsCharacterLightEnvironment=TRUE
-		bUseBooleanEnvironmentShadowing=FALSE
-	End Object
-
-	// Una vez configurada la iluminación, la añadimos al renderizador...
-	Components.Add(MyLightEnvironment)
-	LightEnvironment=MyLightEnvironment
-
-	/** Propiedades de visualización del Pawn:
-	 * - Esqueleto que usará
-	 * - Modelo 3D que usará
-	 * - Set de animaciones
-	 * - Modelo físico del modelo
-	 */
-	Begin Object Class=SkeletalMeshComponent Name=WPawnSkeletalMeshComponent
-		//Your Mesh Properties
-		//SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
-		SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
-		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
-		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
-		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
-		Translation=(Z=8.0)
-		Scale=1.075
-		//General Mesh Properties
-		bCacheAnimSequenceNodes=FALSE
-		AlwaysLoadOnClient=true
-		AlwaysLoadOnServer=true
-		bOwnerNoSee=false
-		CastShadow=true
-		BlockRigidBody=TRUE
-		bUpdateSkelWhenNotRendered=false
-		bIgnoreControllersWhenNotRendered=TRUE
-		bUpdateKinematicBonesFromAnimation=true
-		bCastDynamicShadow=true
-		RBChannel=RBCC_Untitled3
-		RBCollideWithChannels=(Untitled3=true)
-		LightEnvironment=MyLightEnvironment
-		bOverrideAttachmentOwnerVisibility=true
-		bAcceptsDynamicDecals=FALSE
-		bHasPhysicsAssetInstance=true
-		TickGroup=TG_PreAsyncWork
-		MinDistFactorForKinematicUpdate=0.2
-		bChartDistanceFactor=true
-		RBDominanceGroup=20
-		bUseOnePassLightingOnTranslucency=TRUE
-		bPerBoneMotionBlur=true
-		HiddenGame=False
-		BlockNonZeroExtent=True
-		BlockZeroExtent=True
-		BlockActors=True
-		CollideActors=True
-	End Object
-
-	// Lo añadimos al motor
-	Mesh=WPawnSkeletalMeshComponent
-	Components.Add(WPawnSkeletalMeshComponent)
-
-	// Esto tiene algo que ver con el modelo físico de colisiones del modelo
-	Begin Object Name=CollisionCylinder
-		CollisionRadius=+0021.000000
-		CollisionHeight=+0044.000000
-		BlockNonZeroExtent=True
-		BlockZeroExtent=True
-		BlockActors=True
-		CollideActors=True
-	End Object
-
-	// Lo añadimos al motor
-	//CylinderComponent=CollisionCylinder
-	CollisionComponent=CollisionCylinder
-    Components.Add(CollisionComponent);
-	//VLR Inventario para el arma
-	InventoryManagerClass=class'PGame.PInventoryManager'
-}
 
 /**
  * Añadimos el arma al inventario
@@ -242,4 +140,108 @@ state PawnFalling
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
 	}
+}
+
+
+defaultproperties
+{
+	// Propiedades que daremos por defecto
+	WalkingPct=+0.4
+	CrouchedPct=+0.4
+	BaseEyeHeight=38.0
+	EyeHeight=38.0
+	GroundSpeed=440.0
+	AirSpeed=440.0
+	WaterSpeed=220.0
+	AccelRate=2048.0
+	JumpZ=500.0
+	CrouchHeight=29.0
+	CrouchRadius=21.0
+	WalkableFloorZ=0.78
+	bDirectHitWall=true
+	bRollToDesired=True
+	
+	bUseCylinderCollision=True
+
+	// Elimina el sprite del editor
+	Components.Remove(Sprite)
+
+	/** Hacemos que el Pawn pueda estar afectado por la iluminación.
+	 * Si no incluimos esto, el Pawn no estará iluminado y se verá totalmente oscuro.
+	 */
+	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
+		bSynthesizeSHLight=TRUE
+		bIsCharacterLightEnvironment=TRUE
+		bUseBooleanEnvironmentShadowing=FALSE
+	End Object
+
+	// Una vez configurada la iluminación, la añadimos al renderizador...
+	Components.Add(MyLightEnvironment)
+	LightEnvironment=MyLightEnvironment
+
+	/** Propiedades de visualización del Pawn:
+	 * - Esqueleto que usará
+	 * - Modelo 3D que usará
+	 * - Set de animaciones
+	 * - Modelo físico del modelo
+	 */
+	Begin Object Class=SkeletalMeshComponent Name=WPawnSkeletalMeshComponent
+		//Your Mesh Properties
+		//SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
+		SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
+		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
+		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
+		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
+		Translation=(Z=8.0)
+		Scale=1.075
+		//General Mesh Properties
+		bCacheAnimSequenceNodes=FALSE
+		AlwaysLoadOnClient=true
+		AlwaysLoadOnServer=true
+		bOwnerNoSee=false
+		CastShadow=true
+		BlockRigidBody=TRUE
+		bUpdateSkelWhenNotRendered=false
+		bIgnoreControllersWhenNotRendered=TRUE
+		bUpdateKinematicBonesFromAnimation=true
+		bCastDynamicShadow=true
+		RBChannel=RBCC_Untitled3
+		RBCollideWithChannels=(Untitled3=true)
+		LightEnvironment=MyLightEnvironment
+		bOverrideAttachmentOwnerVisibility=true
+		bAcceptsDynamicDecals=FALSE
+		bHasPhysicsAssetInstance=true
+		TickGroup=TG_PreAsyncWork
+		MinDistFactorForKinematicUpdate=0.2
+		bChartDistanceFactor=true
+		RBDominanceGroup=20
+		bUseOnePassLightingOnTranslucency=TRUE
+		bPerBoneMotionBlur=true
+		HiddenGame=False
+		BlockNonZeroExtent=True
+		BlockZeroExtent=True
+		BlockActors=True
+		CollideActors=True
+	End Object
+
+	// Lo añadimos al motor
+	Mesh=WPawnSkeletalMeshComponent
+	Components.Add(WPawnSkeletalMeshComponent)
+
+	// Esto tiene algo que ver con el modelo físico de colisiones del modelo
+	Begin Object Name=CollisionCylinder
+		CollisionRadius=+0021.000000
+		CollisionHeight=+0044.000000
+		BlockNonZeroExtent=True
+		BlockZeroExtent=True
+		BlockActors=True
+		CollideActors=True
+	End Object
+
+	// Lo añadimos al motor
+	//CylinderComponent=CollisionCylinder
+	CollisionComponent=CollisionCylinder
+    Components.Add(CollisionComponent);
+	//VLR Inventario para el arma
+	InventoryManagerClass=class'PGame.PInventoryManager'
 }
