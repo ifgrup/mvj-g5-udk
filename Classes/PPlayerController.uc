@@ -10,8 +10,8 @@ class PPlayerController extends GamePlayerController;
  * */
 defaultproperties
 {
-	CameraClass = class'PGame.PPlayerCamera'
-	InputClass=class'PPlayerInput'
+	CameraClass=class'PGame.PPlayerCamera'
+	InputClass=class'PGame.PPlayerInput'
 	bNotifyFallingHitWall=true
 	
 }
@@ -566,16 +566,27 @@ function HandleMouseInput(EMouseEvent MouseEvent, EInputEvent InputEvent)
 	}
 }
 
+exec function vuela()
+{
+	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+}
+
 // Called when the left mouse button is pressed
 exec function LeftMousePressed()
 {
-  HandleMouseInput(LeftMouseButton, IE_Pressed);
+	if(PGame(WorldInfo.Game).bEarthNotFlying)
+		super.StartFire();
+	else
+		HandleMouseInput(LeftMouseButton, IE_Pressed);
 }
 
 // Called when the left mouse button is released
 exec function LeftMouseReleased()
 {
-  HandleMouseInput(LeftMouseButton, IE_Released);
+	if(PGame(WorldInfo.Game).bEarthNotFlying)
+		super.StopFire();
+	else
+		HandleMouseInput(LeftMouseButton, IE_Released);
 }
 
 // Called when the right mouse button is pressed

@@ -62,8 +62,5 @@ defaultproperties
 
 	FiringStatesArray(0)=WeaponFiring
 	WeaponFireTypes(0)=EWFT_InstantHit
-	FireInterval(0)=0.2
-	
+	FireInterval(0)=0.2	
 }
-
-
