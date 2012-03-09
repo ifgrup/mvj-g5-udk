@@ -136,7 +136,7 @@ defaultproperties
         StaticMesh=StaticMesh'UN_SimpleMeshes.TexPropCube_Dup'
         Materials(0)=Material'EditorMaterials.WidgetMaterial_X'
         LightEnvironment=MyLightEnvironment
-        Scale3D=(X=2.25,Y=2.25,Z=2.25)
+        Scale3D=(X=1,Y=1,Z=1)
     End Object
     Components.Add(EnemyMesh)
     MyMesh=EnemyMesh
