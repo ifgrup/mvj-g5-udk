@@ -36,6 +36,7 @@ auto state Seeking
 {
     function BeginState(Name PreviousStateName)
     {
+		SetPhysics(PHYS_Spider);
         if(!bAttacking)
             MyMesh.SetMaterial(0, SeekingMat);
     }
@@ -54,6 +55,7 @@ auto state Seeking
         {
             NewLocation = Location;
             NewLocation += normal(Enemy.Location - Location) * MovementSpeed * DeltaTime;
+			//Move(NewLocation);
             SetLocation(NewLocation);
     
             if(VSize(NewLocation - Enemy.Location) < AttackDistance)
@@ -136,7 +138,7 @@ defaultproperties
         StaticMesh=StaticMesh'UN_SimpleMeshes.TexPropCube_Dup'
         Materials(0)=Material'EditorMaterials.WidgetMaterial_X'
         LightEnvironment=MyLightEnvironment
-        Scale3D=(X=1,Y=1,Z=1)
+        Scale3D=(X=0.2,Y=0.2,Z=0.2)
     End Object
     Components.Add(EnemyMesh)
     MyMesh=EnemyMesh

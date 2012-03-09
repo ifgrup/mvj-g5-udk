@@ -56,7 +56,6 @@ function ActivateSpawners()
 
     if(InRangeSpawners.length == 0)
     {
-        `log("No enemy spawners within range!");
         SetTimer(1.0, false, 'ActivateSpawners');
         return;
     }
@@ -102,13 +101,13 @@ defaultproperties
 	PlayerControllerClass=class'PGame.PPlayerController'
 	DefaultPawnClass=class'PGame.PPawn'
 	HUDType=class'PGame.PHUD'
-    MinSpawnerDistance=1700.0
-    MaxSpawnerDistance=3000.0
-    EnemiesLeft=10
-    bScoreDeaths=false
+    	MinSpawnerDistance=0.0
+    	MaxSpawnerDistance=3000.0
+    	EnemiesLeft=10
+    	bScoreDeaths=false
 	fDecalSize=512.0f
 	bActivateDecalsOnWalk=false
 	creditos=1000000
-	bEarthNotFlying=false
-
+	bEarthNotFlying=true
+	bDelayedStart=false
 }
