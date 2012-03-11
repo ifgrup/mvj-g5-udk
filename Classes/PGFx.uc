@@ -114,6 +114,30 @@ function SetCredito(int c)
 {
 	creditoMC.SetText(c);
 }
+
+
+function AUIVuela(bool val)
+{
+
+
+tdcMC.SetBool("_visible", val);
+
+ tdiceMC.SetBool("_visible", val);
+ ctdiceMC.SetBool("_visible", val);
+ ctdcMC.SetBool("_visible", val);
+
+
+
+}
+
+function PauseMenu(bool val)
+{
+	tdcMC.SetBool("enabled", val);
+	tdiceMC.SetBool("enabled", val);
+}
+
+
+
 //RR
 
 function SetOverInteractionPanel(bool val)

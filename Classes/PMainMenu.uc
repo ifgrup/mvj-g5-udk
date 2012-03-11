@@ -1,6 +1,6 @@
 class PMainMenu extends GFxMoviePlayer;
 
-var GFxClikWidget btnStart;
+var GFxClikWidget btnStart,btnExit;
 var GFxObject MainMenuTitle;
 
 function bool Start(optional bool startPaused=false)
@@ -8,7 +8,7 @@ function bool Start(optional bool startPaused=false)
 	super.Start();
 	Advance(0);
     MainMenuTitle=GetVariableObject("_root.textField");
-	MainMenuTitle.SetText("Marikaaaaaa");
+	MainMenuTitle.SetText("FishTros Game");
 
 	return true;
 }
@@ -16,12 +16,23 @@ function bool Start(optional bool startPaused=false)
 
 event bool WidgetInitialized(name WN,name WP, GFxObject w)
 {
+	
 	switch(WN)
 	{
 		case ('optionsBtn'):
 			btnStart=GFxClikWidget(w);
-			btnStart.AddEventListener('CLIK_click',OnStartMenuTUPUTAMADRE);
+			
+		btnStart.SetString("label", "Juagar");
+			btnStart.AddEventListener('CLIK_press',OnStartMenuTUPUTAMADRE);
 			break;
+		case ('exit'):
+			btnExit=GFxClikWidget(w);
+			
+		btnExit.SetString("label", "Salir");
+			btnExit.AddEventListener('CLIK_press',OnStartMenuSalir);
+			break;
+
+
 		default:
 			break;
 
@@ -31,12 +42,17 @@ event bool WidgetInitialized(name WN,name WP, GFxObject w)
 
 function OnStartMenuTUPUTAMADRE(GFxClikWidget.EventData ev)
 {
-MainMenuTitle.SetText("PUSAL");
-	`Log("TUPUTA PUSAL");
+//MainMenuTitle.SetText("PUSAL");
+	//`Log("TUPUTA PUSAL");
 
 	OpenGame();
 }
 
+function OnStartMenuSalir(GFxClikWidget.EventData ev)
+{
+
+consolecommand("exit");
+}
 
 function OpenGame()
 {
@@ -55,6 +71,7 @@ DefaultProperties
 //SwfMovie'SimpleTorus.menu00'
 MovieInfo=SwfMovie'PGameMenuFlash.menu00'
  WidgetBindings.Add((WidgetName="optionsBtn",WidgetClass=class'GfxClikWidget'));
+	WidgetBindings.Add((WidgetName="exit",WidgetClass=class'GfxClikWidget'));
 
 
 bDisplayWithHudOff=TRUE

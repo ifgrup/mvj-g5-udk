@@ -566,9 +566,32 @@ function HandleMouseInput(EMouseEvent MouseEvent, EInputEvent InputEvent)
 	}
 }
 
+//rr new
+//Tratar los inputs del Teclado
+function Teclado()
+{
+
+local PHUD pHUD;
+
+	pHUD = PHUD(myHUD);
+
+	if(pHUD != none)
+	{
+
+	ConsoleCommand("Pause");
+pHUD.SetPauseMenu(!pHUD.pauseMenu);
+
+	}
+
+
+}
+
+
 exec function vuela()
 {
 	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	
+
 }
 
 // Called when the left mouse button is pressed
@@ -626,11 +649,14 @@ exec function MiddleMouseScrollDown()
 }
 
 //Al dar al escape cerrara el juego
+/*
 exec function CloseEditorViewport()
 {
-	ConsoleCommand("show BOUNDS");
+	
+	Teclado();
+	
 }
-
+*/
 
 /**
  * 
