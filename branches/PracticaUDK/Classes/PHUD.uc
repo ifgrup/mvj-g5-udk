@@ -178,7 +178,7 @@ local PPlayerController pPlayerController;
 
 
 
-		tc= spawn(class'PTurretCannon', self,,HitLocation);
+		tc= spawn(class'PTurretCannon', self,,HitLocation, rotator(-HitNormal));
 		pGFx.SetTowerActive(false);
 		pGFX.SetReload(false);
 		pGFx.TurretReload();
