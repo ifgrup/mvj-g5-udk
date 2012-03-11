@@ -1,4 +1,4 @@
-class PWeapon extends Weapon;
+class PWeapon extends UDKWeapon;
 
 simulated function TimeWeaponEquipping()
 {
@@ -16,6 +16,8 @@ simulated function AttachWeaponTo(SkeletalMeshComponent MeshCpnt, optional Name 
 
 simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optional int NumHits)
 {
+	super.ProcessInstantHit(FiringMode, Impact, NumHits);
+
     WorldInfo.MyDecalManager.SpawnDecal
     (
 	DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak',	// UMaterialInstance used for this decal.
@@ -34,7 +36,7 @@ simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optiona
 	);
 }
 
-simulated event SetPosition(PPawn Holder)
+/*simulated event SetPosition(PPawn Holder)
 {
     local vector FinalLocation;
     local vector X,Y,Z;
@@ -50,7 +52,7 @@ simulated event SetPosition(PPawn Holder)
     SetBase(Holder);
 
     SetRotation(Holder.Controller.Rotation);
-}
+}*/
 
 defaultproperties
 {
@@ -61,6 +63,35 @@ defaultproperties
 	Components.Add(WeaponMesh)
 
 	FiringStatesArray(0)=WeaponFiring
+	FiringStatesArray(1)=WeaponFiring
+ 
 	WeaponFireTypes(0)=EWFT_InstantHit
-	FireInterval(0)=0.2	
+	WeaponFireTypes(1)=EWFT_InstantHit
+ 
+	WeaponProjectiles(0)=none
+	WeaponProjectiles(1)=none
+ 
+	FireInterval(0)=+0.3
+	FireInterval(1)=+0.3
+ 
+	Spread(0)=0.0
+	Spread(1)=0.0
+ 
+	ShotCost(0)=1
+	ShotCost(1)=1
+ 
+	AmmoCount=5
+	MaxAmmoCount=5
+ 
+	InstantHitDamage(0)=0.0
+	InstantHitDamage(1)=0.0
+	InstantHitMomentum(0)=0.0
+	InstantHitMomentum(1)=0.0
+	InstantHitDamageTypes(0)=class'DamageType'
+	InstantHitDamageTypes(1)=class'DamageType'
+	WeaponRange=22000
+ 
+	ShouldFireOnRelease(0)=0
+	ShouldFireOnRelease(1)=0
+
 }

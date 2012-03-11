@@ -32,6 +32,14 @@ var bool UsingScaleform;
 //Pelicula Scaleform
 var PGFx pGFx;
 var PGame game;
+
+
+//rr new PauseMenu
+var bool pauseMenu;
+var PGFxUI_PauseMenu		PauseMenuMovie;
+//var PMainMenu		PauseMenuMovie;
+var bool	bEnableActorOverlays;
+
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
@@ -147,6 +155,11 @@ local PPlayerController pPlayerController;
 		}
 	}
 
+
+
+
+
+
 	//Conseguir la actual interfaz de interaccion del mouse
 	MouseInteractionInterface = GetMouseActor(HitLocation, HitNormal);
 
@@ -177,6 +190,7 @@ local PPlayerController pPlayerController;
 			PendingLeftPressed = false;
 			
 		}
+		PendingLeftPressed = false;
 			// rr demo Spawn towwer
 			
 	//		
@@ -439,6 +453,87 @@ function Vector GetMouseWorldLocation()
 	return HitLocation;
 }
 
+
+
+//rr new
+function SetPauseMenu(bool val)
+{
+
+pauseMenu=val;
+pGFx.PauseMenu(pauseMenu);
+
+}
+
+function TogglePauseMenu()
+{
+    if ( PauseMenuMovie != none && PauseMenuMovie.bMovieIsOpen )
+	{
+		
+		if( !WorldInfo.IsPlayInMobilePreview() )
+		{
+		PauseMenuMovie.PlayCloseAnimation();
+		}
+		else
+		{
+			// On mobile previewer, close right away
+		CompletePauseMenuClose();
+		}
+	}
+	else
+    {
+	CloseOtherMenus();
+
+        PlayerOwner.SetPause(True);
+
+        if (PauseMenuMovie == None)
+        {
+	        PauseMenuMovie = new class'PGFxUI_PauseMenu';
+		//PauseMenuMovie = new class'PMainMenu';
+           //
+           PauseMenuMovie.MovieInfo = SwfMovie'PGameMenuFlash.ppausemenu';
+			//PauseMenuMovie.MovieInfo =SwfMovie'PGameMenuFlash.menu00';
+            PauseMenuMovie.bEnableGammaCorrection = FALSE;
+			PauseMenuMovie.LocalPlayerOwnerIndex = class'Engine'.static.GetEngine().GamePlayers.Find(LocalPlayer(PlayerOwner.Player));
+            PauseMenuMovie.SetTimingMode(TM_Real);
+        }
+
+	SetVisible(false);
+        PauseMenuMovie.Start();
+	   PauseMenuMovie.PlayOpenAnimation();
+
+		// Do not prevent 'escape' to unpause if running in mobile previewer
+		if( !WorldInfo.IsPlayInMobilePreview() )
+		{
+			PauseMenuMovie.AddFocusIgnoreKey('Escape');
+		}
+    }
+}
+
+
+function CloseOtherMenus();
+
+function SetVisible(bool bNewVisible)
+{
+	bEnableActorOverlays = bNewVisible;
+	bShowHUD = bNewVisible;
+}
+
+function CompletePauseMenuClose()
+{
+    PlayerOwner.SetPause(False);
+    PauseMenuMovie.Close(false);  // Keep the Pause Menu loaded in memory for reuse.
+    SetVisible(true);
+}
+
+
+exec function ShowMenu()
+{
+	// if using GFx HUD, use GFx pause menu
+	TogglePauseMenu();
+}
+
+
+//
 simulated event Tick(float DeltaTime)
 {
 
@@ -449,6 +544,9 @@ if(pGFx.reload &&(PGame(WorldInfo.Game).creditos>=200) )
 pGFx.SetTurretIdle();
 pGFx.SetTowerActive(true);
 }
+
+pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
+
 
 	/*
 	local ASDisplayInfo DI;
@@ -494,5 +592,5 @@ defaultproperties
 	CursorColor=(R=255,G=255,B=255,A=255)
 	CursorTexture=Texture2D'EngineResources.Cursors.Arrow'
 	UsingScaleform=true
-
+	pauseMenu=false
 }
