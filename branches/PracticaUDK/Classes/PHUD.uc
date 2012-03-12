@@ -488,10 +488,9 @@ function TogglePauseMenu()
         if (PauseMenuMovie == None)
         {
 	        PauseMenuMovie = new class'PGFxUI_PauseMenu';
-		//PauseMenuMovie = new class'PMainMenu';
-           //
+	
            PauseMenuMovie.MovieInfo = SwfMovie'PGameMenuFlash.ppausemenu';
-			//PauseMenuMovie.MovieInfo =SwfMovie'PGameMenuFlash.menu00';
+			
             PauseMenuMovie.bEnableGammaCorrection = FALSE;
 			PauseMenuMovie.LocalPlayerOwnerIndex = class'Engine'.static.GetEngine().GamePlayers.Find(LocalPlayer(PlayerOwner.Player));
             PauseMenuMovie.SetTimingMode(TM_Real);

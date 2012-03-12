@@ -22,7 +22,7 @@ event bool WidgetInitialized(name WN,name WP, GFxObject w)
 		case ('optionsBtn'):
 			btnStart=GFxClikWidget(w);
 			
-		btnStart.SetString("label", "Juagar");
+		btnStart.SetString("label", "Jugar");
 			btnStart.AddEventListener('CLIK_press',OnStartMenuTUPUTAMADRE);
 			break;
 		case ('exit'):
@@ -58,25 +58,18 @@ function OpenGame()
 {
     SetPause(false);
     close(true);
-    consolecommand("Open PGamePlanet02");
+    consolecommand("Open PGamePlanet01");
 }
 
 
 DefaultProperties
 {
-
-	//MovieInfo=SwfMovie'UDNHud.UI_QuickStart'
-	//MovieInfo=SwfMovie'FishtrosGameMenu.menu0'
-
-//SwfMovie'SimpleTorus.menu00'
-MovieInfo=SwfMovie'PGameMenuFlash.menu00'
- WidgetBindings.Add((WidgetName="optionsBtn",WidgetClass=class'GfxClikWidget'));
-	WidgetBindings.Add((WidgetName="exit",WidgetClass=class'GfxClikWidget'));
-
-
-bDisplayWithHudOff=TRUE
+	bDisplayWithHudOff=true
     TimingMode=TM_Real
-	bPauseGameWhileActive=TRUE
+	bPauseGameWhileActive=true
 	bCaptureInput=true
+	MovieInfo=SwfMovie'PGameMenuFlash.menu00'
+	WidgetBindings.Add((WidgetName="optionsBtn",WidgetClass=class'GfxClikWidget'));
+	WidgetBindings.Add((WidgetName="exit",WidgetClass=class'GfxClikWidget'));
 
 }
