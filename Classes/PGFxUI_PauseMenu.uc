@@ -62,7 +62,7 @@ event bool WidgetInitialized(name WN,name WP, GFxObject w)
 			case ('f3'):
 			Btn_f3MC=GFxClikWidget(w);
 			
-			Btn_f3MC.SetString("label", "Menu");
+			Btn_f3MC.SetString("label", "Menú");
 			Btn_f3MC.AddEventListener('CLIK_press',OnPressMenuButton);
 			break;
 
@@ -88,7 +88,7 @@ function OnPressExitButton(GFxClikWidget.EventData ev)
 function OnPressRStartButton(GFxClikWidget.EventData ev)
 {
 	//UTPlayerController(GetPC()).QuitToMainMenu();	
-	ConsoleCommand("Open PGamePlanet02");
+	ConsoleCommand("Open PGamePlanet01");
 }
 function OnPressMenuButton(GFxClikWidget.EventData ev)
 {

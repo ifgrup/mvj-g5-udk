@@ -27,13 +27,9 @@ var TTower TTowerActive;
 //RR
 
 
-var GFxObject panelInteraccionMC;
-var GFxObject panelInventarioMC;
-var GFxObject botonAyudaMC;
-var GFxObject botonInventarioMC;
-var GFxObject botonMapaMC;
 
-var bool bPanelInteraccionVisible;
+
+
 
 var bool bMouseOverInteractionPanel;
 var bool bClosingInteractionPanel;
@@ -61,19 +57,8 @@ bTowerActive=true;
 TurretReload();
 //RR
 
-panelInteraccionMC = GetVariableObject("_root.panelInteraccion");
-	panelInventarioMC = GetVariableObject("_root.panelInventario");
-	botonAyudaMC = GetVariableObject("_root.ayuda_boton");
-	botonInventarioMC = GetVariableObject("_root.mochila_boton");
-	botonMapaMC = GetVariableObject("_root.mapa_boton");
 
-
-	//Al inicio asegurarse de que no sea visible
-	if(panelInteraccionMC != none)
-	{
-		panelInteraccionMC.SetBool("_visible", false);
-		bPanelInteraccionVisible = false;
-	}
+	
 }
 //RR
 function SetOverUIElement(bool val)
@@ -145,88 +130,9 @@ function SetOverInteractionPanel(bool val)
 	bMouseOverInteractionPanel = val;
 }
 
-function ShowInteractionPanel(IntPoint posicion)
-{
-	local ASDisplayInfo DI;
 
-	SetInteractionPanelVisible(true);
 
-	//Pasar las coordenadas al display info
-	DI.hasX = true;
-	DI.X = posicion.X;
-	DI.hasY = true;
-	DI.Y = posicion.Y;
-	//Poner el valor alpha a 100, por si ha cambiado durante el juego
-	DI.hasAlpha = true;
-	DI.Alpha = 100;
-	panelInteraccionMC.SetDisplayInfo(DI);
 
-	//Animacion al aparecer
-	panelInteraccionMC.GotoAndPlay("open");
-
-	bClosingInteractionPanel = false;
-}
-
-function HideInteractionPanel()
-{
-	//Cerrando panel de interaccion
-	bClosingInteractionPanel = true;
-	//Animacion al desaparecer
-	panelInteraccionMC.GotoAndPlay("close");
-}
-
-//A esta funcion le llama ActionScript, cuando ha finalizado la animacion de cerrar
-function PanelCloseAnimationFinished()
-{
-	SetInteractionPanelVisible(false);
-	bClosingInteractionPanel = false;
-	
-	//Por si acaso poner las variables que controlan la UI a false
-	SetOverUIElement(false);
-	SetOverInteractionPanel(false);
-}
-
-function SetInteractionPanelVisible(bool val)
-{
-	panelInteraccionMC.SetBool("_visible", val);
-	bPanelInteraccionVisible = val;
-}
-
-//A esta funcion se le llama desde ActionScript, al hacer click en el boton de coger item
-function CogerItem()
-{
-	local PKActor LastClickedItem;
-	local GFxObject slot, gfxIitem;
-	local int i;
-	local bool bItemGuardado;
-
-	//Guardar la referencia al ultimo item clickado
-	LastClickedItem = PKActor(pHUD.LastClickedItem);
-	bItemGuardado = false;
-
-	//Encontrar un slot vacio y guardar el item en la variable de ActionScript que representa el inventario
-	for (i=0; i<14; i++)
-	{
-		slot = panelInventarioMC.GetObject("slot"$i);
-		if(slot.GetObject("data")==none)
-		{
-			gfxIitem = panelInventarioMC.GetObject("itemData").GetElementObject(LastClickedItem.ItemIndex);
-			slot.SetObject("data", gfxIitem);
-			bItemGuardado = true;
-			break;
-		}
-	}
-
-	//Ocultar el panel de interaccion
-	HideInteractionPanel();
-
-	//Si el item se ha guardado en el inventario
-	if(bItemGuardado)
-	{
-		//Destruir el item que acabamos de coger
-		LastClickedItem.DestroyItem();
-	}
-}
 
 //A esta evento se le llama desde la pelicula flash
 event UpdateMousePosition(float x, float y)
