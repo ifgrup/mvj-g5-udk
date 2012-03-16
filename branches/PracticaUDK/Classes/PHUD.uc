@@ -118,16 +118,17 @@ function PreCalcValues()
 event PostRender()
 {
 	local PPlayerInput pPlayerInput;
-local PPlayerController pPlayerController;
+	local PPlayerController pPlayerController;
 	local PMouseInteractionInterface MouseInteractionInterface;
 	local Vector HitLocation, HitNormal;
 	local Vector2D DistanceCheck;
 	local float DistanceToItem;
-		local PPlayerController s;
+	local PPlayerController s;
 	local PTurret tc;
-	
-	Super.PostRender();
+	local Rotator rTorreta; //rotacion de la torreta al spawnearla
+	local float dist;
 
+	Super.PostRender();
 	//Casting
 	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput); 
 
@@ -163,34 +164,40 @@ local PPlayerController pPlayerController;
 	//Conseguir la actual interfaz de interaccion del mouse
 	MouseInteractionInterface = GetMouseActor(HitLocation, HitNormal);
 
-	//Si MouseInteractionInterface es nulo, significa que el mouse no ha interactuado con items
+	//Si MouseInteractionInterface es nulo, significa que el mouse no esta encima de nningun item
 	if(MouseInteractionInterface == none)
 	{		
 		//Si se presiona el boton izquierdo del mouse 
 		if(PendingLeftPressed)
 		{
-		if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive ){
-			`Log("asere "@GetMouseWorldLocation()  );
-			//s = PPlayerController(Instigator.Controller);
-			pPlayerController = PPlayerController(PlayerOwner);
-			`Log("floor del pawn" @pPlayerController.Pawn.Floor);
-			`Log("hit normal pakooo" @HitNormal);
+			//bMouseOverUIElement me dice siestoy encima del propio clip de flash.En talcaso obviamente no podemos actuar encima suyo
+			//reload dice si la torreta esta recargada. bTowerActive si esta habilitada por credito
+		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive )
+		    {
+				pPlayerController = PPlayerController(PlayerOwner);
 
+				//Creamos torreta solo si hemos clickado dentro del planeta, no en el skybox (control por distancia)
+				dist=Vsize(pPlayerController.Pawn.Location-HitLocation);
+				`Log("Click dist\n" @dist);
+				
+				if(dist < 3500)
+				{
+					rTorreta=Rotator(-HitNormal); //hacia el suelo
+					rTorreta.Pitch+=65535/4; //90 grados parriba
+					tc= spawn(class'PTurretCannon', self,,HitLocation, rTorreta);
+					pGFx.SetTowerActive(false);
+					pGFX.SetReload(false);
+					pGFx.TurretReload();
+					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
 
-
-		tc= spawn(class'PTurretCannon', self,,HitLocation, rotator(-HitNormal));
-		pGFx.SetTowerActive(false);
-		pGFX.SetReload(false);
-		pGFx.TurretReload();
-		PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
-	
-	
-			//	`Log("asere "@pPlayerInput.MousePosition.X );
-
-			PendingLeftPressed = false;
-			
-		}
-		PendingLeftPressed = false;
+				}
+				else
+				{
+					`Log("Click fuera de planeta\n");
+				}
+				PendingLeftPressed = false;
+			}
+		    PendingLeftPressed = false;
 			// rr demo Spawn towwer
 			
 	//		
@@ -496,7 +503,7 @@ function TogglePauseMenu()
             PauseMenuMovie.SetTimingMode(TM_Real);
         }
 
-	SetVisible(false);
+		SetVisible(false);
         PauseMenuMovie.Start();
 	   PauseMenuMovie.PlayOpenAnimation();
 
@@ -524,7 +531,7 @@ function CompletePauseMenuClose()
     SetVisible(true);
 }
 
-
+//Funcion definida en el DefaultPlayerInput.ini, asociada a a pulsacion de la tecla ESC
 exec function ShowMenu()
 {
 	// if using GFx HUD, use GFx pause menu

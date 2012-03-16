@@ -16,20 +16,20 @@ function bool Start(optional bool StartPaused = false)
 
 	//Btn_Resume_Wrapper = PauseMC.GetObject("resume");
 	//Btn_Exit_Wrapper = PauseMC.GetObject("exit");
-	//Btn_RStart_Wrapper=PauseMC.GetObject("RStart",class'GFxClikWidget');
+	//Btn_RStart_Wrapper=PauseMC.GetObject("RStart");
  // Btn_ResumeMC = GFxClikWidget(Btn_Resume_Wrapper.GetObject("btn", class'GFxClikWidget'));
   // Btn_ExitMC = GFxClikWidget(Btn_Exit_Wrapper.GetObject("btn", class'GFxClikWidget'));
-	//Btn_RStart= GFxClikWidget(Btn_RStart_Wrapper);
-	
+	//Btn_RStart= GFxClikWidget(Btn_RStart_Wrapper.GetObject("Button",class'GFxClikWidget'));
+	//Btn_RStart.SetString("label", "pakooo");
 	//Btn_ExitMC.SetString("label", "Saliir");
 	//Btn_ResumeMC.SetString("label", "Continuar");
 	//Btn_RStart.SetString("label", "pako");
 	//Btn_ExitMC.AddEventListener('CLIK_press', OnPressExitButton);
 	//Btn_ResumeMC.AddEventListener('CLIK_press', OnPressResumeButton);
 	//Btn_RStart.AddEventListener('CLIK_press', OnPressExitButton);
-	//AddCaptureKey('XboxTypeS_A');
-	//AddCaptureKey('XboxTypeS_Start');
-	//AddCaptureKey('Enter');
+	AddCaptureKey('XboxTypeS_A');
+	AddCaptureKey('XboxTypeS_Start');
+	AddCaptureKey('Enter');
 
     return TRUE;
 }
@@ -65,7 +65,12 @@ event bool WidgetInitialized(name WN,name WP, GFxObject w)
 			Btn_f3MC.SetString("label", "Menú");
 			Btn_f3MC.AddEventListener('CLIK_press',OnPressMenuButton);
 			break;
-
+			case ('RStart'):
+			Btn_RStart=GFxClikWidget(w);
+			
+			Btn_RStart.SetString("label", "aaaaaa");
+			Btn_RStart.AddEventListener('CLIK_press',OnPressMenuButton);
+			break;
 		default:
 			break;
 
@@ -111,7 +116,7 @@ function OnPlayAnimationComplete()
 {
     //
 }
-
+//se llama desde flash cuano termina la animación de cierre del pause menu
 function OnCloseAnimationComplete()
 {
     PHUD(GetPC().MyHUD).CompletePauseMenuClose();
@@ -134,6 +139,7 @@ defaultproperties
 	WidgetBindings.Add((WidgetName="ff",WidgetClass=class'GfxClikWidget'));
 	WidgetBindings.Add((WidgetName="f1",WidgetClass=class'GfxClikWidget'));
 	WidgetBindings.Add((WidgetName="f2",WidgetClass=class'GfxClikWidget'));
-		WidgetBindings.Add((WidgetName="f3",WidgetClass=class'GfxClikWidget'));
+	WidgetBindings.Add((WidgetName="f3",WidgetClass=class'GfxClikWidget'));
+	WidgetBindings.Add((WidgetName="RStart",WidgetClass=class'GfxClikWidget'));
 	
 }

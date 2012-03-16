@@ -18,9 +18,8 @@ local PPlayerController PC;
         if(PC.Pawn != none)
             P = PC.Pawn;
     }
-SetRotation(P.Rotation);
 
-	`log("Rotation:" @Rotation);
+	
 
 }
 
@@ -40,7 +39,7 @@ auto state Seeking
 {
     function BeginState(Name PreviousStateName)
     {
-     `Log("pkkkkk");
+     
 	 SetTimer(2.0,true,'TimedFire');
 	 TimedFire();
     }
