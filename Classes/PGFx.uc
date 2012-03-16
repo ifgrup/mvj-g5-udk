@@ -85,6 +85,9 @@ tdcMC.GotoAndPlay("reload");
 
 }
 
+//Funcion que pone la torreta habilitada o deshabilitada
+//se llama desde Flash cuando acaba la animación de recarga
+//tambien cuando se acaba la pasta, con el parametro a false
 function SetReload(bool val)
 {
 	reload=val;
