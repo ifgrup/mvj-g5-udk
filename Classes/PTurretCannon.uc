@@ -1,9 +1,9 @@
-class PTurretCannon extends PTurret;
+class PTurretCannon extends PTurret
+	placeable;
 
 
 
 defaultproperties
 {
 
-	
 }

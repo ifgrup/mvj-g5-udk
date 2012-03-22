@@ -1,14 +1,6 @@
-class PKActor extends KActorSpawnable
-	placeable
+class PActorInteractuable extends PActor
 	implements(PMouseInteractionInterface);
 
-/*
- * 
- * NOTA:
- * Se ha extendido la clase KActorSpawnable y no KActor, debido a que en tiempo de ejecucion
- * no se pueden destruir los actores de la clase KActor (mediante codigo; por Kismet parece que si), ya que la variable bNoDelete es TRUE
- * 
- */
 
 var Vector CachedMouseHitLocation;
 var Vector CachedMouseHitNormal;
@@ -132,30 +124,7 @@ function Vector GetMouseWorldDirection()
 	return CachedMouseWorldDirection;
 }
 
-function DestroyItem()
-{
-	Destroy();
-}
-
 
 DefaultProperties
 {
-	SupportedEvents(5)=class'PSeqEvent_MouseInput'
-	//El sprite con el que se identificara el objeto cuando lo creemos en el editor
-	
-	Begin Object Class=SpriteComponent Name=Sprite
-		Sprite=Texture2D'EditorResources.S_Actor'
-		HiddenGame=True
-		AlwaysLoadOnClient=False
-		AlwaysLoadOnServer=False
-	End Object
-	Components.Add(Sprite)
-
-
-	 
-
-
-	//Por defecto el indice del item es 0
-	
 }
-

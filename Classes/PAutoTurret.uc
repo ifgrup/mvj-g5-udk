@@ -553,6 +553,7 @@ function RotateTimer()
 
 defaultproperties
 {
+	/*
 	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
    	End Object
    	LightEnvironment=MyLightEnvironment
@@ -621,5 +622,5 @@ defaultproperties
 	AimRotError=128
 	ProjClass=class'UTGame.UTProj_LinkPowerPlasma'
 	RoundsPerSec=3
-	bEdShouldSnap=true
+	bEdShouldSnap=true*/
 }
