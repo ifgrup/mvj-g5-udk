@@ -178,13 +178,13 @@ event PostRender()
 
 				//Creamos torreta solo si hemos clickado dentro del planeta, no en el skybox (control por distancia)
 				dist=Vsize(pPlayerController.Pawn.Location-HitLocation);
-				`Log("Click dist\n" @dist);
+			//	`Log("Click dist\n" @dist);
 				
 				if(dist < 3500)
 				{
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
-					tc= spawn(class'PTurretCannon', self,,HitLocation, rTorreta);
+					tc= spawn(class'PTurretCannon', ,,HitLocation, rTorreta,);
 					pGFx.SetTowerActive(false);
 					pGFX.SetReload(false);
 					pGFx.TurretReload();
@@ -424,8 +424,11 @@ function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocatio
 	{
 		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
 		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
+		//MouseInteractionInterface = PTurretCannon(HitActor);
+//`log("PTurretaaaa \n" @HitActor);
 		if(MouseInteractionInterface != none)
 		{
+			`log("PTurret ");
 			return MouseInteractionInterface;
 		}
 	}
@@ -463,13 +466,13 @@ function Vector GetMouseWorldLocation()
 
 
 //rr new
-function SetPauseMenu(bool val)
+/*function SetPauseMenu(bool val)
 {
 
 pauseMenu=val;
 pGFx.PauseMenu(pauseMenu);
 
-}
+}*/
 
 function TogglePauseMenu()
 {
