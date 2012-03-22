@@ -1,6 +1,5 @@
-class PTurret extends PActor
+class PTurret extends PKActor
     abstract;
-
 var Pawn P;
 var Pawn Enemy;
 var int TurretHealth;
@@ -27,12 +26,12 @@ local PPlayerController PC;
 function GetEnemy()
 {
     local PPlayerController PC;
-
+/*
     foreach LocalPlayerControllers(class'PPlayerController', PC)
     {
         if(PC.Pawn != none)
             Enemy = PC.Pawn;
-    }
+    }*/
 }
 
 auto state Seeking
@@ -46,7 +45,7 @@ auto state Seeking
 
     function Tick(float DeltaTime)
     {
-       
+       /*
 		 if(Enemy == none)
             GetEnemy();
 
@@ -55,7 +54,7 @@ auto state Seeking
     	//TimedFire();
         }
 
-       
+       */
 
       
     }
@@ -71,7 +70,7 @@ function TimedFire()
 
 		if( Proj != None && !Proj.bDeleteMe )
 		{
-			Proj.Init(Vector(Enemy.Rotation));
+			//Proj.Init(Vector(Enemy.Rotation));
 		
 		
 		}
@@ -83,10 +82,10 @@ defaultproperties
 {
 
 
- Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
+ Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironmentrr
         bEnabled=TRUE
     End Object
-    Components.Add(MyLightEnvironment)
+    Components.Add(MyLightEnvironmentrr)
 /*
 Begin Object class=SkeletalMeshComponent name=SkelMeshComp0
 	SkeletalMesh=SkeletalMesh'TurretContent.TurretMesh'
@@ -95,17 +94,8 @@ Begin Object class=SkeletalMeshComponent name=SkelMeshComp0
 		Components.Add(SkelMeshComp0)
 	Mesh=SkelMeshComp0
 
-*/
-	  Begin Object Class=StaticMeshComponent Name=TMesh
-        StaticMesh=StaticMesh'HU_Deco3.SM.Mesh.S_HU_Deco_SM_HydraulicSupport_C'
-       
-        LightEnvironment=MyLightEnvironment
-       // Scale3D=(X=2.25,Y=2.25,Z=2.25)
-    End Object
-    Components.Add(TMesh)
-    MyMesh=TMesh
-	/*
-	 Begin Object Class=CylinderComponent Name=CollisionCylinder
+*/ 
+	/*Begin Object Class=CylinderComponent Name=CollisionCylinder1
         CollisionRadius=32.0
         CollisionHeight=64.0
         BlockNonZeroExtent=true
@@ -113,9 +103,22 @@ Begin Object class=SkeletalMeshComponent name=SkelMeshComp0
         BlockActors=true
         CollideActors=true
     End Object
-    CollisionComponent=CollisionCylinder
-    Components.Add(CollisionCylinder)
-*/
+   
+   Components.Add(CollisionCylinder1)*/
+
+	  Begin Object Class=StaticMeshComponent Name=DMesh
+        StaticMesh=StaticMesh'HU_Deco3.SM.Mesh.S_HU_Deco_SM_HydraulicSupport_C'
+        BlockActors=true
+        CollideActors=true
+        LightEnvironment=MyLightEnvironmentrr 
+		CollisionComponent=CollisionCylinder1
+       // Scale3D=(X=2.25,Y=2.25,Z=2.25)
+    End Object
+    Components.Add(DMesh)
+    MyMesh=DMesh
+	CollisionComponent=DMesh
+	
+
 	ProjClass=class'UTGame.UTProj_LinkPowerPlasma'
 	TurretHealth=500
 	RoundsPerSec=3
