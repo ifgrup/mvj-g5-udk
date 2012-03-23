@@ -107,8 +107,9 @@ Begin Object class=SkeletalMeshComponent name=SkelMeshComp0
    Components.Add(CollisionCylinder1)*/
 
 	  Begin Object Class=StaticMeshComponent Name=DMesh
-        StaticMesh=StaticMesh'HU_Deco3.SM.Mesh.S_HU_Deco_SM_HydraulicSupport_C'
-        BlockActors=true
+        //StaticMesh=StaticMesh'HU_Deco3.SM.Mesh.S_HU_Deco_SM_HydraulicSupport_C'
+		StaticMesh=StaticMesh'PGameMaterialsrr.SM.Mesh.torreta0001'
+        BlockActors=false
         CollideActors=true
         LightEnvironment=MyLightEnvironmentrr 
 		CollisionComponent=CollisionCylinder1
