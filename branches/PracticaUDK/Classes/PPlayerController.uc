@@ -8,13 +8,9 @@ class PPlayerController extends GamePlayerController;
  * Propiedades por defecto.
  * Configuramos que la cámara que controlará al jugador sea la nuestra (PPlayerCamera) 
  * */
-defaultproperties
-{
-	CameraClass=class'PGame.PPlayerCamera'
-	InputClass=class'PGame.PPlayerInput'
-	bNotifyFallingHitWall=true
-	
-}
+
+
+
 
 /**
  * Variables globales para el control de la posición y de la cámara.
@@ -36,7 +32,14 @@ var vector CamViewX, CamViewY, CamViewZ;
  * Último vector normal de "suelo" antes de saltar.
  * */
 var vector mUltimoFloorAntesSalto;
+var Vector m_CentroPlaneta; //posicion del centro del Planeta. Puede que no deba ser 0,0,0
+var float m_DistanciaAlCentro; //distancia que queremos mantener alrededor del planeta hasta su centro
 
+//Variables para controlar la rotación
+var Quat m_CurrentQuadFlaying;
+var Quat m_DesiredQuadFlaying;
+var float m_velocidad_rotacion;
+var Vector m_posicionPawn; //Para ir guardando la posicion del pawn mientras volamos, porque parece que no se actualiza???
 
 /**
  *Gestión del ratón RR
@@ -108,6 +111,7 @@ state PlayerWalking
 	event BeginState(Name PreviousStateName)
 	{
 		ClientMessage("Vamos al estado Spidering");
+		`Log("******************************Inicio de PlayerControler en PlayerWalking********************");
 		GotoState('PlayerSpidering');
 	}
 	
@@ -251,11 +255,12 @@ state PlayerSpidering
     simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
     {
 
-        local vector  CamDirX, CamDirY,CamDirZ, CamDir,OffsetDirZ;    
+        local vector  CamDirX, CamDirY,CamDirZ;    
         local vector  HitLocation, HitNormal,CamStart,tmpCamStart,tmpCamEnd;
         local Rotator rProta;
         local float dist,fs;
-        local bool bEnSuelo;
+		local float despx,despz;
+		local float lPitch;
 
         super.GetPlayerViewPoint(out_Location, out_Rotation);
         if(Pawn != none)
@@ -268,49 +273,57 @@ state PlayerSpidering
             //Tenemos el sist.coordenadas de hacia donde está mirando el prota,en coordenadas de mundo.
             //Como queremos estar siempre detrás, sólo nos interesa desplazar la cámara sólo en X, dejando la Y a cero
 
-            bEnSuelo=PGame(WorldInfo.Game).bEarthNotFlying;
-            if(bEnSuelo)
-                CamDirX*=100*1/VSize(CamDirX); 
-            else
-                CamDirZ*=500*1/VSize(CamDirZ); 
+            //CamDirX*=500*1/VSize(CamDirX); 
+
 
             //Calculamos desplazamiento up/down de la cámara. 
             //PlayerInput.aLookup no es absoluto, sino que depende sólo de la velocidad del movimiento del mouse.
             //Para controlar si la cámara está más arriba o abajo, vamos acumulando el valor,
             //modulándolo con sin 
             
-            fs=Sin(0.0005*mUltimoLookup);
+            fs=Sin(0.001*mUltimoLookup);
+            
             mOffsetCamaraUpDown+=fs;
 
             //Limite de altura. Por debajo, será el suelo y las colisiones con él.
-            if (abs(mOffsetCamaraUpDown) > 100)
+            /*
+             * if (abs(mOffsetCamaraUpDown) > 90)
             {
                 mOffsetCamaraUpDown-=fs;
+				`log("Max offset Z");
             }
+            */
 
-            //A ese vector, hay que aplicarle la rotación por mouse up/down. Tenemos PlayerInput.aLookup en mUltimoLookup
-            //mOffsetCamaraUpDown hay que aplicarlo a la altura del bicho, por tanto a su eje Z, que tenemos en camDirZ
-            
-            if(bEnSuelo)
-            {
-                out_Location = (Pawn.Location -CamDirX)+(camDirZ*mOffsetCamaraUpDown);
-                out_Rotation=Pawn.Rotation;
+			//`log("antes clamp " @mOffsetCamaraUpDown @fs @mUltimoLookup);
+			//mOffsetCamaraUpDown=clamp(mOffsetCamaraUpDown,15.0,90);
+			if(mOffsetCamaraUpDown<15.0)
+				mOffsetCamaraUpDown=15.0;
+			
+			if(mOffsetCamaraUpDown>65.0)
+				mOffsetCamaraUpDown=65.0;
+			
+            //A ese vector, hay que aplicarle la rotación por mouse up/down. 
+            //Tenemos PlayerInput.aLookup guardado en mUltimoLookup porque desde aquí no es accesible (siempre dice ser 0???)
+    		//Debemos intentar mantener la distancia de la cámara al jugador.
+            //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
+			//Consideramos mOffsetCamaraUpDown como el ángulo de inclinación de la cámara
+			despX=300*cos(mOffsetCamaraUpDown*degtorad);
+			despZ=300*sin(mOffsetCamaraUpDown*degtorad);
+			//`Log("" @500*sin(mOffsetCamaraUpDown*degtorad));
+			out_Location = (Pawn.Location -CamDirX*despX)+(camDirZ*despZ);
+			out_Rotation=Pawn.Rotation;
+			//Aplicamos el ángulo de elevación al pitch de la orientación del pawn 
+			
+			lPitch=(65535/4)*mOffsetCamaraUpDown/90;
+			out_Rotation.Pitch-= lPitch;
 
-            }
-            else
-            {
-                out_Location = (Pawn.Location + CamDirZ);
-                out_Rotation = rotator(Pawn.Location - out_Location);
-            }
-
-
-            //Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
+			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
             //Lanzamos un 'rayo' desde la cámara hasta el bicho, y si encontramos algún obstáculo por medio, ponemos la cámara
             //donde está el obstáculo, para evitar tener esa pared en medio. Si hubiera más de dos obstáculos, el segundo nos seguiría
             //tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
             //utilizamos ;)
         
-            if (Trace(HitLocation, HitNormal, out_Location, CamStart, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
+            if (Trace(HitLocation, HitNormal, camStart,out_Location, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
             {
                 //Hay contacto. Ponemos la cámara en el obstáculo
                 out_Location=HitLocation;
@@ -352,6 +365,7 @@ state PlayerSpidering
 	function bool NotifyLanded(vector HitNormal, Actor FloorActor)
 	{
 		`log("He caido sobre algo, NO despues de saltar");
+		Pawn.SetPhysics(PHYS_None);
 		Pawn.SetPhysics(PHYS_Spider);
 		Pawn.SetBase(FloorActor, HitNormal);
 
@@ -473,7 +487,7 @@ state PlayerSpidering
 	event BeginState(Name PreviousStateName)
 	{
 		OldFloor = vect(0,0,1);
-
+		`Log("__________________________BEGIN STATE PLAYERCONTROLLER.PLAYERSPIDERING_____________________");
 		GetAxes(Rotation,ViewX,ViewY,ViewZ);
 
 		DoubleClickDir = DCLICK_None;
@@ -486,6 +500,7 @@ state PlayerSpidering
 		}
  
 		GroundPitch = 0;
+		mOffsetCamaraUpDown=15.0; //angulo inicial de up/down de la cámara
 	}
 
 	/**
@@ -498,6 +513,171 @@ state PlayerSpidering
     }
 }
 
+
+state PlayerFlaying
+{
+	ignores SeePlayer, HearNoise, Bump;
+
+	/**
+	 * Inicialización del estado.
+	 * */
+	event BeginState(Name PreviousStateName)
+	{
+		/*Debemos poner al Pawn en el cielo, hacerlo invisible, y poner las físicas en vuelo*/
+		local Vector pPosition,vAlCentro;
+		local vector Centro2Pawn; //del centro del planeta, a donde está el pawn
+
+		//Colocamos al Pawn volando, prolongando su Z actual:
+        `log("PC Flaying 2");
+
+	
+		pPosition=PPawn(Pawn).Location;
+		Centro2Pawn=Normal(pPosition-m_CentroPlaneta);
+		pPosition=m_CentroPlaneta+Centro2Pawn*m_DistanciaAlCentro;
+		PPawn(Pawn).SetLocation(pPosition);
+		vAlCentro=m_CentroPlaneta-Pawn.Location; //vector de dirección del prota.
+		PPawn(Pawn).SetRotation(Rotator(vAlCentro));
+		SetRotation(Rotator(vAlCentro));
+		PPawn(Pawn).GotoState('PawnFlaying');
+		SetPhysics(PHYS_None); 
+		//QUAT inicial sobre el que iremos aplicando la rotación muhahahaha
+		m_CurrentQuadFlaying=QuatFromRotator(Rotator(vAlCentro));
+		m_DesiredQuadFlaying= m_CurrentQuadFlaying;
+		DrawDebugCone(m_CentroPlaneta,pPosition-m_CentroPlaneta,m_DistanciaAlCentro,0.01,0.01,200,MakeColor(255,0,0,1),true);
+		
+	}
+
+	event EndState(Name NextState)
+	{
+		local Vector HitLocation,HitNormal;
+		local Rotator rPawn;
+
+		`Log("PlayerController yendo al estado "@NextState);
+		
+		if(NextState=='PlayerWalking')
+		{
+			//Debemos calcular la coordenada de suelo en la que poner al Pawn
+			Trace(HitLocation,HitNormal,m_CentroPlaneta,m_posicionPawn,false);
+			if (HitLocation!=vect(0,0,0))
+			{
+				`Log("____________________Hit al planeta");
+				PPawn(Pawn).SetPhysics(PHYS_None); 
+				SetPhysics(PHYS_None); 
+				PPawn(Pawn).SetLocation(HitLocation);
+				rPawn=Rotator(-HitNormal);
+				rPawn.Pitch+=65535/4; //90º arriba, igual que con las torretas
+				PPawn(Pawn).SetRotation(rPawn);
+				SetLocation(HitLocation);
+				SetRotation(rPawn);
+				PPawn(Pawn).GotoState('');
+				SetPhysics(PHYS_Spider); // "Glue" back to surface
+				PPawn(Pawn).SetPhysics(PHYS_Spider);
+				PGame(WorldInfo.Game).bEarthNotFlying =true;
+			}
+			else
+			{
+				`Log("NOHit al planeta");
+			}
+
+		}
+
+
+	}
+
+	function UpdateRotation(float DeltaTime)
+	{
+        //Queremos asegurar que no hace nada, así que la dejamos en blanco y no ejecutamos nada de super 
+		
+	}
+
+	function CalculaPosicionPorQuaternion(Quat pQuat, out Vector pPosicion)
+	{
+		local Rotator rFromQuad;
+		local Vector X,Y,Z;
+		local vector vDesdeCentro;
+
+		rFromQuad=QuatToRotator(pQuat);
+		GetAxes(rFromQuad,X,Y,Z);
+		vDesdeCentro=m_CentroPlaneta- (X*m_DistanciaAlCentro);
+		pPosicion=vDesdeCentro;
+
+	}
+
+	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
+	{
+	
+		//m_QuadFlaying está actualizada con el Quad que toca. Obtengo su rotator, y la
+		//X me dará la dirección al centro del planeta. Mantengo cte la distancia al centro en dicho X,
+		//y punto
+		local Vector Posicion;
+		local Rotator rFromQuad;
+		rFromQuad=QuatToRotator(m_CurrentQuadFlaying);
+		out_Rotation=rFromQuad;
+		PPawn(Pawn).SetRotation(out_Rotation);
+		CalculaPosicionPorQuaternion(m_CurrentQuadFlaying,Posicion);
+		PPawn(Pawn).SetLocation(Posicion);
+		out_Location=Posicion;
+
+		m_posicionPawn=Posicion;
+		//DrawDebugCone(m_CentroPlaneta,Posicion,m_DistanciaAlCentro,0.01,0.01,200,MakeColor(0,255,0,1),false);
+
+	}
+    
+
+	function PlayerMove(float aDeltaTime)
+	{
+		local vector X,Y,Z;
+		local Quat qPitch,qYaw;
+		local Rotator rActual;
+		local float iUD,iLR;
+
+		
+        iUD=PlayerInput.aForward;
+		iLR=PlayerInput.aStrafe;
+
+		
+		if (iUD!=0)
+		{
+			rActual=QuatToRotator(m_DesiredQuadFlaying);
+			GetAxes(rActual,X,Y,Z);
+			iUD=(iUD/abs(iUD))*m_velocidad_rotacion*DegToRad; //un grado cada vez
+			qPitch=QuatFromAxisAndAngle(Y,iUD);
+			m_DesiredQuadFlaying=QuatProduct(qPitch,m_DesiredQuadFlaying);
+		}
+
+		if(iLR!=0)
+		{
+			rActual=QuatToRotator(m_DesiredQuadFlaying);
+			GetAxes(rActual,X,Y,Z);
+			iLR=(iLR/abs(iLR))*m_velocidad_rotacion*DegToRad; //un grado cada vez
+			qYaw=QuatFromAxisAndAngle(Z,-iLR); //Negado por la dirección de izda/dcha va al revés
+			m_DesiredQuadFlaying=QuatProduct(qYaw,m_DesiredQuadFlaying);
+		}
+        
+		//Aqui ya tengo actualizado el Quaternon deseado, al que quiero llegar.
+		//En el tick lo interpolamos a partir del actual, y la posición la calculamos siempre a partir
+		//del actual
+
+	}
+
+	function PlayerTick(float DeltaTime)
+	{
+		local Vector posCurrent, posDesired;
+		local float dist;
+
+		CalculaPosicionPorQuaternion(m_CurrentQuadFlaying,posCurrent);
+		CalculaPosicionPorQuaternion(m_DesiredQuadFlaying,posDesired);
+		dist=VSize(posCurrent-posDesired);
+		if(dist>10)
+			m_CurrentQuadFlaying=QuatSlerp(m_CurrentQuadFlaying,m_DesiredQuadFlaying,DeltaTime);
+		
+		
+
+		super.PlayerTick(DeltaTime);
+			
+	}
+
+}
 
 /**
  * Eventos de Ratón RR
@@ -572,8 +752,14 @@ function HandleMouseInput(EMouseEvent MouseEvent, EInputEvent InputEvent)
 
 exec function vuela()
 {
-	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	local bool bTierraAire;
 	
+	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
+	if(bTierraAire)
+		GotoState('PlayerWalking');
+	else
+		GotoState('PlayerFlaying');
 
 }
 
@@ -631,10 +817,14 @@ exec function MiddleMouseScrollDown()
   HandleMouseInput(ScrollWheelDown, IE_Pressed);
 }
 
+defaultproperties
+{
+	//CameraClass = class'PGame.PPlayerCamera'
+	bNotifyFallingHitWall=true
+    m_CentroPlaneta=(X=528,Y=144,Z=8752)
+	InputClass=class'PGame.PPlayerInput'
+	m_DistanciaAlCentro=8000
+	m_velocidad_rotacion=1.0
 
+}
 
-/**
- * 
- * AAA RR
- * 
- * */
