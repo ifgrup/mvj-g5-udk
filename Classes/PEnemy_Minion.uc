@@ -8,11 +8,6 @@ event TakeDamage(int DamageAmount, Controller EventInstigator, vector HitLocatio
     Destroy();
 }
 
-function RunAway()
-{
-    GoToState('Fleeing');
-}
-
 defaultproperties
 {
 }
