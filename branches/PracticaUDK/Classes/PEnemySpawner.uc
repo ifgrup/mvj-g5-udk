@@ -2,11 +2,17 @@ class PEnemySpawner extends PActor
     placeable;
 
 var PEnemy MySpawnedEnemy;
+var PEnemyBot AI;
 
 function SpawnEnemy()
 {
     if(MySpawnedEnemy == none)
-        MySpawnedEnemy = spawn(class'PEnemy_Minion', self,, Location);
+    {
+        MySpawnedEnemy = spawn(class'PEnemy_Minion',,, Location);
+		AI = spawn(class'PEnemyBot',,,Location);
+		AI.Possess(MySpawnedEnemy, false);
+    }
+
 }
 
 function bool CanSpawnEnemy()
@@ -14,15 +20,11 @@ function bool CanSpawnEnemy()
     return MySpawnedEnemy == none;
 }
 
-function MakeEnemyRunAway()
-{
-    if(MySpawnedEnemy != none)
-        MySpawnedEnemy.RunAway();
-}
-
 function SpawnBoss()
 {
-    spawn(class'PEnemy_Boss', self,, Location);
+    MySpawnedEnemy = spawn(class'PEnemy_Boss', self,, Location);
+	AI = spawn(class'PEnemyBot',,,Location);
+	AI.Possess(MySpawnedEnemy, false);
 }
 
 defaultproperties
