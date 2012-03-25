@@ -142,6 +142,31 @@ state PawnFalling
 	}
 }
 
+//STATE PAWNFLAYING:
+
+state PawnFlaying
+{
+	//En este estado, no queremos que el pawn haga absolutamente nada, ya que estará invisible, y el control lo haremos
+	//entero desde PPlayerController, con el estado PlayerFlaying
+
+	event BeginState(Name PreviousState)
+	{
+		`log("Pawn en PawnFlaying, previous was: "@PreviousState);
+		//Invisible, y a volar!
+		Mesh.SetOwnerNoSee(true);
+		SetPhysics(PHYS_Flying);
+		
+	}
+	
+	event EndState(Name NextState)
+	{
+		`log("Pawn END state: "@NextState);
+		//la ponemos visible de nuevo
+		Mesh.SetOwnerNoSee(false);
+		
+	}
+
+}//STATE PLAYERFLAYING
 
 defaultproperties
 {
@@ -241,7 +266,7 @@ defaultproperties
 	// Lo añadimos al motor
 	//CylinderComponent=CollisionCylinder
 	CollisionComponent=CollisionCylinder
-    Components.Add(CollisionComponent);
+    Components.Add(CollisionComponent)
 	//VLR Inventario para el arma
 	InventoryManagerClass=class'PGame.PInventoryManager'
 }
