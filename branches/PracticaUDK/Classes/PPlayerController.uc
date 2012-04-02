@@ -261,6 +261,8 @@ state PlayerSpidering
         local float dist,fs;
 		local float despx,despz;
 		local float lPitch;
+		local quat  qpitchZ,qCamZ;
+		local vector qX,qY,qZ;
 
         super.GetPlayerViewPoint(out_Location, out_Rotation);
         if(Pawn != none)
@@ -273,49 +275,44 @@ state PlayerSpidering
             //Tenemos el sist.coordenadas de hacia donde está mirando el prota,en coordenadas de mundo.
             //Como queremos estar siempre detrás, sólo nos interesa desplazar la cámara sólo en X, dejando la Y a cero
 
-            //CamDirX*=500*1/VSize(CamDirX); 
-
-
             //Calculamos desplazamiento up/down de la cámara. 
             //PlayerInput.aLookup no es absoluto, sino que depende sólo de la velocidad del movimiento del mouse.
             //Para controlar si la cámara está más arriba o abajo, vamos acumulando el valor,
             //modulándolo con sin 
             
-            fs=Sin(0.001*mUltimoLookup);
+            fs=Sin(0.001*mUltimoLookup); //utilizamos mUltimoLookup porque aquí vale cero PlayerInput, parece que sólo puede leerse 
+										  //en PlayerMove o ProcessMove ???
             
             mOffsetCamaraUpDown+=fs;
 
-            //Limite de altura. Por debajo, será el suelo y las colisiones con él.
-            /*
-             * if (abs(mOffsetCamaraUpDown) > 90)
-            {
-                mOffsetCamaraUpDown-=fs;
-				`log("Max offset Z");
-            }
-            */
-
-			//`log("antes clamp " @mOffsetCamaraUpDown @fs @mUltimoLookup);
-			//mOffsetCamaraUpDown=clamp(mOffsetCamaraUpDown,15.0,90);
+			//Control de inclinación up/down máximo de la cámara. Con Clamp me hacía cosas raras, así que if de toda la vida
 			if(mOffsetCamaraUpDown<15.0)
 				mOffsetCamaraUpDown=15.0;
 			
 			if(mOffsetCamaraUpDown>65.0)
 				mOffsetCamaraUpDown=65.0;
 			
-            //A ese vector, hay que aplicarle la rotación por mouse up/down. 
-            //Tenemos PlayerInput.aLookup guardado en mUltimoLookup porque desde aquí no es accesible (siempre dice ser 0???)
     		//Debemos intentar mantener la distancia de la cámara al jugador.
             //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
 			//Consideramos mOffsetCamaraUpDown como el ángulo de inclinación de la cámara
-			despX=300*cos(mOffsetCamaraUpDown*degtorad);
-			despZ=300*sin(mOffsetCamaraUpDown*degtorad);
-			//`Log("" @500*sin(mOffsetCamaraUpDown*degtorad));
-			out_Location = (Pawn.Location -CamDirX*despX)+(camDirZ*despZ);
-			out_Rotation=Pawn.Rotation;
-			//Aplicamos el ángulo de elevación al pitch de la orientación del pawn 
+			despX=200+300*sin(mOffsetCamaraUpDown*degtorad);
+			despZ=700*sin(mOffsetCamaraUpDown*degtorad);
+
+			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
+			out_Location = Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
 			
-			lPitch=(65535/4)*mOffsetCamaraUpDown/90;
-			out_Rotation.Pitch-= lPitch;
+			//DrawDebugCone(pawn.Location,vector(out_rotation),100,0.1,0.1,50,MakeColor(255,0,0));
+			//La rotación la debemos modificar en up/down, rotando sobre el eje Y actual del Rotator
+			//para ello, benditos quaternions:
+
+			qcamZ=QuatFromRotator(pawn.Rotation);
+			GetAxes(Pawn.Rotation,qX,qY,qZ);
+			qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
+			qcamZ=QuatProduct(qPitchZ,qcamZ);
+			out_rotation=QuatToRotator(qcamZ);
+			
+			//DrawDebugCone(pawn.Location,vector(out_rotation),100,0.1,0.1,50,MakeColor(0,0,255));
+	
 
 			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
             //Lanzamos un 'rayo' desde la cámara hasta el bicho, y si encontramos algún obstáculo por medio, ponemos la cámara
@@ -323,7 +320,7 @@ state PlayerSpidering
             //tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
             //utilizamos ;)
         
-            if (Trace(HitLocation, HitNormal, camStart,out_Location, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
+            if (Trace(HitLocation, HitNormal, out_Location,Pawn.Location, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
             {
                 //Hay contacto. Ponemos la cámara en el obstáculo
                 out_Location=HitLocation;
@@ -543,7 +540,7 @@ state PlayerFlaying
 		//QUAT inicial sobre el que iremos aplicando la rotación muhahahaha
 		m_CurrentQuadFlaying=QuatFromRotator(Rotator(vAlCentro));
 		m_DesiredQuadFlaying= m_CurrentQuadFlaying;
-		DrawDebugCone(m_CentroPlaneta,pPosition-m_CentroPlaneta,m_DistanciaAlCentro,0.01,0.01,200,MakeColor(255,0,0,1),true);
+		//DrawDebugCone(m_CentroPlaneta,pPosition-m_CentroPlaneta,m_DistanciaAlCentro,0.01,0.01,200,MakeColor(255,0,0,1),true);
 		
 	}
 
@@ -551,27 +548,43 @@ state PlayerFlaying
 	{
 		local Vector HitLocation,HitNormal;
 		local Rotator rPawn;
+		local Actor traceret;
+		local vector posCaida;
 
 		`Log("PlayerController yendo al estado "@NextState);
 		
 		if(NextState=='PlayerWalking')
 		{
 			//Debemos calcular la coordenada de suelo en la que poner al Pawn
-			Trace(HitLocation,HitNormal,m_CentroPlaneta,m_posicionPawn,false);
-			if (HitLocation!=vect(0,0,0))
+			m_posicionPawn=m_posicionPawn+1000*Normal(m_CentroPlaneta-m_posicionPawn);
+			//IMPORTANTE:
+			//Para el Trace, pasamos bTraceActors como false para q no colisione con los actores, solo con terreno.
+			////http://udn.epicgames.com/Two/ActorFunctions.html#Trace:
+			//When bTraceActors is FALSE the trace can only hit world geometry and movers. World geometry includes BSP, Terrain, blocking volumes, and things that have bWorldGeometry set to true, like StaticMeshes.
+			
+			//TRACEFLAG_Blocking - If set, then trace will collide against actors that can block the checking actor (the actor where 
+			//Trace was called from) and all colliding. All colliding includes level geometry, pawns, interpolated actors, 
+			//any other kind of actor, terrain and volumes.
+			traceret=Trace(HitLocation,HitNormal,m_CentroPlaneta,m_posicionPawn,false,vect(1,1,0),,TRACEFLAG_Blocking);
+			
+			if (traceret!=none)
 			{
-				`Log("____________________Hit al planeta");
+				
+				//HitLocation es la posición en la 'corteza' terrestre. La subimos un poco para dar la sensación de caída
+				posCaida=HitLocation+150*Normal(m_posicionPawn-m_CentroPlaneta);
+				`Log("____________________Hit al planeta "@hitlocation @posCaida @m_posicionPawn);
 				PPawn(Pawn).SetPhysics(PHYS_None); 
-				SetPhysics(PHYS_None); 
-				PPawn(Pawn).SetLocation(HitLocation);
+				//SetPhysics(PHYS_None); 
+				PPawn(Pawn).SetLocation(posCaida);
 				rPawn=Rotator(-HitNormal);
 				rPawn.Pitch+=65535/4; //90º arriba, igual que con las torretas
 				PPawn(Pawn).SetRotation(rPawn);
-				SetLocation(HitLocation);
+				SetLocation(posCaida);
 				SetRotation(rPawn);
 				PPawn(Pawn).GotoState('');
-				SetPhysics(PHYS_Spider); // "Glue" back to surface
-				PPawn(Pawn).SetPhysics(PHYS_Spider);
+				//SetPhysics(PHYS_Spider); // "Glue" back to surface
+				//PPawn(Pawn).SetPhysics(PHYS_Spider);
+				//PPawn(Pawn).SetBase(traceret,HitNormal);
 				PGame(WorldInfo.Game).bEarthNotFlying =true;
 			}
 			else
@@ -822,6 +835,7 @@ defaultproperties
 	//CameraClass = class'PGame.PPlayerCamera'
 	bNotifyFallingHitWall=true
     m_CentroPlaneta=(X=528,Y=144,Z=8752)
+	//m_CentroPlaneta=(X=0,Y=0,Z=0)
 	InputClass=class'PGame.PPlayerInput'
 	m_DistanciaAlCentro=8000
 	m_velocidad_rotacion=1.0
