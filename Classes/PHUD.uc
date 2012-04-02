@@ -178,9 +178,7 @@ event PostRender()
 
 				//Creamos torreta solo si hemos clickado dentro del planeta, no en el skybox (control por distancia)
 				dist=Vsize(pPlayerController.Pawn.Location-HitLocation);
-			//	`Log("Click dist\n" @dist);
-				
-				if(dist < 3500)
+				if(dist < pPlayerController.m_DistanciaAlCentro)
 				{
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
@@ -193,7 +191,7 @@ event PostRender()
 				}
 				else
 				{
-					`Log("Click fuera de planeta\n");
+					`Log("Click fuera de planeta "@dist @hitlocation);
 				}
 				PendingLeftPressed = false;
 			}
@@ -425,10 +423,9 @@ function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocatio
 		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
 		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
 		//MouseInteractionInterface = PTurretCannon(HitActor);
-//`log("PTurretaaaa \n" @HitActor);
+ 
 		if(MouseInteractionInterface != none)
 		{
-			`log("PTurret ");
 			return MouseInteractionInterface;
 		}
 	}
@@ -603,3 +600,4 @@ defaultproperties
 	UsingScaleform=true
 	pauseMenu=false
 }
+
