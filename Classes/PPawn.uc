@@ -17,6 +17,7 @@ class PPawn extends GamePawn;
 var DynamicLightEnvironmentComponent LightEnvironment;
 var vector FallDirection;
 
+
 /**
  * Añadimos el arma al inventario
  * 
@@ -34,6 +35,7 @@ function AddDefaultInventory()
  */
 singular event BaseChange()
 {
+	//`log('Base Changed');
 	if(PPaintCanvas(self.Base) != none)
 	{
 		PPaintCanvas(self.Base).ChangeTexture();
@@ -43,6 +45,7 @@ singular event BaseChange()
 // called when the pawn lands or hits another surface
 event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 {
+	//`log('Hit Wall neng');
 	GotoState('');
 	SetBase(Wall, HitNormal);
 
@@ -70,10 +73,39 @@ function bool DoJump( bool bUpdating )
 
 		// Y vamos al estado PawnFalling
 		GotoState('PawnFalling');
+		//`log('DoJump de PPawn');
 		return true;
 	}
-
+	`log('DoJump de PPawn NO PUEDE SALTAR');
 	return false;
+}
+
+
+/*
+ * Funcion OrientarPawnPorNormal.
+ * Recibe la normal del suelo donde se acaba de colocar tras un salto o al volver de la vista aérea
+ * En función de esa normal, orientamos al pawn
+ */
+
+function OrientarPawnPorNormal ( Vector normalsuelo, out Rotator pawnRotation)
+{
+	local Rotator rPawn;
+	local Vector rX,rY,rZ;
+	local Quat quatRZ,quatNormal;
+
+	rPawn=Rotator(-normalsuelo);
+
+	quatNormal=QuatFromRotator(rPawn);
+	GetAxes(rPawn,rX,rY,rZ);
+	quatRZ=QuatFromAxisAndAngle(rY,-90*DegToRad);
+	quatRZ=QuatProduct(quatRZ,quatNormal);
+	rPawn=QuatToRotator(quatRZ);
+
+    SetRotation(rPawn);
+	self.Floor=normalsuelo;
+	pawnRotation=rPawn;
+	//c4 
+	DrawDebugCylinder(self.Location,self.Location+vector(rPawn)*100,5,20,100,100,0,true);
 }
 
 /** -----------------------
@@ -89,6 +121,7 @@ state PawnFalling
 
 	event BeginState(Name PrevName)
 	{
+		`log('pawn en estado Falling');
 		WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
 		FallDirection = -Floor;
 
@@ -117,6 +150,7 @@ state PawnFalling
 
 		// Add force to velocity
 		Velocity += Gravity;
+		//`log('Gravity on Pawn en estado Falling');
 	}
 
 	// called when the pawn lands or hits another surface
@@ -127,7 +161,11 @@ state PawnFalling
 		GotoState('');
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn");
+		`log('el pawn ha caido al suelo despues de saltar');
 		SetBase(Wall, HitNormal);
+		//c3
+		DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
+
 		if(PPaintCanvas(Wall) != none)
 		{
 			PPaintCanvas(Wall).ChangeTexture();
@@ -139,8 +177,73 @@ state PawnFalling
 		FallDirection = vect(0,0,0); // CLEAR DESTINATION FLOOR
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
+		`log('el pawn deja de esar en Falling');
 	}
 }
+
+
+
+/** -----------------------
+ * ---Estado PawnFallingSky---
+ * ------------------------
+ * 
+ * Copia de PawnFalling, con 4 cambios para la gestión de cuando caemos del cielo después de estar en vista aérea
+ */
+state PawnFallingSky
+{
+    ignores BaseChange;
+
+	event BeginState(Name PrevName)
+	{
+		`log('pawn cayendo del cielo');
+		FallDirection = -Floor; //el Floor se lo deberá asignar PC al enviarle a este estado
+
+		// Direct hit wall enabled just for the custom falling
+		bDirectHitWall = true;
+		//No tocamos las físicas, que siga en flying como en PC
+		//La velocidad se la indicamos en PlayerController antes de poner el pawn en este estado
+		//Acceleration=Velocity*10;
+	}
+
+	// cuando llegue al suelo:
+	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
+	{
+		// switch pawn back to standard state
+		local PPlayerController PC;
+		local Rotator routPawn;
+
+		
+		PC = PPlayerController(Instigator.Controller);
+		PC.ClientMessage("HitWallPawn al caer del cielo");
+		`log('el pawn ha caido al suelo despues de bajar de vista aerea');
+		SetBase(Wall, HitNormal);
+		
+		//c3
+		DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
+		OrientarPawnPorNormal(HitNormal,routPawn);
+		//Ya ha llegado al suelo. Spidercerdo, spidercerdo..
+		GoToState(''); //vuelve el pawn al estado 'normal'
+		PC.GotoState('PlayerSpidering');
+		if(PPaintCanvas(Wall) != none)
+		{
+			PPaintCanvas(Wall).ChangeTexture();
+		}
+	}
+   
+	event EndState(Name NextState)
+	{
+		FallDirection = vect(0,0,0); // CLEAR DESTINATION FLOOR
+		bDirectHitWall = false; 
+		SetPhysics(PHYS_None);
+		SetPhysics(PHYS_Spider); // "Glue" back to surface
+		`log('el pawn deja de esar en FallingSky');
+	}
+}
+
+
+
+
+
 
 //STATE PAWNFLAYING:
 

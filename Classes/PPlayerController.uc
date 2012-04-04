@@ -135,9 +135,8 @@ state PlayerSpidering
      * */
 	function UpdateRotation(float DeltaTime)
 	{
-		local rotator ViewRotation, CamRotation;
+		local rotator ViewRotation;
 		local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
-		local vector CamOldX;
 		local bool bSaltando;
 
 		//ClientMessage("UPdate Estado spider" $ DeltaTime);
@@ -194,39 +193,16 @@ state PlayerSpidering
 		//Ahora giro de la cámara.
 		//Al girar por aTurn,sólo nos afectará la rotación sobre el eje Z.
 		//Por tanto, la Z quedará igual, la X es la que rotará, y la Y será el producto cartesiano de la nueva X por la Z que ya tenemos
-		if ( (PlayerInput.aTurn != 0) || (PlayerInput.aLookUp != 0) )
+		if ( (PlayerInput.aTurn != 0))
 		{
-		// adjust Yaw based on aTurn
+		   // adjust Yaw based on aTurn
 			if ( PlayerInput.aTurn != 0 )
 			{
 				ViewX = Normal(ViewX + 10 * ViewY * Sin(0.0005*DeltaTime*PlayerInput.aTurn));
 			}
- 
-			// adjust CAMERA Pitch based on aLookUp
-			//Este movimiento es SOLO para la cámara, no para el controlador, no queremos que se mueva el bicho sino la cámara
-			if ( PlayerInput.aLookUp != 0 )
-			{
-				CamViewX=ViewX;
-				CamViewY=ViewY;
-				CamViewZ=ViewZ;
-				CamOldX = CamViewX;
-				
-				CamViewX = Normal(CamViewX + 10 * CamViewZ * Sin(0.0005*DeltaTime*PlayerInput.aLookUp));
-				CamViewZ = Normal(CamViewX Cross CamViewY);
- 
-				// bound max pitch
-				if ( (CamViewZ dot MyFloor) < 0.1   )
-				{
-					CamViewX = CamOldX;
-				}
-	
-				//VMH:La Y no cambia al rotar no?....CamViewY = Normal(MyFloor cross CamViewX);
-				CamRotation=OrthoRotation(CamViewX,CamViewY,CamViewZ);
-			}
-
-			// calculate new Y axis
+ 			// calculate new Y axis
 			ViewY = Normal(MyFloor cross ViewX);
-		}
+ 		}
 
 		ViewRotation = OrthoRotation(ViewX,ViewY,ViewZ);
 		
@@ -234,20 +210,7 @@ state PlayerSpidering
 		if(Pawn != None)
 		{
 			Pawn.SetRotation(ViewRotation);
-			//Pawn.CylinderComponent.SetRBRotation(ViewRotation);
 		}		
-		//Pawn.CollisionComponent.Rotation=ViewRotation;
-		//Pawn.CollisionComponent.SetHidden(False);
-		//Pawn.mesh.SetRotation(ViewRotation);
-
-
-		//		 if ( PlayerInput.aLookUp != 0 )
-		//            PlayerCamera.SetRotation(camRotation);
-			  
- 
-		//SET PAWN ROTATION WITH RESPECT TO FLOOR NORMALS HERE
-		// Does not work anymore.. will need some debugging
-		//Pawn.mesh.SkeletalMesh.Rotation = Pawn.Rotation;
 	}
 
 
@@ -260,7 +223,6 @@ state PlayerSpidering
         local Rotator rProta;
         local float dist,fs;
 		local float despx,despz;
-		local float lPitch;
 		local quat  qpitchZ,qCamZ;
 		local vector qX,qY,qZ;
 
@@ -359,16 +321,21 @@ state PlayerSpidering
 	 * Dentro del estado spidering nunca pasará, ya que estás pegado a las superficies y no se puede caer.
 	 * El saltar en este estado genera un evento HitWall dentro de PPawn en el estado PawnFalling. 
 	 * */
-	function bool NotifyLanded(vector HitNormal, Actor FloorActor)
+	
+	
+    function bool NotifyLanded(vector HitNormal, Actor FloorActor)
 	{
-		`log("He caido sobre algo, NO despues de saltar");
-		Pawn.SetPhysics(PHYS_None);
-		Pawn.SetPhysics(PHYS_Spider);
-		Pawn.SetBase(FloorActor, HitNormal);
+		`log("He caido sobre algo, NO despues de saltar.Es inicio de juego.");
+		if (PPawn(pawn)!=None)
+		{
+			Pawn.SetPhysics(PHYS_None);
+			Pawn.SetPhysics(PHYS_Spider);
+			Pawn.SetBase(FloorActor, HitNormal);
+			return bUpdating;
+		}
 
-		return bUpdating;
 	}
- 
+
 	/**
 	 * Comprobamos si cambiamos de Volumen de físicas.
 	 * Ahora mismo sólo comprobamos si estamos dentro de agua, para no engancharnos a nada y poder nadar 
@@ -399,7 +366,7 @@ state PlayerSpidering
 			if ( bPressedJump )
 			{
 				ClientMessage("Va a saltar");
-				Pawn.DoJump(bUpdating);
+				PPawn(Pawn).DoJump(bUpdating);
 			}
 
 			/** Comprobamos cada vez que nos movemos si la última posición en la que dejamos un decal
@@ -459,6 +426,16 @@ state PlayerSpidering
         // Update acceleration.
         NewAccel = PlayerInput.aForward*Normal(ViewX - OldFloor * (OldFloor Dot ViewX)) + PlayerInput.aStrafe*ViewY;
  
+		//Comprobamos si al aplicar el movimiento, chocaría contra un objeto, y en tal caso, para no 'spidearlo', pues
+		//no llamamos a ProcessMove, o ponemos el vector NewAccel a (0,0,0) para que no se mueva
+		/*
+        if (CheckDelantePawn())
+		{
+			`log("tiene algo delante. No seguimos el movimiento");
+			NewAccel=vect(0,0,0);
+		}
+		*/
+
         if ( VSize(NewAccel) < 1.0 )
         {
             NewAccel = vect(0,0,0);
@@ -475,6 +452,9 @@ state PlayerSpidering
         DoubleClickMove = DCLICK_None;
         ProcessMove(DeltaTime, NewAccel, DoubleClickMove, OldRotation - Rotation);
         bPressedJump = bSaveJump;
+
+		//drawdebugcone(pawn.Location,pawn.Floor,100,0.1,0.1,100,MakeColor(200,0,0));
+		drawdebugcone(pawn.Location,vector(PPawn(Pawn).rotation),100,0.1,0.1,100,MakeColor(0,0,200));
 		
     }
 
@@ -483,9 +463,17 @@ state PlayerSpidering
 	 * */
 	event BeginState(Name PreviousStateName)
 	{
-		OldFloor = vect(0,0,1);
 		`Log("__________________________BEGIN STATE PLAYERCONTROLLER.PLAYERSPIDERING_____________________");
-		GetAxes(Rotation,ViewX,ViewY,ViewZ);
+		if (PreviousStateName!='PlayerFallingSky')
+		{
+			OldFloor = vect(0,0,1);
+			GetAxes(Rotation,ViewX,ViewY,ViewZ);
+		}
+		else
+		{
+			OldFloor=PPawn(Pawn).Floor;
+			GetAxes(PPawn(Pawn).Rotation,ViewX,ViewY,ViewZ);
+		}
 
 		DoubleClickDir = DCLICK_None;
 		Pawn.ShouldCrouch(false);
@@ -546,56 +534,12 @@ state PlayerFlaying
 
 	event EndState(Name NextState)
 	{
-		local Vector HitLocation,HitNormal;
-		local Rotator rPawn;
-		local Actor traceret;
-		local vector posCaida;
-
-		`Log("PlayerController yendo al estado "@NextState);
-		
-		if(NextState=='PlayerWalking')
-		{
-			//Debemos calcular la coordenada de suelo en la que poner al Pawn
-			m_posicionPawn=m_posicionPawn+1000*Normal(m_CentroPlaneta-m_posicionPawn);
-			//IMPORTANTE:
-			//Para el Trace, pasamos bTraceActors como false para q no colisione con los actores, solo con terreno.
-			////http://udn.epicgames.com/Two/ActorFunctions.html#Trace:
-			//When bTraceActors is FALSE the trace can only hit world geometry and movers. World geometry includes BSP, Terrain, blocking volumes, and things that have bWorldGeometry set to true, like StaticMeshes.
-			
-			//TRACEFLAG_Blocking - If set, then trace will collide against actors that can block the checking actor (the actor where 
-			//Trace was called from) and all colliding. All colliding includes level geometry, pawns, interpolated actors, 
-			//any other kind of actor, terrain and volumes.
-			traceret=Trace(HitLocation,HitNormal,m_CentroPlaneta,m_posicionPawn,false,vect(1,1,0),,TRACEFLAG_Blocking);
-			
-			if (traceret!=none)
-			{
-				
-				//HitLocation es la posición en la 'corteza' terrestre. La subimos un poco para dar la sensación de caída
-				posCaida=HitLocation+150*Normal(m_posicionPawn-m_CentroPlaneta);
-				`Log("____________________Hit al planeta "@hitlocation @posCaida @m_posicionPawn);
-				PPawn(Pawn).SetPhysics(PHYS_None); 
-				//SetPhysics(PHYS_None); 
-				PPawn(Pawn).SetLocation(posCaida);
-				rPawn=Rotator(-HitNormal);
-				rPawn.Pitch+=65535/4; //90º arriba, igual que con las torretas
-				PPawn(Pawn).SetRotation(rPawn);
-				SetLocation(posCaida);
-				SetRotation(rPawn);
-				PPawn(Pawn).GotoState('');
-				//SetPhysics(PHYS_Spider); // "Glue" back to surface
-				//PPawn(Pawn).SetPhysics(PHYS_Spider);
-				//PPawn(Pawn).SetBase(traceret,HitNormal);
-				PGame(WorldInfo.Game).bEarthNotFlying =true;
-			}
-			else
-			{
-				`Log("NOHit al planeta");
-			}
-
-		}
-
-
+		//No hacemos nada en principio.Para volver a bajar al planeta, vamos al estado PlayerFallingSky
+		`Log("PlayerController estaba en PlayerFlaying, yendo al estado "@NextState);
+	
 	}
+
+
 
 	function UpdateRotation(float DeltaTime)
 	{
@@ -692,6 +636,74 @@ state PlayerFlaying
 
 }
 
+
+
+state PlayerFallingSky
+{
+	ignores SeePlayer, HearNoise, Bump;
+  
+	/**
+	 * Inicialización del estado.
+	 * */
+	event BeginState(Name PreviousStateName)
+	{
+		/*Simplemente, vamos cayendo, hasta que el Pawn nos avise de que estamos en el suelo */
+		local Vector pPosition,vAlCentro;
+
+        `log("PC Falling Sky");
+
+		pPosition=PPawn(Pawn).Location;
+		vAlCentro=m_CentroPlaneta-pPosition; //vector de dirección del prota.
+		PPawn(Pawn).SetLocation(pPosition);
+		PPawn(Pawn).SetRotation(Rotator(vAlCentro));
+		SetRotation(Rotator(vAlCentro));
+		pawn.Velocity=Normal(vAlCentro)*100;
+		pawn.Acceleration=pawn.Velocity*10;
+		PPawn(Pawn).GotoState('PawnFallingSky');
+		
+	}
+
+	event EndState(Name NextState)
+	{
+		`Log("PlayerController yendo al estado "@NextState);
+	}		
+
+	function UpdateRotation(float DeltaTime)
+	{
+        //Queremos asegurar que no hace nada, así que la dejamos en blanco y no ejecutamos nada de super 
+	}
+
+	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
+	{
+		local Vector alPlaneta;
+		local Vector pPosition;
+		
+		pPosition=PPawn(pawn).Location;
+		alPlaneta=m_CentroPlaneta-pPosition;
+		
+		out_Location=PPawn(pawn).Location-Normal(alPlaneta)*300;
+		out_Rotation=rotator(m_CentroPlaneta-out_Location);
+	}
+    
+	/*
+	function PlayerMove(float aDeltaTime)
+	{
+		//vamos acercando el pawn al planeta
+		local Vector pPosition;
+		local Vector alPlaneta;
+
+		pPosition=PPawn(pawn).Location;
+		alPlaneta=m_CentroPlaneta-pPosition;
+		//Caida libre hasta el suelo
+		//ProcessMove(aDeltaTime,normal(alPlaneta)*vsize(alPlaneta)/10,DCLICK_None ,Rotator(vect(0,0,0)));
+		//ProcessMove(aDeltaTime,normal(alPlaneta)*500,DCLICK_None ,Rotator(vect(0,0,0)));
+		`log(""@pawn.velocity @Acceleration);
+		super.PlayerMove(aDeltaTime);
+	}
+    */
+
+}
+
 /**
  * Eventos de Ratón RR
  * 
@@ -770,7 +782,7 @@ exec function vuela()
 	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
 	if(bTierraAire)
-		GotoState('PlayerWalking');
+		GotoState('PlayerFallingSky');
 	else
 		GotoState('PlayerFlaying');
 
@@ -832,7 +844,6 @@ exec function MiddleMouseScrollDown()
 
 defaultproperties
 {
-	//CameraClass = class'PGame.PPlayerCamera'
 	bNotifyFallingHitWall=true
     m_CentroPlaneta=(X=528,Y=144,Z=8752)
 	//m_CentroPlaneta=(X=0,Y=0,Z=0)

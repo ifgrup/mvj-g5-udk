@@ -71,7 +71,7 @@ simulated event Destroyed()
 
 function PreCalcValues()
 {
-	local ASDisplayInfo DI;
+	//local ASDisplayInfo DI;
 	local int margenBotones;
 
 	super.PreCalcValues();
@@ -123,7 +123,7 @@ event PostRender()
 	local Vector HitLocation, HitNormal;
 	local Vector2D DistanceCheck;
 	local float DistanceToItem;
-	local PPlayerController s;
+	//local PPlayerController s;
 	local PTurret tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
