@@ -35,8 +35,8 @@ simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optiona
 	,100000
 	);
 }
-
-/*simulated event SetPosition(PPawn Holder)
+/*
+simulated event SetPosition(PPawn Holder)
 {
     local vector FinalLocation;
     local vector X,Y,Z;
@@ -52,8 +52,8 @@ simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optiona
     SetBase(Holder);
 
     SetRotation(Holder.Controller.Rotation);
-}*/
-
+}
+*/
 defaultproperties
 {
 	Begin Object Class=SkeletalMeshComponent Name=WeaponMesh

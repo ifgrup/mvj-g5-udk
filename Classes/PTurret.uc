@@ -7,7 +7,7 @@ var int TurretHealth;
 var(Turret) class<Projectile> ProjClass;
 var(Turret) Int RoundsPerSec;				//Number of rounds to fire per second
 
-function PostBeginPlay()
+simulated function PostBeginPlay()
 {
 
 /*
@@ -113,26 +113,8 @@ defaultproperties
         bEnabled=TRUE
     End Object
     Components.Add(MyLightEnvironmentrr)
+
 /*
-Begin Object class=SkeletalMeshComponent name=SkelMeshComp0
-	SkeletalMesh=SkeletalMesh'TurretContent.TurretMesh'
-		LightEnvironment=MyLightEnvironment
-		End Object
-		Components.Add(SkelMeshComp0)
-	Mesh=SkelMeshComp0
-
-*/ 
-	/*Begin Object Class=CylinderComponent Name=CollisionCylinder1
-        CollisionRadius=32.0
-        CollisionHeight=64.0
-        BlockNonZeroExtent=true
-        BlockZeroExtent=true
-        BlockActors=true
-        CollideActors=true
-    End Object
-   
-   Components.Add(CollisionCylinder1)*/
-
 	  Begin Object Class=StaticMeshComponent Name=DMesh
         //StaticMesh=StaticMesh'HU_Deco3.SM.Mesh.S_HU_Deco_SM_HydraulicSupport_C'
 		StaticMesh=StaticMesh'PGameContentrr.cannon003'
@@ -140,12 +122,24 @@ Begin Object class=SkeletalMeshComponent name=SkelMeshComp0
         CollideActors=true
         LightEnvironment=MyLightEnvironmentrr 
 		//CollisionComponent=CollisionCylinder1
-       // Scale3D=(X=2.25,Y=2.25,Z=2.25)
+    //   Scale3D=(X=5,Y=5,Z=5)
     End Object
     Components.Add(DMesh)
     MyMesh=DMesh
-	CollisionComponent=DMesh
+	CollisionComponent=DMesh*/
 	
+	
+Begin Object class=SkeletalMeshComponent name=torretask
+		SkeletalMesh=SkeletalMesh'PGameContentrr.tcannon2bones'
+		AnimSet=AnimSet'PGameContentrr.ctcannon'
+		PhysicsAsset=PhysicsAsset'PGameContentrr.tcannon2bones_Physics'
+		LightEnvironment=MyLightEnvironmentrr
+	End Object
+	Components.Add(torretask)
+	Mesh=torretask
+
+
+
 
 	ProjClass=class'PGame.PMisiles'
 	TurretHealth=500
