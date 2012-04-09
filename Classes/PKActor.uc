@@ -29,6 +29,7 @@ function MouseLeftPressed(Vector MouseWorldOrigin, Vector MouseWorldDirection, V
 	CachedMouseHitNormal = HitNormal;
 	//El ultimo parametro de la funcion indica el indice de salida del evento
 	TriggerEventClass(class'PSeqEvent_MouseInput', self, 0);
+
 }
 
 function MouseLeftReleased(Vector MouseWorldOrigin, Vector MouseWorldDirection)
@@ -142,7 +143,7 @@ DefaultProperties
 {
 	SupportedEvents(5)=class'PSeqEvent_MouseInput'
 	//El sprite con el que se identificara el objeto cuando lo creemos en el editor
-	
+	/*
 	Begin Object Class=SpriteComponent Name=Sprite
 		Sprite=Texture2D'EditorResources.S_Actor'
 		HiddenGame=True
@@ -150,7 +151,7 @@ DefaultProperties
 		AlwaysLoadOnServer=False
 	End Object
 	Components.Add(Sprite)
-
+*/
 
 	 
 

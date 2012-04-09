@@ -1,4 +1,4 @@
-class PTurret extends PKActor
+class PTurret extends PKActor  
     abstract;
 var Pawn P;
 var Pawn Enemy;
@@ -7,8 +7,22 @@ var int TurretHealth;
 var(Turret) class<Projectile> ProjClass;
 var(Turret) Int RoundsPerSec;				//Number of rounds to fire per second
 
-simulated function PostBeginPlay()
+
+
+
+
+var Vector FireLocation;		
+var Rotator FireRotation,rTorreta;	
+
+var SkelControlSingleBone TurretControl;
+
+var(Turret) SkeletalMeshComponent TurretMesh;	
+
+simulated function   PostBeginPlay()
 {
+ local PEnemyBot PC;
+ local UTPawn pa;
+
 
 /*
 local PPlayerController PC;
@@ -20,9 +34,21 @@ local PPlayerController PC;
     }
 */
 
- local PEnemyBot PC;
- local UTPawn pa;
 
+// camputaramos del AnimTree SkelControlSingleBone con nombre PivotController
+   TurretControl = SkelControlSingleBone(TurretMesh.FindSkelControl('PivotController'));
+TurretControl.bApplyRotation = true;
+		TurretControl.SetSkelControlStrength(1.0, 0.5);
+		TurretControl.BlendInTime = 5.0;
+		TurretControl.bAddRotation = true;
+		TurretControl.BoneRotation = rTorreta;
+
+
+//PivotController = SkelControlSingleBone(Mesh.FindSkelControl('pako'));
+
+//Asignamos la localización y la rotación del socket con nombre FireLocation a las siguientes vars FireLocation y FireRotation 
+TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+DrawDebugCylinder(FireLocation,FireLocation+vector(FireRotation)*100,4,30,0,200,0,true);
     foreach VisibleCollidingActors(class'PEnemyBot', PC,2000.f)
     {
 		`log("veo veo "@PC);
@@ -35,7 +61,6 @@ foreach WorldInfo.AllPawns(class'UTPawn', pa)
 
 			}
 
-	
 
 }
 
@@ -50,6 +75,15 @@ function GetEnemy()
 			`log("encuentra argo marika " @pa.Location);
 			Enemy=pa;
 			}
+
+TurretControl.bApplyRotation = true;
+		//TurretControl.SetSkelControlStrength(1.0, 0.5);
+		//TurretControl.BlendInTime = 5.0;
+		TurretControl.bAddRotation = true;
+		
+		TurretControl.BoneRotation = Enemy.Rotation;
+TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+DrawDebugCylinder(FireLocation,FireLocation+vector(FireRotation)*100,4,30,0,200,0,true);
 
 	/*foreach VisibleCollidingActors(class'PEnemy_Minion', PC,2000.f)
     {
@@ -90,14 +124,17 @@ auto state Seeking
 function TimedFire()
 	{
 		local Projectile Proj;
-	
-		Proj = Spawn(ProjClass,self,,self.Location,self.Rotation,,True);
-
+	//TurretControl.BoneRotation = rTorreta;
+`log("la rotacion de la torreta " @rTorreta);
+		//Proj = Spawn(ProjClass,self,,self.Location,self.Rotation,,True);
+		Proj = Spawn(ProjClass,self,,FireLocation,FireRotation,,True);
 		if( Proj != None && !Proj.bDeleteMe )
 		{
-			`log("la loca del enemy " @Enemy.Location);
-			`log("la rota del enemy " @Enemy.RotationRate);
-			Proj.Init(Vector(Enemy.Rotation));
+			  GetEnemy();
+			`log("la loca del enemy " @FireLocation);
+			`log("la rota del enemy " @FireRotation);
+			Proj.Init(Vector(FireRotation));
+			//Proj.Init(Enemy.Location);
 		
 		
 		}
@@ -113,6 +150,9 @@ defaultproperties
         bEnabled=TRUE
     End Object
     Components.Add(MyLightEnvironmentrr)
+	
+
+
 
 /*
 	  Begin Object Class=StaticMeshComponent Name=DMesh
@@ -129,18 +169,31 @@ defaultproperties
 	CollisionComponent=DMesh*/
 	
 	
-Begin Object class=SkeletalMeshComponent name=torretask
-		SkeletalMesh=SkeletalMesh'PGameContentrr.tcannon2bones'
-		AnimSet=AnimSet'PGameContentrr.ctcannon'
-		PhysicsAsset=PhysicsAsset'PGameContentrr.tcannon2bones_Physics'
-		LightEnvironment=MyLightEnvironmentrr
-	End Object
-	Components.Add(torretask)
-	Mesh=torretask
+ Begin Object class=SkeletalMeshComponent name=torretask
+        
+		AnimTreeTemplate=AnimTree'PGameContentcannon.basecannonAnimTree'
+		AnimSets(0)=AnimSet'PGameContentcannon.basecannon'
+		CollideActors=false 
+		BlockActors=true
+		BlockNonZeroExtent=true
+		BlockZeroExtent=false
+       
+		PhysicsAsset=PhysicsAsset'PGameContentcannon.cannonrudk_Physics'
+        SkeletalMesh=SkeletalMesh'PGameContentcannon.cannonrudk'
+        LightEnvironment=MyLightEnvironmentrr
+		bHasPhysicsAssetInstance=true
+		
+        //Translation=(X=0,Y=0,z=-200)
+    End Object
+    
+	TurretMesh=torretask
+    
+	
+	CollisionComponent=torretask
+    bCollideComplex=true
+	Components.Add(torretask) 
 
-
-
-
+	
 	ProjClass=class'PGame.PMisiles'
 	TurretHealth=500
 	RoundsPerSec=3

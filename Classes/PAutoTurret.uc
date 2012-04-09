@@ -1,8 +1,9 @@
-class PAutoTurret extends Pawn HideCategories(AI,Camera,Debug,Pawn,Physics)
-	placeable;
+class PAutoTurret extends PKActor  
+    abstract;
 
 
 //Min and Max Rotators Struct - limiting turret rotation
+
 struct RotationRange
 {
 	var() Rotator RotLimitMin;
@@ -65,8 +66,8 @@ struct TurretRotationGroup
 
 
 /*Class variables*/
-var PPawn EnemyTarget;	//The new enemy the turret should target - set from the controller or TakeDamage()
-var PPawn LastEnemyTarget;	//The enemy the turret is targeting in the current interpolation
+var PEnemy EnemyTarget;	//The new enemy the turret should target - set from the controller or TakeDamage()
+var PEnemy LastEnemyTarget;	//The enemy the turret is targeting in the current interpolation
 
 var Vector EnemyDir;	//Vector from the turret's base to the enemy's location this tick
 var Vector LastEnemyDir;		//Vector from the turret's base to the enemy's location last tick
@@ -128,19 +129,24 @@ event PostBeginPlay()
 	OrigMinRotRate = MinTurretRotRate;
 	FullRevTime = 65536.0 / Float(MinTurretRotRate);
 
-	PivotController = SkelControlSingleBone(Mesh.FindSkelControl(TurretBones.PivotControllerName));
+	PivotController = SkelControlSingleBone(TurretMesh.FindSkelControl(TurretBones.PivotControllerName));
+	//TurretBones.PivotControllerName tiene el nombre del SkelControler creado en el AnimTree
+	//Deberá especificarse en cada DefaultProperties. Para TurretCannon por ejemplo es "PivotController"
 
-	Mesh.GetSocketWorldLocationAndRotation(TurretBones.FireSocket,FireLocation,FireRotation);
+	TurretMesh.GetSocketWorldLocationAndRotation(TurretBones.FireSocket,FireLocation,FireRotation);
 
-	Mesh.AttachComponentToSocket(DamageEffect, TurretBones.DamageSocket);
-	Mesh.AttachComponentToSocket(MuzzleFlashEffect, TurretBones.FireSocket);
-	Mesh.AttachComponentToSocket(DestroyEffect, TurretBones.DestroySocket);
+	TurretMesh.AttachComponentToSocket(DamageEffect, TurretBones.DamageSocket);
+	TurretMesh.AttachComponentToSocket(MuzzleFlashEffect, TurretBones.FireSocket);
+	TurretMesh.AttachComponentToSocket(DestroyEffect, TurretBones.DestroySocket);
 
 	DamageEffect.SetTemplate(TurretEmitters.DamageEmitter);
 	MuzzleFlashEffect.SetTemplate(TurretEmitters.MuzzleFlashEmitter);
 	DestroyEffect.SetTemplate(TurretEmitters.DestroyEmitter);
-
+	
+	/*
+self.SetPhysicalCollisionProperties(
 	SetPhysics(PHYS_None);
+	SetPhysics(PHYS_Spider);*/
 }
 
 auto state Idle
@@ -159,33 +165,52 @@ auto state Idle
 	{
 		local Float currDot;
 		local Float thisDot;
-		local PPawn P;
+		local PEnemy P;
 		local Bool bHasTarget;
+		local Actor a;
+		local Vector HitLocation, Hitnormal;
 		
 		currDot = -1.01;
 	
+		//Recalcula enemigo cada medio segundo
 		if(GElapsedTime > 0.5 && !bDestroyed)
 		{
 			GElapsedTime = 0.0;
 			bHasTarget = false;
-
-			foreach WorldInfo.AllPawns(class'PGame.PPawn', P)
+			//
+			TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+			DrawDebugCylinder(FireLocation,FireLocation+vector(FireRotation)*100,4,30,0,200,0,true);
+			//foreach VisibleCollidingActors(class'PEnemy', P,200.f,,,vect(10,10,10),true)
+			foreach WorldInfo.AllPawns(class'PEnemy', P)
 			{
-				if(FastTrace(P.Location, FireLocation))
+			//	`Log("encuentra argo la location del enemy " @P.Location);
+				DrawDebugLine(P.Location,FireLocation,255,0,0);
+				//a=trace(HitLocation, Hitnormal,P.Location,FireLocation,false,,,TRACEFLAG_Bullet);
+				//if(a!=None)
+				//	`log("trace con su puta madre"@a.name);
+				if(P.FastTrace(P.Location, FireLocation))
+				//if(a==None)
 				{
+					`Log("encuentra argo con el fast ");
+
+
+					
 					thisDot = Normal(Vector(PivotController.BoneRotation)) Dot
 							Normal(((P.Location - FireLocation) << Rotation));
 	
 					if(	P.Health > 0 &&
+						//Ignoramos la velocidad a la hora de elegir enemigo
 						VSize(P.Velocity) > 16.0 &&
 						thisDot >= 0.0 &&
 						thisDot >= currDot	)
 					{
 						EnemyTarget = P;
-		                    currDot = thisDot;
-		                    bHasTarget = true;
+		                currDot = thisDot;
+		                bHasTarget = true;
 					}
 				}
+	
+
 			}
 	
 			if(bHasTarget && !bDestroyed && !IsInState('Defend'))
@@ -194,6 +219,7 @@ auto state Idle
 			}
 			else if(!bHasTarget && !bDestroyed && IsInState('Defend'))
 			{
+				`log("Estoy en Defend dentro de Idle...");
 				GotoState('Alert');
 			}
 		}
@@ -217,6 +243,7 @@ auto state Idle
 		{
 			DoRotation(TurretRotations.AlertRotation, 1.0);
 			SetTimer(1.0,false,'BeginIdling');
+			
 		}
 		else
 			BeginIdling();
@@ -311,8 +338,10 @@ state Defend
 {
 	function BeginFire()
 	{
+
 		if(RoundsPerSec > 0)
 		{
+			`Log("tiepo pa morir");
 			SetTimer(1.0/RoundsPerSec,true,'TimedFire');
 			bCanFire = true;
 		}
@@ -388,7 +417,7 @@ state Defend
 
 			PivotController.BoneRotation = InterpRot;
 
-			Mesh.GetSocketWorldLocationAndRotation(TurretBones.FireSocket,FireLocation,FireRotation);
+			TurretMesh.GetSocketWorldLocationAndRotation(TurretBones.FireSocket,FireLocation,FireRotation);
 
 			FireRotation.Pitch += Rand(AimRotError * 2) - AimRotError;
 			FireRotation.Yaw += Rand(AimRotError * 2) - AimRotError;
@@ -407,7 +436,8 @@ state Defend
 	
 		bCanFire = false;
 		
-		Mesh.GetSocketWorldLocationAndRotation(TurretBones.FireSocket,FireLocation,FireRotation);
+		
+		TurretMesh.GetSocketWorldLocationAndRotation(TurretBones.FireSocket,FireLocation,FireRotation);
 		
 		DoRotation(Rotator((EnemyTarget.Location - FireLocation) << Rotation), 1.0);
 		
@@ -415,6 +445,7 @@ state Defend
 			PlaySound(TurretSounds.SpinUpSound);
 		
 		SetTimer(1.0,false,'BeginFire');
+	
 	}
 	
 	event EndState(Name NewStateName)
@@ -436,7 +467,7 @@ state Dead
 			PlaySound(TurretSounds.DeathSound);
 
 		if(DestroyedMesh != None)
-			Mesh.SetSkeletalMesh(DestroyedMesh);
+			TurretMesh.SetSkeletalMesh(DestroyedMesh);
 
 		if(TurretEmitters.bStopDamageEmitterOnDeath)
 			DamageEffect.DeactivateSystem();
@@ -472,7 +503,7 @@ state Dead
 function Tick(Float Delta)
 {
 	local Float currDot,thisDot;
-	local PPawn P;
+	local PEnemy P;
 	local Bool bHasTarget;
 	
 	currDot = -1.01;
@@ -482,9 +513,11 @@ function Tick(Float Delta)
 		GElapsedTime = 0.0;
 		bHasTarget = false;
 
-		foreach WorldInfo.AllPawns(class'PGame.PPawn',P)
+		foreach WorldInfo.AllPawns(class'PEnemy',P)
 		{
-			if(FastTrace(P.Location,FireLocation))
+			
+			if(P.FastTrace(P.Location,FireLocation))
+			
 			{
 				thisDot = Normal(Vector(PivotController.BoneRotation)) Dot
 						Normal(((P.Location - FireLocation) << Rotation));
@@ -524,9 +557,12 @@ event TakeDamage(int Damage, Controller InstigatedBy, vector HitLocation, vector
 	if(TurretSounds.DamageSound != None)
 		PlaySound(TurretSounds.DamageSound);
 
+	//No queremos que quien nos acaba de hacer pupita sea nuesto enemigo
+	/*
 	if(InstigatedBy.Pawn != None)
 		EnemyTarget = PPawn(InstigatedBy.Pawn);
-	
+	*/
+
 	if(TurretHealth <= 0)
 	{
 		GotoState('Dead');
@@ -553,6 +589,7 @@ function RotateTimer()
 
 defaultproperties
 {
+
 	/*
 	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
    	End Object
@@ -620,7 +657,9 @@ defaultproperties
 	MaxTurretRotRate=128000
 	TurretHealth=500
 	AimRotError=128
-	ProjClass=class'UTGame.UTProj_LinkPowerPlasma'
+	ProjClass=class'PGame.PMisiles'
 	RoundsPerSec=3
-	bEdShouldSnap=true*/
+	bEdShouldSnap=true
+	*/
+
 }

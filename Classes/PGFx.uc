@@ -11,6 +11,13 @@ var GFxObject tdiceMC;
 var GFxObject ctdiceMC;
 var GFxObject ctdcMC;
 var GFxObject creditoMC;
+var GFxObject pelicula;
+//variables para capturar ratón y cursores de la pelicula flash
+var GFxObject raton;// _clip pelicula que controla el ratón
+var GFxObject bcursor;// cursor de la brocha
+var GFxObject cice;//cursor del cubito de hielo
+var GFxObject cct;//cursor de la torreta cañon 
+//
 var bool bMouseOverUIElement;
 var bool bTowerActive;
 var bool reload;
@@ -19,6 +26,7 @@ enum TTower
 {
 	ice,
 	cannon,
+	ninguna,
 	
 	
 };
@@ -52,6 +60,12 @@ tdcMC = GetVariableObject("_root.tdc");
  ctdiceMC= GetVariableObject("_root.ctdice");
  ctdcMC= GetVariableObject("_root.ctdc");
  creditoMC= GetVariableObject("_root.credito");
+ //capturamos de la pelicula flash los objetos y los asignamos a nuestras variables
+ pelicula=GetVariableObject("_root");
+ raton= GetVariableObject("_root._clip");
+ bcursor= GetVariableObject("_root.bcursor");
+ cice= GetVariableObject("_root.cice");
+ cct= GetVariableObject("_root.cct");
 
 bTowerActive=true;
 TurretReload();
@@ -107,6 +121,13 @@ function SetCredito(int c)
 function AUIVuela(bool val)
 {
 
+if(!val)
+{
+	raton.GotoAndPlay("mirilla");
+	TTowerActive=2;
+}else{
+//raton.GotoAndPlay("ctcannon");
+}
 
 tdcMC.SetBool("_visible", val);
 
@@ -162,4 +183,5 @@ DefaultProperties
 	TimingMode=TM_Game
 	MovieInfo=SwfMovie'PGameMenuFlash.PHUD'
 	bPauseGameWhileActive=false
+	TTowerActive=2;
 }
