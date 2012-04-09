@@ -16,7 +16,7 @@ class PPawn extends GamePawn;
 // Para que a nuestro Pawn le afecte la iluminación
 var DynamicLightEnvironmentComponent LightEnvironment;
 var vector FallDirection;
-
+var float fTiempoDeSalto; //tiempo que lleva saltando. Si se pasa de un límite, para evitar que se pire volando, lo bajamos
 
 /**
  * Añadimos el arma al inventario
@@ -121,24 +121,34 @@ state PawnFalling
 
 	event BeginState(Name PrevName)
 	{
+
 		`log('pawn en estado Falling');
 		WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
 		FallDirection = -Floor;
-
-		// Direct hit wall enabled just for the custom falling
+		
+        // Direct hit wall enabled just for the custom falling
 		bDirectHitWall = true;
 
 		// flying instead of Falling as flying allows for custom gravity
 		SetPhysics(PHYS_Flying);
+		fTiempoDeSalto=0.0; //tiempo de salto
 	}
 
 	event Tick(float DeltaTime)
 	{	
-		// continue normal updates
+		local vector vAlCentro;
+
 		super.Tick(DeltaTime);
 
 		// Apply Gravitational Force
 		ApplyGravity(DeltaTime);
+		fTiempoDeSalto+=DeltaTime;
+		if (fTiempoDeSalto>3.0) //Se le ha ido la castaña al salto. Hay que bajarlo a la tierra.Utilizamos el centro del planeta
+		{
+			vAlCentro=PPlayerController(self.Controller).m_CentroPlaneta-Location; 
+			FallDirection = Normal(vAlCentro);
+			`log("volviendo pa la tierra neng!");
+		}
 	}
 
 	/** Adds gravity to the velocity based on floor normal pawn was last on */
@@ -158,13 +168,16 @@ state PawnFalling
 	{
 		// switch pawn back to standard state
 		local PPlayerController PC;
+		local rotator routPawn;
+
 		GotoState('');
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn");
 		`log('el pawn ha caido al suelo despues de saltar');
 		SetBase(Wall, HitNormal);
+
 		//c3
-		DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
+		//DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
 
 		if(PPaintCanvas(Wall) != none)
 		{
@@ -203,6 +216,7 @@ state PawnFallingSky
 		//No tocamos las físicas, que siga en flying como en PC
 		//La velocidad se la indicamos en PlayerController antes de poner el pawn en este estado
 		//Acceleration=Velocity*10;
+		
 	}
 
 	// cuando llegue al suelo:
@@ -289,8 +303,6 @@ defaultproperties
 	bDirectHitWall=true
 	bRollToDesired=True
 	
-	bUseCylinderCollision=True
-
 	// Elimina el sprite del editor
 	Components.Remove(Sprite)
 
@@ -356,6 +368,7 @@ defaultproperties
 	Mesh=WPawnSkeletalMeshComponent
 	Components.Add(WPawnSkeletalMeshComponent)
 
+
 	// Esto tiene algo que ver con el modelo físico de colisiones del modelo
 	Begin Object Name=CollisionCylinder
 		CollisionRadius=+0021.000000
@@ -367,9 +380,11 @@ defaultproperties
 	End Object
 
 	// Lo añadimos al motor
-	//CylinderComponent=CollisionCylinder
+	CylinderComponent=CollisionCylinder
 	CollisionComponent=CollisionCylinder
-    Components.Add(CollisionComponent)
+	Components.Add(CollisionCylinder)
+
+	bCollideComplex=true //VMH: Creo que necesario, aunque el cilindro sigue usándolo, no ho entenc...
 	//VLR Inventario para el arma
 	InventoryManagerClass=class'PGame.PInventoryManager'
 }
