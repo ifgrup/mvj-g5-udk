@@ -12,6 +12,7 @@ var int creditos;
 var array<PEnemySpawner> EnemySpawners;
 
 var bool bSpawnBoss;
+var Vector  m_CentroPlaneta;
 
 simulated function PostBeginPlay()
 {
@@ -83,4 +84,5 @@ defaultproperties
 	creditos=1000000
 	bEarthNotFlying=true
 	bDelayedStart=false
+	m_CentroPlaneta=(X=528,Y=144,Z=8752)
 }

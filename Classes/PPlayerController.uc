@@ -40,6 +40,7 @@ var Quat m_CurrentQuadFlaying;
 var Quat m_DesiredQuadFlaying;
 var float m_velocidad_rotacion;
 var Vector m_posicionPawn; //Para ir guardando la posicion del pawn mientras volamos, porque parece que no se actualiza???
+var bool m_vCaidaMax; //al caer al planeta, hemos llegadoa velocidad máxima de caida
 
 /**
  *Gestión del ratón RR
@@ -401,6 +402,82 @@ state PlayerSpidering
 		}
     }
 
+
+	/**
+	 * bAlgoDelante valdrá !=0 si hay algo delante con lo que colisiona, impidiendo el avance
+	 * valdrá false si puede seguir palante sin problemas
+	 */
+	
+    function CheckDelantePawn(Vector direccion,out int bAlgoDelante)
+	{
+		local Vector pFinTrace,pInitTrace;
+		local Vector HitLocation,HitNormal;
+		local Actor aTrace1,aTrace2,aTrace3;
+		local Vector mFloor;
+	
+
+		if (direccion==vect(0,0,0))
+			return;
+		pFinTrace=PPawn(Pawn).Location+Normal(direccion)*20; //Del obstáculo hacia nosotros
+		pInitTrace=pFinTrace+Normal(direccion)*120; //Hacia donde nos dirigimos
+		DrawDebugCone(pInitTrace,direccion,45,0.01,0.01,10,MakeColor(200,200,0),false);
+		mFloor=PPawn(Pawn).Floor;
+		DrawDebugCone(pInitTrace-(mFloor*20),pFinTrace-pInitTrace,45,0.01,0.01,10,MakeColor(200,200,0),false);
+		DrawDebugCone(pInitTrace+(mFloor*40),pFinTrace-pInitTrace,45,0.01,0.01,10,MakeColor(200,200,0),false);
+		
+		aTrace1=PPawn(Pawn).Trace(HitLocation,HitNormal,pFinTrace,pInitTrace,true,vect(12,12,12),,TRACEFLAG_Blocking);
+		aTrace2=PPawn(Pawn).Trace(HitLocation,HitNormal,pFinTrace+(mFloor*40),pInitTrace+(mFloor*40),true,vect(12,12,12),,TRACEFLAG_Blocking);
+		aTrace3=PPawn(Pawn).Trace(HitLocation,HitNormal,pFinTrace-(mFloor*20),pInitTrace-(mFloor*20),true,vect(12,12,12),,TRACEFLAG_Blocking);
+
+		if (None==aTrace1 && none==aTrace2 && none==aTrace3)
+		{
+			//Raro, como mínimo tendría que colisionar con el propio pawn
+			bAlgoDelante=0;
+			return;
+		}
+		else
+		{
+			
+			if (None!=aTrace1)
+			{
+				
+				 if (aTrace1.Name!=name("StaticMeshActor_0") && aTrace1.Name!=name("StaticMeshActor_1"))
+				 {
+					`log("Nombre impacto trace "@aTrace1.Name);
+					bAlgoDelante=1;
+					return;
+				 }
+			}
+			if (None!=aTrace2)
+			{
+				
+				 if (aTrace2.Name!=name("StaticMeshActor_0") && aTrace2.Name!=name("StaticMeshActor_1") )
+				 {
+					`log("Nombre impacto trace2 "@aTrace2.Name);
+					bAlgoDelante=1;
+					return;
+				 }
+
+			}
+
+			if (None!=aTrace3)
+			{
+				
+				 if (aTrace3.Name!=name("StaticMeshActor_0") && aTrace3.Name!=name("StaticMeshActor_1") )
+				 {
+					`log("Nombre impacto trace3 "@aTrace3.Name);
+					bAlgoDelante=1;
+					return;
+				 }
+
+			}
+
+		}
+		bAlgoDelante=0;
+		return;
+	}
+    
+
 	/**
 	 * Función para controlar el movimiento del personaje.
 	 * */
@@ -410,8 +487,8 @@ state PlayerSpidering
         local eDoubleClickDir DoubleClickMove;
         local rotator OldRotation, ViewRotation;
         local bool  bSaveJump;
+		local int bAlgoDelante;
 
-	
 		DeltaTimeAccumulator += 0.001f;
         GroundPitch = 0;
         ViewRotation = Rotation;
@@ -422,19 +499,26 @@ state PlayerSpidering
        
         //Giramos al pawn para que esté siempre perpendicular al suelo
         UpdateRotation(DeltaTime);
- 
+
         // Update acceleration.
+
         NewAccel = PlayerInput.aForward*Normal(ViewX - OldFloor * (OldFloor Dot ViewX)) + PlayerInput.aStrafe*ViewY;
  
 		//Comprobamos si al aplicar el movimiento, chocaría contra un objeto, y en tal caso, para no 'spidearlo', pues
 		//no llamamos a ProcessMove, o ponemos el vector NewAccel a (0,0,0) para que no se mueva
-		/*
-        if (CheckDelantePawn())
+        CheckDelantePawn(NewAccel,bAlgoDelante);
+		if (bAlgoDelante!=0)
 		{
 			`log("tiene algo delante. No seguimos el movimiento");
 			NewAccel=vect(0,0,0);
 		}
-		*/
+
+		
+		if (PPawn(pawn).GetStateName()=='PawnFalling' ) //&& PPAwn(pawn).bSaltoAcabado)
+		{
+			//`log("Estas saltando, no te muevas!");
+			NewAccel=vect(0,0,0);
+		}
 
         if ( VSize(NewAccel) < 1.0 )
         {
@@ -654,13 +738,14 @@ state PlayerFallingSky
 
 		pPosition=PPawn(Pawn).Location;
 		vAlCentro=m_CentroPlaneta-pPosition; //vector de dirección del prota.
-		PPawn(Pawn).SetLocation(pPosition);
-		PPawn(Pawn).SetRotation(Rotator(vAlCentro));
-		SetRotation(Rotator(vAlCentro));
-		pawn.Velocity=Normal(vAlCentro)*100;
+		pawn.Velocity=Normal(vAlCentro)*400;
 		pawn.Acceleration=pawn.Velocity*10;
+
+		//ponemos al pawn 300 unidades más abajo, porque pondremos la cámara 300 unidades más arriba para que se le vea caer
+		PPawn(pawn).SetLocation(pPosition+Normal(vAlCentro)*300);
 		PPawn(Pawn).GotoState('PawnFallingSky');
-		
+		m_vCaidaMax=false;
+
 	}
 
 	event EndState(Name NextState)
@@ -681,8 +766,9 @@ state PlayerFallingSky
 		pPosition=PPawn(pawn).Location;
 		alPlaneta=m_CentroPlaneta-pPosition;
 		
-		out_Location=PPawn(pawn).Location-Normal(alPlaneta)*300;
-		out_Rotation=rotator(m_CentroPlaneta-out_Location);
+		out_Location=PPawn(pawn).Location-Normal(alPlaneta)*300; //Para que la cámara esté por encima del pawn y se vea
+		out_Rotation=PPawn(pawn).Rotation; //No la cambiamos en toda la bajada
+
 	}
     
 	/*
@@ -691,14 +777,32 @@ state PlayerFallingSky
 		//vamos acercando el pawn al planeta
 		local Vector pPosition;
 		local Vector alPlaneta;
+		
+
+		super.PlayerMove(aDeltaTime);
 
 		pPosition=PPawn(pawn).Location;
 		alPlaneta=m_CentroPlaneta-pPosition;
 		//Caida libre hasta el suelo
-		//ProcessMove(aDeltaTime,normal(alPlaneta)*vsize(alPlaneta)/10,DCLICK_None ,Rotator(vect(0,0,0)));
+		//controlamos la velocidad máxima
+		
+		if(vsize(Pawn.Velocity)>700)
+		{
+			m_vCaidaMax=true;
+		}
+
+		if (m_vCaidaMax && vsize(Pawn.Velocity)>300)
+		{   //Si hemos llegado a velocidad máxima, vamos decelerando
+			PPawn(Pawn).Velocity*=0.95;
+			`log("decelerando");
+
+		}
+        
+		ProcessMove(aDeltaTime,PPawn(Pawn).Acceleration,DCLICK_None ,Rotator(vect(0,0,0)));
 		//ProcessMove(aDeltaTime,normal(alPlaneta)*500,DCLICK_None ,Rotator(vect(0,0,0)));
-		`log(""@pawn.velocity @Acceleration);
-		super.PlayerMove(aDeltaTime);
+		
+		`log(""@vsize(pawn.velocity) @vsize(Acceleration));
+		
 	}
     */
 

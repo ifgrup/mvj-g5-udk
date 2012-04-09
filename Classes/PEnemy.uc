@@ -3,14 +3,59 @@ Placeable;
 
 var PPawn P; // variable to hold the pawn we bump into
 var() int DamageAmount;   //how much brain to munch
+var vector DireccionCaida;
 
 simulated function PostBeginPlay()
 {
    super.PostBeginPlay();
 
-   //wake the physics up
-   SetPhysics(PHYS_Falling);
+   //Hacemos que caigan hasta el suelo. Una vez en el suelo, spider
+  // GoToState('Cayendo');
+   
 }
+
+auto state Cayendo
+{
+	event BeginState(name EstadoPrevio)
+	{
+		//Nada más empezar estamos en este estado, cayendo desde el EnemySpawner.
+		//Nos ponemos en physics flying hasta llegar al suelo, y luego, pasamos a spider y al comportamiento normal
+		local Vector vCaida;
+
+		vCaida=PGame(WorldInfo.game).m_centroPlaneta-Location;
+		Velocity=Normal(vCaida)*400; //Lo decimos la velocidad a la que volará hasta el suelo, como si estuviera cayendo
+		SetPhysics(PHYS_Flying);
+		DireccionCaida=Normal(vCaida);
+		`log('Enemy entrando en estado CAYENDO');
+		bDirectHitWall = true;
+	}
+	
+	event Tick(float delta)
+	{
+		//`log("->" @self.Location @self.Velocity);
+		DrawDebugCone(self.Location,Velocity,100,0.01,0.1,20,MakeColor(200,0,0));
+		
+	}
+	// cuando llegue al suelo:
+	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
+	{
+		`log('Enemy ha llegado al suelo');
+		SetBase(Wall, HitNormal);
+		bDirectHitWall = false; 
+		SetPhysics(PHYS_None);
+		SetPhysics(PHYS_Spider); // "Glue" back to surface
+
+		GotoState(''); //estado default
+	}
+   
+	event EndState(Name NextState)
+	{
+		
+		`log('Enemy sale de estado Cayebdo '@NextState);
+	}
+
+}//state Cayendo
+
 
 //over-ride epics silly character stuff
 simulated function SetCharacterClassFromInfo(class<UTFamilyInfo> Info)
@@ -52,6 +97,9 @@ simulated function EatSlow()
 	}
 }
 
+
+
+
 defaultproperties
 {
 	Begin Object Name=WPawnSkeletalMeshComponent
@@ -68,6 +116,6 @@ defaultproperties
 
 	ControllerClass=class'PEnemyBot'
 	bDontPossess=false
-
+	//bNotifyStopFalling=true --> si quisiéramos controlar el fin del falling así, se ejecutaría StoppedFalling.
 	DamageAmount=10
 }
