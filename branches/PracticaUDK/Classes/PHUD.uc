@@ -124,7 +124,7 @@ event PostRender()
 	local Vector2D DistanceCheck;
 	local float DistanceToItem;
 	//local PPlayerController s;
-	local PTurret tc;
+	local PAutoTurret tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
 
@@ -172,8 +172,9 @@ event PostRender()
 		{
 			//bMouseOverUIElement me dice siestoy encima del propio clip de flash.En talcaso obviamente no podemos actuar encima suyo
 			//reload dice si la torreta esta recargada. bTowerActive si esta habilitada por credito
-		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive )
+		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.TTowerActive!=2 )
 		    {
+				`log("la pgfx ttower active " @pGFx.TTowerActive);
 				pPlayerController = PPlayerController(PlayerOwner);
 
 				//Creamos torreta solo si hemos clickado dentro del planeta, no en el skybox (control por distancia)
@@ -182,7 +183,14 @@ event PostRender()
 				{
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
-					tc= spawn(class'PTurretCannon', ,,HitLocation, rTorreta,);
+					if(pGFx.TTowerActive==0)
+					{
+						`log("Vamos a spawnear una torreta ice");
+
+					}
+				spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+					//spawn(class'MU_AutoTurret', ,,HitLocation, rTorreta,);
+				
 					pGFx.SetTowerActive(false);
 					pGFX.SetReload(false);
 					pGFx.TurretReload();
