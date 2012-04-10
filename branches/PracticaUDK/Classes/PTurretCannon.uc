@@ -23,8 +23,8 @@ Begin Object class=SkeletalMeshComponent name=torretask
         SkeletalMesh=SkeletalMesh'PGameContentcannon.cannonrudk'
         LightEnvironment=MyLightEnvironmentrr
 		bHasPhysicsAssetInstance=true
-		RBChannel=RBCC_Nothing
-		RBCollideWithChannels=(Nothing=true)
+		bDisableAllRigidBody=true//para que no se caigan las torretas 
+
         //Translation=(X=0,Y=0,z=-200)
     End Object
     
@@ -32,6 +32,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
 	
 	CollisionComponent=torretask
     bCollideComplex=true
+	bDisableAllRigidBody=true
 	bDisableClientSidePawnInteractions=true
 	Components.Add(torretask) 
 	
