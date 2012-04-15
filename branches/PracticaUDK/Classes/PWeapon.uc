@@ -77,11 +77,11 @@ defaultproperties
 	Spread(0)=0.0
 	Spread(1)=0.0
  
-	ShotCost(0)=1
-	ShotCost(1)=1
+//	ShotCost(0)=1
+//	ShotCost(1)=1
  
 	AmmoCount=5
-	MaxAmmoCount=5
+//	MaxAmmoCount=5
  
 	InstantHitDamage(0)=0.0
 	InstantHitDamage(1)=0.0

@@ -87,7 +87,7 @@ DefaultProperties
 	ColorMesh=BaseMesh
 	Components.Add(BaseMesh)
 	CollisionComponent=BaseMesh
-	Components.Add(CollisionComponent)
+//	Components.Add(CollisionComponent)
 
 	bWorldGeometry=true
 	TickGroup=TG_PreAsyncWork

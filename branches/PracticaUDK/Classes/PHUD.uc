@@ -72,7 +72,7 @@ simulated event Destroyed()
 function PreCalcValues()
 {
 	//local ASDisplayInfo DI;
-	local int margenBotones;
+//	local int margenBotones;
 
 	super.PreCalcValues();
 
@@ -85,7 +85,7 @@ function PreCalcValues()
 		pGFx.SetAlignment(Align_TopLeft);
 
 		//Alinear los elementos de la pelicula flash por si acaso
-		margenBotones = 20;
+//		margenBotones = 20;
 /*
 		//Inventario
 		DI = titGFx.panelInventarioMC.GetDisplayInfo();
@@ -122,9 +122,9 @@ event PostRender()
 	local PMouseInteractionInterface MouseInteractionInterface;
 	local Vector HitLocation, HitNormal;
 	local Vector2D DistanceCheck;
-	local float DistanceToItem;
+//	local float DistanceToItem;
 	//local PPlayerController s;
-	local PAutoTurret tc;
+//	local PAutoTurret tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
 
@@ -186,9 +186,11 @@ event PostRender()
 					if(pGFx.TTowerActive==0)
 					{
 						`log("Vamos a spawnear una torreta ice");
+						spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
 
-					}
+					}else{
 				spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+					}
 					//spawn(class'MU_AutoTurret', ,,HitLocation, rTorreta,);
 				
 					pGFx.SetTowerActive(false);
@@ -310,7 +312,7 @@ event PostRender()
 				//Calcular la distancia que hay del jugador hasta el item clickado
 				DistanceCheck.X = KActorSpawnable(LastClickedItem).Location.X - PlayerOwner.Pawn.Location.X;
 				DistanceCheck.Y = KActorSpawnable(LastClickedItem).Location.Y - PlayerOwner.Pawn.Location.Y;
-				DistanceToItem = Sqrt((DistanceCheck.X*DistanceCheck.X) + (DistanceCheck.Y*DistanceCheck.Y));
+//				DistanceToItem = Sqrt((DistanceCheck.X*DistanceCheck.X) + (DistanceCheck.Y*DistanceCheck.Y));
 
 				//Si el panel de interaccion esta visible, cerrarlo
 			/*
