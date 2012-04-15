@@ -249,8 +249,8 @@ state PlayerSpidering
             mOffsetCamaraUpDown+=fs;
 
 			//Control de inclinación up/down máximo de la cámara. Con Clamp me hacía cosas raras, así que if de toda la vida
-			if(mOffsetCamaraUpDown<15.0)
-				mOffsetCamaraUpDown=15.0;
+			if(mOffsetCamaraUpDown<20.0)
+				mOffsetCamaraUpDown=20.0;
 			
 			if(mOffsetCamaraUpDown>65.0)
 				mOffsetCamaraUpDown=65.0;
@@ -258,9 +258,9 @@ state PlayerSpidering
     		//Debemos intentar mantener la distancia de la cámara al jugador.
             //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
 			//Consideramos mOffsetCamaraUpDown como el ángulo de inclinación de la cámara
-			despX=200+300*sin(mOffsetCamaraUpDown*degtorad);
-			despZ=700*sin(mOffsetCamaraUpDown*degtorad);
-
+			despX=333;//300*sin(mOffsetCamaraUpDown*degtorad);
+			despZ=200*sin(mOffsetCamaraUpDown*degtorad);
+	
 			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
 			out_Location = Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
 			
@@ -506,13 +506,14 @@ state PlayerSpidering
  
 		//Comprobamos si al aplicar el movimiento, chocaría contra un objeto, y en tal caso, para no 'spidearlo', pues
 		//no llamamos a ProcessMove, o ponemos el vector NewAccel a (0,0,0) para que no se mueva
+       
         CheckDelantePawn(NewAccel,bAlgoDelante);
 		if (bAlgoDelante!=0)
 		{
 			`log("tiene algo delante. No seguimos el movimiento");
 			NewAccel=vect(0,0,0);
 		}
-
+       
 		
 		if (PPawn(pawn).GetStateName()=='PawnFalling' ) //&& PPAwn(pawn).bSaltoAcabado)
 		{
