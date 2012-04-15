@@ -143,10 +143,10 @@ event PostBeginPlay()
 	MuzzleFlashEffect.SetTemplate(TurretEmitters.MuzzleFlashEmitter);
 	DestroyEffect.SetTemplate(TurretEmitters.DestroyEmitter);
 	
-	/*
-self.SetPhysicalCollisionProperties(
+	/*IMPRESCINDIBLE ponerla sin físicas para que no aplique nada sobre ella y la controlemos nosotros*/
 	SetPhysics(PHYS_None);
-	SetPhysics(PHYS_Spider);*/
+	
+    
 }
 
 auto state Idle
@@ -169,7 +169,8 @@ auto state Idle
 		local Bool bHasTarget;
 		local Actor a;
 		local Vector HitLocation, Hitnormal;
-		
+	
+        return;
 		currDot = -1.01;
 	
 		//Recalcula enemigo cada medio segundo
@@ -179,7 +180,7 @@ auto state Idle
 			bHasTarget = false;
 			//
 			TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
-			DrawDebugCylinder(FireLocation,FireLocation+vector(FireRotation)*100,4,30,0,200,0,true);
+			//DrawDebugCylinder(FireLocation,FireLocation+vector(FireRotation)*100,4,30,0,200,0,true);
 			//foreach VisibleCollidingActors(class'PEnemy', P,200.f,,,vect(10,10,10),true)
 			foreach WorldInfo.AllPawns(class'PEnemy', P)
 			{
@@ -231,7 +232,7 @@ auto state Idle
 	
 	function BeginIdling()
 	{
-		DoRotation(TurretRotations.IdleRotation, 1.0);
+		DoRotation(TurretRotations.IdleRotation, 5.0);
 
           if(TurretSounds.SleepSound != None)
 			PlaySound(TurretSounds.SleepSound);
@@ -265,6 +266,7 @@ state() Alert
 		local Rotator AnimRot;
 
 		Global.Tick(Delta);
+		return;
 
 		AnimRot.Yaw = MinTurretRotRate * Delta;
 		PivotController.BoneRotation += AnimRot;
@@ -380,6 +382,7 @@ state Defend
 		local Int MaxDiffRot;
 
 		Global.Tick(Delta);
+		return;
 
 		if(bCanFire)
 		{
@@ -506,6 +509,8 @@ function Tick(Float Delta)
 	local PEnemy P;
 	local Bool bHasTarget;
 	
+	return;
+
 	currDot = -1.01;
 
 	if(GElapsedTime > 0.5 && !bDestroyed)

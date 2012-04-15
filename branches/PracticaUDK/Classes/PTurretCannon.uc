@@ -14,16 +14,21 @@ Begin Object class=SkeletalMeshComponent name=torretask
         
 		AnimTreeTemplate=AnimTree'PGameContentcannon.basecannonAnimTree'
 		AnimSets(0)=AnimSet'PGameContentcannon.basecannon'
+		
+		PhysicsAsset=PhysicsAsset'PGameContentcannon.cannonrudk_Physics'
+		bHasPhysicsAssetInstance=true
+        SkeletalMesh=SkeletalMesh'PGameContentcannon.cannonrudk'
+        LightEnvironment=MyLightEnvironmentrr
+		
+		bDisableAllRigidBody=true//para que no se caigan las torretas 
+
+
 		CollideActors=true 
 		BlockActors=true
 		BlockNonZeroExtent=true
 		BlockZeroExtent=true
-		
-		PhysicsAsset=PhysicsAsset'PGameContentcannon.cannonrudk_Physics'
-        SkeletalMesh=SkeletalMesh'PGameContentcannon.cannonrudk'
-        LightEnvironment=MyLightEnvironmentrr
-		bHasPhysicsAssetInstance=true
-		bDisableAllRigidBody=true//para que no se caigan las torretas 
+
+		bDisableAllRigidBody=true
 
         //Translation=(X=0,Y=0,z=-200)
     End Object
@@ -82,7 +87,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
 					)}
 
 	TurretRotations={(
-					IdleRotation=(Pitch=-8192,Yaw=0,Roll=0),
+					IdleRotation=(Pitch=0,Yaw=15000,Roll=0),
 					AlertRotation=(Pitch=0,Yaw=0,Roll=0),
 					DeathRotation=(Pitch=8192,Yaw=10922,Roll=4551)
 					)}
