@@ -168,7 +168,7 @@ state PawnFalling
 	{
 		// switch pawn back to standard state
 		local PPlayerController PC;
-		local rotator routPawn;
+//		local rotator routPawn;
 
 		GotoState('');
 		PC = PPlayerController(Instigator.Controller);
