@@ -67,7 +67,7 @@ foreach WorldInfo.AllPawns(class'UTPawn', pa)
 
 function GetEnemy()
 {
-    local PEnemy_Minion PC;
+//    local PEnemy_Minion PC;
 	local UTPawn pa;
     
 	foreach WorldInfo.AllPawns(class'UTPawn',pa)

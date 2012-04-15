@@ -20,7 +20,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
         SkeletalMesh=SkeletalMesh'PGameContentcannon.cannonrudk'
         LightEnvironment=MyLightEnvironmentrr
 		
-		bDisableAllRigidBody=true//para que no se caigan las torretas 
+		//bDisableAllRigidBody=true//para que no se caigan las torretas 
 
 
 		CollideActors=true 
@@ -28,7 +28,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
 		BlockNonZeroExtent=true
 		BlockZeroExtent=true
 
-		bDisableAllRigidBody=true
+		//bDisableAllRigidBody=true
 
         //Translation=(X=0,Y=0,z=-200)
     End Object
@@ -37,7 +37,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
 	
 	CollisionComponent=torretask
     bCollideComplex=true
-	bDisableAllRigidBody=true
+	
 	bDisableClientSidePawnInteractions=true
 	Components.Add(torretask) 
 	
@@ -72,17 +72,17 @@ Begin Object class=SkeletalMeshComponent name=torretask
 				
 	TurretSounds={(
 				FireSound=SoundCue'A_Weapon_Link.Cue.A_Weapon_Link_FireCue',
-				DamageSound=SoundCue'A_Weapon_Stinger.Weapons.A_Weapon_Stinger_FireImpactCue',
-				SpinUpSound=SoundCue'A_Vehicle_Turret.Cue.AxonTurret_PowerUpCue',
-				WakeSound=SoundCue'A_Vehicle_Turret.Cue.A_Turret_TrackStart01Cue',
-				SleepSound=SoundCue'A_Vehicle_Turret.Cue.A_Turret_TrackStop01Cue',
-				DeathSound=SoundCue'A_Vehicle_Turret.Cue.AxonTurret_PowerDownCue'
+				DamageSound=SoundCue'A_Music_GoDown.MusicSegments.A_Music_GoDown_Ambient01Cue',
+				SpinUpSound=SoundCue'A_Weapon_Link.Cue.A_Weapon_Link_FireCue',
+				WakeSound=SoundCue'A_Weapon_Link.Cue.A_Weapon_Link_FireCue',
+				SleepSound=SoundCue'A_Weapon_Link.Cue.A_Weapon_Link_FireCue',
+				DeathSound=SoundCue'A_Weapon_Link.Cue.A_Weapon_Link_FireCue'
 				)}
 	
 	TurretEmitters={(
-					DamageEmitter=ParticleSystem'TurretContent.P_TurretDamage',
-					MuzzleFlashEmitter=ParticleSystem'WP_Stinger.Particles.P_Stinger_3P_MF_Alt_Fire',
-					DestroyEmitter=ParticleSystem'FX_VehicleExplosions.Effects.P_FX_VehicleDeathExplosion',
+					DamageEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
+					MuzzleFlashEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
+					DestroyEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
 					DamageEmitterParamName=DamageParticles
 					)}
 

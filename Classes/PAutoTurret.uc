@@ -99,7 +99,7 @@ var Int OrigMinRotRate;	//Beginning value of MinTurretRotRate
 
 /*Designer editable variables*/
 var(Turret) SkeletalMeshComponent TurretMesh;				//SkelMeshComp for the turret
-var(Turret) DynamicLightEnvironmentComponent LightEnvironment;	//LightEnvironment for the turret
+var(Turret) DynamicLightEnvironmentComponent LightEnvironmentrr;	//LightEnvironment for the turret
 var(Turret) SkeletalMesh DestroyedMesh;						//SkelMesh to show when turret is destroyed
 
 var(Turret) TurretBoneGroup TurretBones;	//Bone, Socket, Controller names
@@ -121,7 +121,7 @@ var(Turret) Int TurretHealth;		//Initial amount of health for the turret
 
 
 
-event PostBeginPlay()
+simulated function  PostBeginPlay()
 {
 	Super.PostBeginPlay();
 	
@@ -167,12 +167,12 @@ auto state Idle
 		local Float thisDot;
 		local PEnemy P;
 		local Bool bHasTarget;
-		local Actor a;
-		local Vector HitLocation, Hitnormal;
+//		local Actor a;
+	//	local Vector HitLocation, Hitnormal;
 	
         return;
 		currDot = -1.01;
-	
+	return;
 		//Recalcula enemigo cada medio segundo
 		if(GElapsedTime > 0.5 && !bDestroyed)
 		{
@@ -264,7 +264,7 @@ state() Alert
 	function Tick(Float Delta)
 	{
 		local Rotator AnimRot;
-
+	return;
 		Global.Tick(Delta);
 		return;
 
@@ -380,7 +380,7 @@ state Defend
 		local Rotator InterpRot;
 		local Rotator DiffRot;
 		local Int MaxDiffRot;
-
+	return;
 		Global.Tick(Delta);
 		return;
 
@@ -512,7 +512,7 @@ function Tick(Float Delta)
 	return;
 
 	currDot = -1.01;
-
+	return;
 	if(GElapsedTime > 0.5 && !bDestroyed)
 	{
 		GElapsedTime = 0.0;
@@ -595,76 +595,6 @@ function RotateTimer()
 defaultproperties
 {
 
-	/*
-	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
-   	End Object
-   	LightEnvironment=MyLightEnvironment
-   	Components.Add(MyLightEnvironment)
-
-	Begin Object class=SkeletalMeshComponent name=SkelMeshComp0
-		SkeletalMesh=SkeletalMesh'TurretContent.TurretMesh'
-		AnimTreeTemplate=AnimTree'TurretContent.TurretAnimTree'
-		PhysicsAsset=PhysicsAsset'TurretContent.TurretMesh_Physics'
-		LightEnvironment=MyLightEnvironment
-	End Object
-	Components.Add(SkelMeshComp0)
-	TurretMesh=SkelMeshComp0
-	Mesh=SkelMeshComp0
-
-	Begin Object Class=ParticleSystemComponent Name=ParticleSystemComponent0
-		SecondsBeforeInactive=1
-	End Object
-	MuzzleFlashEffect=ParticleSystemComponent0
-	Components.Add(ParticleSystemComponent0)
-
-	Begin Object Class=ParticleSystemComponent Name=ParticleSystemComponent1
-		SecondsBeforeInactive=1
-	End Object
-	DestroyEffect=ParticleSystemComponent1
-	Components.Add(ParticleSystemComponent1)
-
-	Begin Object Class=ParticleSystemComponent Name=ParticleSystemComponent2
-		SecondsBeforeInactive=10000.0
-	End Object
-	DamageEffect=ParticleSystemComponent2
-	Components.Add(ParticleSystemComponent2)
 	
-	TurretBones={(
-				DestroySocket=DamageLocation,
-				DamageSocket=DamageLocation,
-				FireSocket=FireLocation,
-				PivotControllerName=PivotController
-				)}
-				
-	TurretSounds={(
-				FireSound=SoundCue'A_Weapon_Link.Cue.A_Weapon_Link_FireCue',
-				DamageSound=SoundCue'A_Weapon_Stinger.Weapons.A_Weapon_Stinger_FireImpactCue',
-				SpinUpSound=SoundCue'A_Vehicle_Turret.Cue.AxonTurret_PowerUpCue',
-				WakeSound=SoundCue'A_Vehicle_Turret.Cue.A_Turret_TrackStart01Cue',
-				SleepSound=SoundCue'A_Vehicle_Turret.Cue.A_Turret_TrackStop01Cue',
-				DeathSound=SoundCue'A_Vehicle_Turret.Cue.AxonTurret_PowerDownCue'
-				)}
-	
-	TurretEmitters={(
-					DamageEmitter=ParticleSystem'TurretContent.P_TurretDamage',
-					MuzzleFlashEmitter=ParticleSystem'WP_Stinger.Particles.P_Stinger_3P_MF_Alt_Fire',
-					DestroyEmitter=ParticleSystem'FX_VehicleExplosions.Effects.P_FX_VehicleDeathExplosion',
-					DamageEmitterParamName=DamageParticles
-					)}
-
-	TurretRotations={(
-					IdleRotation=(Pitch=-8192,Yaw=0,Roll=0),
-					AlertRotation=(Pitch=0,Yaw=0,Roll=0),
-					DeathRotation=(Pitch=8192,Yaw=10922,Roll=4551)
-					)}
-
-	MinTurretRotRate=8192
-	MaxTurretRotRate=128000
-	TurretHealth=500
-	AimRotError=128
-	ProjClass=class'PGame.PMisiles'
-	RoundsPerSec=3
-	bEdShouldSnap=true
-	*/
 
 }
