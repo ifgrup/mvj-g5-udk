@@ -81,7 +81,8 @@ var Rotator TargetRotation;	//Desired rotations for interpolating
 var Vector FireLocation;		//World position of the firing socket
 var Rotator FireRotation;	//World orientation of the firing socket
 
-var SkelControlSingleBone PivotController;	//Reference to the skelcontrol in the AnimTree
+//var SkelControlSingleBone PivotController;	//Reference to the skelcontrol in the AnimTree
+var SkelControlLookAt  PivotController;	//Reference to the skelcontrol in the AnimTree
 
 var Bool bCanFire;		//Is the turret in a firing state?
 var Bool bDestroyed;	//Has the turret been destroyed?
@@ -124,7 +125,14 @@ var float m_tiempotranscurrido;
 var int m_numticksrotacion;
 var float m_tiemporotando;
 
-event PostBeginPlay()
+event PostInitAnimTree(SkeletalMeshComponent skelcomp)
+{
+	Super.PostInitAnimTree(skelcomp);
+	if (skelcomp==TurretMesh)
+		PivotController = SkelControlLookAt (TurretMesh.FindSkelControl(TurretBones.PivotControllerName));
+}
+
+simulated event PostBeginPlay()
 {
 	Super.PostBeginPlay();
 	
@@ -132,7 +140,8 @@ event PostBeginPlay()
 	OrigMinRotRate = MinTurretRotRate;
 	FullRevTime = 65536.0 / Float(MinTurretRotRate);
 
-	PivotController = SkelControlSingleBone(TurretMesh.FindSkelControl(TurretBones.PivotControllerName));
+	//PivotController = SkelControlSingleBone(TurretMesh.FindSkelControl(TurretBones.PivotControllerName));
+
 	//TurretBones.PivotControllerName tiene el nombre del SkelControler creado en el AnimTree
 	//Deberá especificarse en cada DefaultProperties. Para TurretCannon por ejemplo es "PivotController"
 
@@ -170,6 +179,17 @@ function RotaParaApuntarA(vector newTarget)
 	TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
     TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
 
+	
+	PivotController.TargetLocation=newtarget;
+	//Normal(newTarget-FireLocation);
+//	(Normal(newTarget-FireLocation))
+	FlushPersistentDebugLines();
+	DrawDebugCylinder(FireLocation,newtarget,5,30,200,0,0,true);
+
+}
+/*******************
+	return;
+
 	/***DEBUG***
     va=FireLocation-IniFireLocation;
 	FlushPersistentDebugLines();
@@ -180,7 +200,7 @@ function RotaParaApuntarA(vector newTarget)
     ****DEBUG***/
 
 	rTorreta=PivotController.BoneRotation; //vector de la rotación actual
-	
+		
 
 	
 	//va es el vector del cannon. vprojCannon su proyeccion con Z=0 (en vector2D)
@@ -202,16 +222,17 @@ function RotaParaApuntarA(vector newTarget)
 	if (vsigno.Z >=0)
 	{
 		`log('Arriba');
-		pdesp=-pdesp;
+		rTorreta.Pitch=(65535+(rTorreta.Pitch-pdesp))%65535;
 	}
 	else
 	{
-	
+		rTorreta.Pitch=(65535+(rTorreta.Pitch+pdesp))%65535;
 		`log('Abajo');
     }
-	rTorreta.Pitch=(65535+(rTorreta.Pitch+pdesp))%65535;
-
-
+	
+    Normalize(rTorreta);
+    DoRotation(rTorreta,1.0);
+    return;
 
     //AHORA PARA UP/DOWN
 	//hay que considerar la torreta ya girada, y calcular con esa rotación ya realizada
@@ -262,6 +283,7 @@ function RotaParaApuntarA(vector newTarget)
 	DoRotation(rTorreta,1.0);
 
 }
+******************/
 
 auto state Idle
 {
@@ -275,6 +297,16 @@ auto state Idle
 		}
 	}
 
+	function TiempodeMorir(vector locaEnemigo)
+	{
+		local Projectile Proj;
+		return;
+
+		Proj = Spawn(class'UTProj_Rocket',self,,FireLocation,,,True);
+		Proj.Init(Normal(locaEnemigo-FireLocation));
+		
+	}
+
 	function Tick(Float Delta)
 	{
 		local Float currDot;
@@ -284,21 +316,25 @@ auto state Idle
 		local Actor a;
 		local Vector HitLocation, Hitnormal;
 		local PPAwn prota;
-
-
+		
 		m_tiempotranscurrido+=Delta;
-        if (m_tiempotranscurrido>3)
-        {
-			m_tiempotranscurrido=0;
+        
 
-			foreach WorldInfo.AllPawns(class'PPawn',Prota)
+		foreach WorldInfo.AllPawns(class'PPawn',Prota)
+		{
+	       	RotaParaApuntarA(Prota.Location);
+			if (m_tiempotranscurrido>5)
 			{
-	        	RotaParaApuntarA(Prota.Location);
-				return;
+				m_tiempotranscurrido=0;
+				TiempodeMorir(prota.Location);
 			}
         }
-		
-		return;
+	}//Tick	
+}//state
+
+
+/***********************
+        return;
 		currDot = -1.01;
 	
 		//Recalcula enemigo cada medio segundo
@@ -717,13 +753,15 @@ function DoRotation(Rotator NewRotation, Float InterpTime)
 
 function RotateTimer()
 {
-	/*********
+	
 	RotationAlpha += 0.033;
 	if(RotationAlpha <= TotalInterpTime)
 		PivotController.BoneRotation = RLerp(StartRotation,TargetRotation,RotationAlpha,true);
 	else
 		ClearTimer('RotateTimer');
-    ***************/
+   
+    return;
+    /**
 	local float incpitch,incyaw;
 	local int offsetpitchtotal,offsetyawtotal;
 
@@ -734,8 +772,8 @@ function RotateTimer()
 	incyaw=(offsetyawtotal*0.033)/TotalInterpTime;
 
 
-	//PivotController.BoneRotation.Pitch =(65535+(PivotController.BoneRotation.Pitch+incpitch))%65535; 
-	PivotController.BoneRotation.yaw =(65535+(PivotController.BoneRotation.yaw+incyaw))%65535; 
+	PivotController.BoneRotation.Pitch =(65535+(PivotController.BoneRotation.Pitch+incpitch))%65535; 
+	//PivotController.BoneRotation.yaw =(65535+(PivotController.BoneRotation.yaw+incyaw))%65535; 
 	
 
 	m_tiemporotando+=0.033;
@@ -743,8 +781,10 @@ function RotateTimer()
 	{
 		ClearTimer('RotateTimer');
 	}
+   ********/
 	
 }
+***********************/
 
 defaultproperties
 {
