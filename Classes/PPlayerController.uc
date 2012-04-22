@@ -218,8 +218,20 @@ state PlayerSpidering
 	//sólo será así si el cursor está por encima del límite horizontal definido para ese movimiento
 	function bool DebeHacerseUPDownCamara()
 	{
-		//`log ("Y del mouse " @PlayerInput.);
-		return true;
+		
+		local Vector2D MousePosition;
+		local PPlayerInput pInput;
+		
+		pInput=PPlayerInput(PlayerInput);
+
+		MousePosition.X = pInput.MousePosition.X;
+		MousePosition.Y = pInput.MousePosition.Y;
+
+		
+		if (MousePosition.Y < 175)
+			return true;
+		else
+			return false;
 	}
 
 	//Devuelve dónde estará mirando el jugador,la cámara vamos ;)
@@ -251,17 +263,7 @@ state PlayerSpidering
             //Para controlar si la cámara está más arriba o abajo, vamos acumulando el valor,
             //modulándolo con sin 
             
-            fs=Sin(0.001*mUltimoLookup); //utilizamos mUltimoLookup porque aquí vale cero PlayerInput, parece que sólo puede leerse 
-										  //en PlayerMove o ProcessMove ???
             
-            mOffsetCamaraUpDown+=fs;
-
-			//Control de inclinación up/down máximo de la cámara. Con Clamp me hacía cosas raras, así que if de toda la vida
-			if(mOffsetCamaraUpDown<15.0)
-				mOffsetCamaraUpDown=15.0;
-			
-			if(mOffsetCamaraUpDown>65.0)
-				mOffsetCamaraUpDown=65.0;
 			
     		//Debemos intentar mantener la distancia de la cámara al jugador.
             //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
@@ -276,18 +278,34 @@ state PlayerSpidering
 			bCamaraUPDown=DebeHacerseUPDownCamara();
 			if (bCamaraUPDown)
 			{
-				qcamZ=QuatFromRotator(pawn.Rotation);
-				GetAxes(Pawn.Rotation,qX,qY,qZ);
-				qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
-				qcamZ=QuatProduct(qPitchZ,qcamZ);
-				out_rotation=QuatToRotator(qcamZ);
-				despZ=600*sin(mOffsetCamaraUpDown*degtorad);
+				fs=Sin(0.001*mUltimoLookup); //utilizamos mUltimoLookup porque aquí vale cero PlayerInput, parece que sólo puede leerse 
+										  //en PlayerMove o ProcessMove ???
+            
+				mOffsetCamaraUpDown+=fs;
+
+				//Control de inclinación up/down máximo de la cámara. Con Clamp me hacía cosas raras, así que if de toda la vida
+				if(mOffsetCamaraUpDown<15.0)
+					mOffsetCamaraUpDown=15.0;
+			
+				if(mOffsetCamaraUpDown>65.0)
+					mOffsetCamaraUpDown=65.0;
 			}
 			else
 			{
-				out_rotation=pawn.Rotation;
-				despZ=0;
+				//si hemos bajado rápido, puede que el salto de ángulo sea grande. Por eso vamos decrementando el ángulo
+				//hasta que lleguemos a 15.0
+				if (mOffsetCamaraUpDown >15.0)
+					mOffsetCamaraUpDown-=0.05;
+				else
+					mOffsetCamaraUpDown=15.0;
 			}
+
+			qcamZ=QuatFromRotator(pawn.Rotation);
+			GetAxes(Pawn.Rotation,qX,qY,qZ);
+			qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
+			qcamZ=QuatProduct(qPitchZ,qcamZ);
+			out_rotation=QuatToRotator(qcamZ);
+			despZ=600*sin(mOffsetCamaraUpDown*degtorad);
 
 			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
 			out_Location = Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
