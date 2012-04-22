@@ -489,6 +489,8 @@ function Vector GetMouseWorldLocation()
 	//Pasar la posicion del mouse de intPoint a Vector2D
 	MousePosition.X = pPlayerInput.MousePosition.X;
 	MousePosition.Y = pPlayerInput.MousePosition.Y;
+
+	`log("Coordenadas mouse " @MousePosition.X @MousePosition.Y);
 	//Deproyectar el mouse
 	Canvas.DeProject(MousePosition, MouseWorldOrigin, MouseWorldDirection);
 

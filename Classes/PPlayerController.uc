@@ -5,20 +5,11 @@
 class PPlayerController extends GamePlayerController;
 
 /**
- * Propiedades por defecto.
- * Configuramos que la cámara que controlará al jugador sea la nuestra (PPlayerCamera) 
- * */
-
-
-
-
-/**
  * Variables globales para el control de la posición y de la cámara.
  * */
 var vector OldFloor;
 var vector ViewX, ViewY, ViewZ;
 var vector OldLocation;
-var float DeltaTimeAccumulator;
 
 var float mOffsetCamaraUpDown; //Para ir acumulando la altura de la cámara
 var float mUltimoLookup; //para guardar el ultimo aLookUp de PlayerInput, no accesible desde el evento GetPlayerViewPoint
@@ -32,7 +23,6 @@ var vector CamViewX, CamViewY, CamViewZ;
  * Último vector normal de "suelo" antes de saltar.
  * */
 var vector mUltimoFloorAntesSalto;
-var Vector m_CentroPlaneta; //posicion del centro del Planeta. Puede que no deba ser 0,0,0
 var float m_DistanciaAlCentro; //distancia que queremos mantener alrededor del planeta hasta su centro
 
 //Variables para controlar la rotación
@@ -381,7 +371,7 @@ state PlayerSpidering
 	{
 		if ( NewVolume.bWaterVolume )
 		{
-		GotoState(Pawn.WaterMovementState);
+			GotoState(Pawn.WaterMovementState);
 		}
 	}
  
@@ -525,7 +515,6 @@ state PlayerSpidering
         local bool  bSaveJump;
 		local int bAlgoDelante;
 
-		DeltaTimeAccumulator += 0.001f;
         GroundPitch = 0;
         ViewRotation = Rotation;
 		
@@ -638,10 +627,10 @@ state PlayerFlaying
 
 	
 		pPosition=PPawn(Pawn).Location;
-		Centro2Pawn=Normal(pPosition-m_CentroPlaneta);
-		pPosition=m_CentroPlaneta+Centro2Pawn*m_DistanciaAlCentro;
+		Centro2Pawn=Normal(pPosition-PGame(WorldInfo.Game).GetCentroPlaneta());
+		pPosition=PGame(WorldInfo.Game).GetCentroPlaneta()+Centro2Pawn*m_DistanciaAlCentro;
 		PPawn(Pawn).SetLocation(pPosition);
-		vAlCentro=m_CentroPlaneta-Pawn.Location; //vector de dirección del prota.
+		vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Pawn.Location; //vector de dirección del prota.
 		PPawn(Pawn).SetRotation(Rotator(vAlCentro));
 		SetRotation(Rotator(vAlCentro));
 		PPawn(Pawn).GotoState('PawnFlaying');
@@ -676,7 +665,7 @@ state PlayerFlaying
 
 		rFromQuad=QuatToRotator(pQuat);
 		GetAxes(rFromQuad,X,Y,Z);
-		vDesdeCentro=m_CentroPlaneta- (X*m_DistanciaAlCentro);
+		vDesdeCentro=PGame(WorldInfo.Game).GetCentroPlaneta() - (X*m_DistanciaAlCentro);
 		pPosicion=vDesdeCentro;
 
 	}
@@ -774,7 +763,7 @@ state PlayerFallingSky
         `log("PC Falling Sky");
 
 		pPosition=PPawn(Pawn).Location;
-		vAlCentro=m_CentroPlaneta-pPosition; //vector de dirección del prota.
+		vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition; //vector de dirección del prota.
 		pawn.Velocity=Normal(vAlCentro)*400;
 		pawn.Acceleration=pawn.Velocity*10;
 
@@ -801,7 +790,7 @@ state PlayerFallingSky
 		local Vector pPosition;
 		
 		pPosition=PPawn(pawn).Location;
-		alPlaneta=m_CentroPlaneta-pPosition;
+		alPlaneta=PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition;
 		
 		out_Location=PPawn(pawn).Location-Normal(alPlaneta)*300; //Para que la cámara esté por encima del pawn y se vea
 		out_Rotation=PPawn(pawn).Rotation; //No la cambiamos en toda la bajada
@@ -991,11 +980,8 @@ exec function MiddleMouseScrollDown()
 defaultproperties
 {
 	bNotifyFallingHitWall=true
-    m_CentroPlaneta=(X=528,Y=144,Z=8752)
-	//m_CentroPlaneta=(X=0,Y=0,Z=0)
-	InputClass=class'PGame.PPlayerInput'
-	m_DistanciaAlCentro=8000
+    InputClass=class'PGame.PPlayerInput'
+	m_DistanciaAlCentro=5000
 	m_velocidad_rotacion=1.0
-
 }
 
