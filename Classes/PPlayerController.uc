@@ -214,6 +214,13 @@ state PlayerSpidering
 		}		
 	}
 
+	//Funcion que devuelve en el booleano parametro si se debe hacer rotacion up/down de la camara.
+	//sólo será así si el cursor está por encima del límite horizontal definido para ese movimiento
+	function bool DebeHacerseUPDownCamara()
+	{
+		//`log ("Y del mouse " @PlayerInput.);
+		return true;
+	}
 
 	//Devuelve dónde estará mirando el jugador,la cámara vamos ;)
     simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
@@ -226,6 +233,7 @@ state PlayerSpidering
 		local float despx,despz;
 		local quat  qpitchZ,qCamZ;
 		local vector qX,qY,qZ;
+		local bool bCamaraUPDown;
 
         super.GetPlayerViewPoint(out_Location, out_Rotation);
         if(Pawn != none)
@@ -249,8 +257,8 @@ state PlayerSpidering
             mOffsetCamaraUpDown+=fs;
 
 			//Control de inclinación up/down máximo de la cámara. Con Clamp me hacía cosas raras, así que if de toda la vida
-			if(mOffsetCamaraUpDown<20.0)
-				mOffsetCamaraUpDown=20.0;
+			if(mOffsetCamaraUpDown<15.0)
+				mOffsetCamaraUpDown=15.0;
 			
 			if(mOffsetCamaraUpDown>65.0)
 				mOffsetCamaraUpDown=65.0;
@@ -258,21 +266,31 @@ state PlayerSpidering
     		//Debemos intentar mantener la distancia de la cámara al jugador.
             //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
 			//Consideramos mOffsetCamaraUpDown como el ángulo de inclinación de la cámara
-			despX=333;//300*sin(mOffsetCamaraUpDown*degtorad);
-			despZ=200*sin(mOffsetCamaraUpDown*degtorad);
+			despX=350;//300*sin(mOffsetCamaraUpDown*degtorad);
+			
 	
-			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
-			out_Location = Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
 			
 			//DrawDebugCone(pawn.Location,vector(out_rotation),100,0.1,0.1,50,MakeColor(255,0,0));
 			//La rotación la debemos modificar en up/down, rotando sobre el eje Y actual del Rotator
 			//para ello, benditos quaternions:
+			bCamaraUPDown=DebeHacerseUPDownCamara();
+			if (bCamaraUPDown)
+			{
+				qcamZ=QuatFromRotator(pawn.Rotation);
+				GetAxes(Pawn.Rotation,qX,qY,qZ);
+				qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
+				qcamZ=QuatProduct(qPitchZ,qcamZ);
+				out_rotation=QuatToRotator(qcamZ);
+				despZ=600*sin(mOffsetCamaraUpDown*degtorad);
+			}
+			else
+			{
+				out_rotation=pawn.Rotation;
+				despZ=0;
+			}
 
-			qcamZ=QuatFromRotator(pawn.Rotation);
-			GetAxes(Pawn.Rotation,qX,qY,qZ);
-			qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
-			qcamZ=QuatProduct(qPitchZ,qcamZ);
-			out_rotation=QuatToRotator(qcamZ);
+			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
+			out_Location = Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
 			
 			//DrawDebugCone(pawn.Location,vector(out_rotation),100,0.1,0.1,50,MakeColor(0,0,255));
 	
