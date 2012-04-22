@@ -1,4 +1,4 @@
-class PTurretIce extends PTurret
+class PTurretIce extends PAutoTurret
 	placeable;
 DefaultProperties
 {
