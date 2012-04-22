@@ -69,6 +69,19 @@ simulated event Destroyed()
 	}
 }
 
+//nos da la posición que marcamos con el ratón, 
+simulated  function vector GetTargetLocation(optional actor RequestedBy, optional bool bRequestAlternateLoc) 
+
+{
+	local Vector HitLocation, HitNormal;
+	//local PMouseInteractionInterface MouseInteractionInterface;
+//super.GetTargetLocation(RequestedBy,bRequestAlternateLoc);
+
+/*MouseInteractionInterface = */GetMouseActor(HitLocation, HitNormal);
+`Log("la hit location del GetTarget del HUD"@HitLocation);
+return HitLocation;
+}
+
 function PreCalcValues()
 {
 	//local ASDisplayInfo DI;
@@ -127,7 +140,7 @@ event PostRender()
 //	local PAutoTurret tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
-
+	
 	Super.PostRender();
 	//Casting
 	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput); 
@@ -170,6 +183,15 @@ event PostRender()
 		//Si se presiona el boton izquierdo del mouse 
 		if(PendingLeftPressed)
 		{
+			//controlamos que el jugador no este volando y le hacemos disparar
+		//	if(PGame(WorldInfo.Game).bEarthNotFlying)
+			//{
+			pPlayerController = PPlayerController(PlayerOwner);
+		
+			pPlayerController.StartFire();
+		//	}
+			
+
 			//bMouseOverUIElement me dice siestoy encima del propio clip de flash.En talcaso obviamente no podemos actuar encima suyo
 			//reload dice si la torreta esta recargada. bTowerActive si esta habilitada por credito
 		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.TTowerActive!=2 )
@@ -186,7 +208,8 @@ event PostRender()
 					if(pGFx.TTowerActive==0)
 					{
 						`log("Vamos a spawnear una torreta ice");
-						spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
+						
+						//spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
 
 					}else{
 				spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
@@ -333,7 +356,11 @@ event PostRender()
 			//Izquierdo release
 			PendingLeftReleased = false;
 			LastMouseInteractionInterface.MouseLeftReleased(CachedMouseWorldOrigin, CachedMouseWorldDirection);
+		
+
+
 		}
+
 		/****   Fin boton izquierdo ****/
 
 		/****     Boton derecho     ****/
@@ -342,6 +369,7 @@ event PostRender()
 			if(PendingRightReleased)
 			{
 				//Right click, descartar
+						
 				PendingRightPressed = false;
 				PendingRightReleased = false;
 			}
@@ -546,6 +574,7 @@ exec function ShowMenu()
 {
 	// if using GFx HUD, use GFx pause menu
 	TogglePauseMenu();
+	
 }
 
 
@@ -602,6 +631,7 @@ pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
 	}
 */
 }
+
 
 defaultproperties
 {

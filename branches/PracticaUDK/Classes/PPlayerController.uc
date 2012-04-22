@@ -896,9 +896,10 @@ exec function vuela()
 // Called when the left mouse button is pressed
 exec function LeftMousePressed()
 {
-	if(PGame(WorldInfo.Game).bEarthNotFlying)
-		super.StartFire();
-	else
+	//if(PGame(WorldInfo.Game).bEarthNotFlying)
+	//super.StartFire();
+
+	//else
 		HandleMouseInput(LeftMouseButton, IE_Pressed);
 }
 
@@ -907,8 +908,12 @@ exec function LeftMouseReleased()
 {
 	if(PGame(WorldInfo.Game).bEarthNotFlying)
 		super.StopFire();
-	else
+
+ 
+	else{
+	super.StopFire();
 		HandleMouseInput(LeftMouseButton, IE_Released);
+	}
 }
 
 // Called when the right mouse button is pressed

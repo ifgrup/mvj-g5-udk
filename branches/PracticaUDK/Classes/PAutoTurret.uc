@@ -595,6 +595,17 @@ function RotateTimer()
 defaultproperties
 {
 
-	
+	 Begin Object Class=StaticMeshComponent Name=DMesh
+		//Archetype=InterpActor'PGameContentcannon.escudocca'
+        //StaticMesh=StaticMesh'HU_Deco3.SM.Mesh.S_HU_Deco_SM_HydraulicSupport_C'
+		 StaticMesh=StaticMesh'PGameContentcannon.Mesh.escudocannon'
+        BlockActors=false
+        CollideActors=true
+        LightEnvironment=MyLightEnvironmentrr 
+		//CollisionComponent=CollisionCylinder1
+      Scale3D=(X=20,Y=20,Z=20)
+//ObjectArchetype=InterpActor'PGameContentcannon.escudocca'
+    End Object
+    Components.Add(DMesh)
 
 }
