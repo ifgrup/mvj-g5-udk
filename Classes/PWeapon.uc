@@ -1,5 +1,5 @@
 class PWeapon extends UDKWeapon;
-
+//class PWeapon extends UTWeap_RocketLauncher_Content;
 simulated function TimeWeaponEquipping()
 {
 	AttachWeaponTo( Instigator.Mesh,'WeaponPoint' );
@@ -10,6 +10,7 @@ simulated function AttachWeaponTo(SkeletalMeshComponent MeshCpnt, optional Name 
 {
 	local PPawn P;
 	P = PPawn(Instigator);
+	
 	MeshCpnt.AttachComponentToSocket(Mesh, SocketName);
 	Mesh.SetLightEnvironment(P.LightEnvironment);
 }
@@ -35,8 +36,37 @@ simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optiona
 	,100000
 	);
 }
-/*
-simulated event SetPosition(PPawn Holder)
+
+
+
+simulated function Projectile ProjectileFire()
+{
+local Projectile MyProj;
+local PHUD pHUD;
+//local Vector HitLocation, HitNormal;
+local PPlayerController pPlayerController;
+//local vector FinalLocation;
+    //local vector X,Y,Z;
+//local Pawn Holder;
+//local PMouseInteractionInterface MouseInteractionInterface;
+pPlayerController=PPlayerController(Instigator.Controller);
+`log("er player controller"@pPlayerController.myHUD.GetTargetLocation());
+
+pHUD = PHUD(pPlayerController.myHUD);
+
+MyProj = super.ProjectileFire();
+//MouseInteractionInterface=pHUD.GetMouseActor(HitLocation,HitNormal);
+//MouseInteractionInterface.GetHitLocation();
+
+	
+//`log(" la hitlocation del ratón" @HitLocation);
+`log(" la hitlocation del ratón en el arma" @ pPlayerController.myHUD.GetTargetLocation());
+
+MyProj.Init(Normal( pPlayerController.myHUD.GetTargetLocation()- pPlayerController.Pawn.Location));//lo dirigimos al tagetlocatión
+
+return MyProj;
+}
+/*simulated event SetPosition(UDKPawn Holder)
 {
     local vector FinalLocation;
     local vector X,Y,Z;
@@ -52,8 +82,8 @@ simulated event SetPosition(PPawn Holder)
     SetBase(Holder);
 
     SetRotation(Holder.Controller.Rotation);
-}
-*/
+}*/
+
 defaultproperties
 {
 	Begin Object Class=SkeletalMeshComponent Name=WeaponMesh
@@ -65,10 +95,10 @@ defaultproperties
 	FiringStatesArray(0)=WeaponFiring
 	FiringStatesArray(1)=WeaponFiring
  
-	WeaponFireTypes(0)=EWFT_InstantHit
+	WeaponFireTypes(0)=EWFT_Projectile
 	WeaponFireTypes(1)=EWFT_InstantHit
- 
-	WeaponProjectiles(0)=none
+
+	WeaponProjectiles(0)=class'UTProj_Rocket'
 	WeaponProjectiles(1)=none
  
 	FireInterval(0)=+0.3
