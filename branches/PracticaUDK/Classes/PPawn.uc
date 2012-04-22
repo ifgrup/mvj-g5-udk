@@ -145,7 +145,7 @@ state PawnFalling
 		fTiempoDeSalto+=DeltaTime;
 		if (fTiempoDeSalto>3.0) //Se le ha ido la castaña al salto. Hay que bajarlo a la tierra.Utilizamos el centro del planeta
 		{
-			vAlCentro=PPlayerController(self.Controller).m_CentroPlaneta-Location; 
+			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Location; 
 			FallDirection = Normal(vAlCentro);
 			`log("volviendo pa la tierra neng!");
 		}
