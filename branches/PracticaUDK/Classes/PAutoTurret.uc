@@ -119,9 +119,12 @@ var(Turret) TurretSoundGroup TurretSounds;		//Sounds used for different turret b
 
 var(Turret) Int TurretHealth;		//Initial amount of health for the turret
 
+//VICTOR
+var float m_tiempotranscurrido;
+var int m_numticksrotacion;
+var float m_tiemporotando;
 
-
-simulated function  PostBeginPlay()
+event PostBeginPlay()
 {
 	Super.PostBeginPlay();
 	
@@ -149,6 +152,117 @@ simulated function  PostBeginPlay()
     
 }
 
+function RotaParaApuntarA(vector newTarget)
+{
+	local vector va,vt,va_r,vt_r;
+	local vector IniFireLocation;
+	local vector vx,vy,vz;
+	local bool bkk;
+
+	local float alfa1,alfa2;
+	local rotator rTorreta,ract,rnew,IniFireRotation,rva,rvt;
+	local float cosalfa, alfa,dpitch;
+	local Vector va_ud,vt_ud;
+
+	local vector vsigno;
+	local float pdesp;
+
+	TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+    TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
+
+	/***DEBUG***
+    va=FireLocation-IniFireLocation;
+	FlushPersistentDebugLines();
+	DrawDebugCylinder(IniFireLocation,IniFireLocation+va*2,4,15,100,0,0,true);
+	DrawDebugCylinder(IniFireLocation,newtarget,4,15,0,100,0,true);
+	DrawDebugSphere(IniFireLocation,60,30,200,0,0,true);
+	DrawDebugSphere(FireLocation,25,30,0,0,200,true);
+    ****DEBUG***/
+
+	rTorreta=PivotController.BoneRotation; //vector de la rotación actual
+	
+
+	
+	//va es el vector del cannon. vprojCannon su proyeccion con Z=0 (en vector2D)
+	va=FireLocation-IniFireLocation; //vector de disparo actual. 
+	va_r=Normal2D(va);
+	
+	//va es el vector del nuevo disparo. vprojDisparo su proyeccion con Z=0 (en vector2D)
+	vt=newTarget-IniFireLocation;
+	vt_r=Normal2D(vt);
+		
+	cosalfa=(NoZDot(va_r,vt_r)) ;// / (VSize2D(vprojCannon)*VSize2D(vprojDisparo));
+	alfa=Acos(cosalfa)*RadToDeg;
+	
+	//Control del signo
+	vsigno=va cross vt;
+	
+
+	pdesp=alfa*DegToUnrRot;
+	if (vsigno.Z >=0)
+	{
+		`log('Arriba');
+		pdesp=-pdesp;
+	}
+	else
+	{
+	
+		`log('Abajo');
+    }
+	rTorreta.Pitch=(65535+(rTorreta.Pitch+pdesp))%65535;
+
+
+
+    //AHORA PARA UP/DOWN
+	//hay que considerar la torreta ya girada, y calcular con esa rotación ya realizada
+    va=FireLocation-IniFireLocation; //vector de disparo actual. 
+	
+    
+    rva.Pitch=0;
+	rva.Yaw=pdesp;
+	rva.Roll=0;
+	va=va<<rva; //en va tenemos el disparo a donde apuntaría la torreta después de la rotación de pitch que va a hacer.
+    
+	
+    vt=newTarget-IniFireLocation;
+	
+	rva=Rotator(va);
+	rvt=Rotator(vt);
+	dpitch=rvt.pitch-rva.pitch;
+	rTorreta.yaw=(65535+(rTorreta.Yaw+dpitch))%65535;
+	`log("beta "  @dpitch * UnrRotToDeg);
+
+	FlushPersistentDebugLines();
+	DrawDebugCylinder(IniFireLocation,IniFireLocation+vector(rva)*200,4,15,100,0,0,true);
+	DrawDebugCylinder(IniFireLocation,IniFireLocation+vector(rvt)*200,4,15,0,0,200,true);
+	DrawDebugCylinder(IniFireLocation,newtarget,4,15,0,100,0,true);
+	
+
+	/*
+	va_ud.X=va.X;
+	va_ud.Y=va.Z;
+    va_ud.Z=0;
+	va_ud=Normal2d(va_ud);
+
+	vt_ud.X=vt.X;
+	vt_ud.Y=vt.Z;
+	vt_ud.z=0;
+	vt_ud=Normal2d(vt_ud);
+
+	cosalfa=(NoZDot(va_ud,vt_ud)) ;// / (VSize2D(vprojCannon)*VSize2D(vprojDisparo));
+	alfa=Acos(cosalfa)*RadToDeg;
+
+
+	pdesp=alfa*DegToUnrRot;
+
+	rTorreta.roll=(65535+(rTorreta.roll-pdesp))%65535;
+	*/
+
+    Normalize(rTorreta);
+	DoRotation(rTorreta,1.0);
+
+}
+
 auto state Idle
 {
 	event TakeDamage(int Damage, Controller InstigatedBy, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
@@ -167,12 +281,26 @@ auto state Idle
 		local Float thisDot;
 		local PEnemy P;
 		local Bool bHasTarget;
-//		local Actor a;
-	//	local Vector HitLocation, Hitnormal;
-	
-        return;
+		local Actor a;
+		local Vector HitLocation, Hitnormal;
+		local PPAwn prota;
+
+
+		m_tiempotranscurrido+=Delta;
+        if (m_tiempotranscurrido>3)
+        {
+			m_tiempotranscurrido=0;
+
+			foreach WorldInfo.AllPawns(class'PPawn',Prota)
+			{
+	        	RotaParaApuntarA(Prota.Location);
+				return;
+			}
+        }
+		
+		return;
 		currDot = -1.01;
-	return;
+	
 		//Recalcula enemigo cada medio segundo
 		if(GElapsedTime > 0.5 && !bDestroyed)
 		{
@@ -232,7 +360,7 @@ auto state Idle
 	
 	function BeginIdling()
 	{
-		DoRotation(TurretRotations.IdleRotation, 5.0);
+		DoRotation(TurretRotations.IdleRotation, 1.0);
 
           if(TurretSounds.SleepSound != None)
 			PlaySound(TurretSounds.SleepSound);
@@ -240,6 +368,9 @@ auto state Idle
 	
 	event BeginState(Name PreviousStateName)
 	{
+		//VMH:
+		return;
+
 		if(PreviousStateName != 'Alert')
 		{
 			DoRotation(TurretRotations.AlertRotation, 1.0);
@@ -264,7 +395,7 @@ state() Alert
 	function Tick(Float Delta)
 	{
 		local Rotator AnimRot;
-	return;
+
 		Global.Tick(Delta);
 		return;
 
@@ -380,7 +511,7 @@ state Defend
 		local Rotator InterpRot;
 		local Rotator DiffRot;
 		local Int MaxDiffRot;
-	return;
+
 		Global.Tick(Delta);
 		return;
 
@@ -512,7 +643,7 @@ function Tick(Float Delta)
 	return;
 
 	currDot = -1.01;
-	return;
+
 	if(GElapsedTime > 0.5 && !bDestroyed)
 	{
 		GElapsedTime = 0.0;
@@ -581,15 +712,38 @@ function DoRotation(Rotator NewRotation, Float InterpTime)
 	RotationAlpha = 0.0;
 	TotalInterpTime = InterpTime;
 	SetTimer(0.033,true,'RotateTimer');
+	m_tiemporotando=0;
 }
 
 function RotateTimer()
 {
+	/*********
 	RotationAlpha += 0.033;
 	if(RotationAlpha <= TotalInterpTime)
 		PivotController.BoneRotation = RLerp(StartRotation,TargetRotation,RotationAlpha,true);
 	else
 		ClearTimer('RotateTimer');
+    ***************/
+	local float incpitch,incyaw;
+	local int offsetpitchtotal,offsetyawtotal;
+
+	offsetpitchtotal=TargetRotation.Pitch-StartRotation.Pitch;
+	offsetyawtotal=TargetRotation.Yaw-startrotation.Yaw;
+
+	incpitch=(offsetpitchtotal*0.033)/TotalInterpTime;
+	incyaw=(offsetyawtotal*0.033)/TotalInterpTime;
+
+
+	//PivotController.BoneRotation.Pitch =(65535+(PivotController.BoneRotation.Pitch+incpitch))%65535; 
+	PivotController.BoneRotation.yaw =(65535+(PivotController.BoneRotation.yaw+incyaw))%65535; 
+	
+
+	m_tiemporotando+=0.033;
+	if (m_tiemporotando >= TotalInterpTime)
+	{
+		ClearTimer('RotateTimer');
+	}
+	
 }
 
 defaultproperties
