@@ -289,6 +289,13 @@ state PlayerSpidering
 				else
 					mOffsetCamaraUpDown=15.0;
 			}
+		    `log ("moffset " @mOffsetCamaraUpDown);
+			qcamZ=QuatFromRotator(pawn.Rotation);
+			GetAxes(Pawn.Rotation,qX,qY,qZ);
+			qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
+			qcamZ=QuatProduct(qPitchZ,qcamZ);
+			out_rotation=QuatToRotator(qcamZ);
+			despZ=600*sin(mOffsetCamaraUpDown*degtorad);
 
 			qcamZ=QuatFromRotator(pawn.Rotation);
 			GetAxes(Pawn.Rotation,qX,qY,qZ);
@@ -981,6 +988,10 @@ defaultproperties
 {
 	bNotifyFallingHitWall=true
     InputClass=class'PGame.PPlayerInput'
+	  //m_CentroPlaneta=(X=528,Y=144,Z=8752)
+	//m_CentroPlaneta=(X=0,Y=0,Z=0)
+//m_DistanciaAlCentro=8000
+
 	m_DistanciaAlCentro=5000
 	m_velocidad_rotacion=1.0
 }
