@@ -184,12 +184,12 @@ event PostRender()
 		if(PendingLeftPressed)
 		{
 			//controlamos que el jugador no este volando y le hacemos disparar
-		//	if(PGame(WorldInfo.Game).bEarthNotFlying)
-			//{
+			if(PGame(WorldInfo.Game).bEarthNotFlying)
+			{
 			pPlayerController = PPlayerController(PlayerOwner);
 		
 			pPlayerController.StartFire();
-		//	}
+			}
 			
 
 			//bMouseOverUIElement me dice siestoy encima del propio clip de flash.En talcaso obviamente no podemos actuar encima suyo
@@ -208,18 +208,20 @@ event PostRender()
 					if(pGFx.TTowerActive==0)
 					{
 						`log("Vamos a spawnear una torreta ice");
-						
+						pPlayerController.StartFire();
+						PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-1000);
 						//spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
 
 					}else{
 				spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+				PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
 					}
 					//spawn(class'MU_AutoTurret', ,,HitLocation, rTorreta,);
 				
 					pGFx.SetTowerActive(false);
 					pGFX.SetReload(false);
 					pGFx.TurretReload();
-					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
+					
 
 				}
 				else

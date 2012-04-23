@@ -53,8 +53,16 @@ pPlayerController=PPlayerController(Instigator.Controller);
 `log("er player controller"@pPlayerController.myHUD.GetTargetLocation());
 
 pHUD = PHUD(pPlayerController.myHUD);
+if(pPlayerController.myHUD.GetTargetLocation()==vect(0,0,0))
+	{
+		`log("...");
+	}else{
 
 MyProj = super.ProjectileFire();
+MyProj.Init(Normal( pPlayerController.myHUD.GetTargetLocation()- pPlayerController.Pawn.Location));//lo dirigimos al tagetlocatión
+
+	}
+
 //MouseInteractionInterface=pHUD.GetMouseActor(HitLocation,HitNormal);
 //MouseInteractionInterface.GetHitLocation();
 
@@ -62,7 +70,6 @@ MyProj = super.ProjectileFire();
 //`log(" la hitlocation del ratón" @HitLocation);
 `log(" la hitlocation del ratón en el arma" @ pPlayerController.myHUD.GetTargetLocation());
 
-MyProj.Init(Normal( pPlayerController.myHUD.GetTargetLocation()- pPlayerController.Pawn.Location));//lo dirigimos al tagetlocatión
 
 return MyProj;
 }

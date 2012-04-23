@@ -300,7 +300,7 @@ auto state Idle
 	function TiempodeMorir(vector locaEnemigo)
 	{
 		local Projectile Proj;
-		return;
+		//return;
 
 		Proj = Spawn(class'UTProj_Rocket',self,,FireLocation,,,True);
 		Proj.Init(Normal(locaEnemigo-FireLocation));
@@ -316,17 +316,20 @@ auto state Idle
 		local Actor a;
 		local Vector HitLocation, Hitnormal;
 		local PPAwn prota;
+		local PEnemyPawn_Minion enemigo;
 		
 		m_tiempotranscurrido+=Delta;
         
 
-		foreach WorldInfo.AllPawns(class'PPawn',Prota)
+		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo)
 		{
-	       	RotaParaApuntarA(Prota.Location);
+			`Log("encuentra enemigo???"@enemigo.Location);
+		RotaParaApuntarA(enemigo.Location);
+	     //  	RotaParaApuntarA(Prota.Location);
 			if (m_tiempotranscurrido>5)
 			{
 				m_tiempotranscurrido=0;
-				TiempodeMorir(prota.Location);
+				TiempodeMorir(enemigo.Location);
 			}
         }
 	}//Tick	
