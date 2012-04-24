@@ -42,17 +42,18 @@ simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optiona
 simulated function Projectile ProjectileFire()
 {
 local Projectile MyProj;
-local PHUD pHUD;
+//local PHUD pHUD;
 //local Vector HitLocation, HitNormal;
-local PPlayerController pPlayerController;
+//local PPlayerController pPlayerController;
 //local vector FinalLocation;
     //local vector X,Y,Z;
 //local Pawn Holder;
 //local PMouseInteractionInterface MouseInteractionInterface;
-pPlayerController=PPlayerController(Instigator.Controller);
-`log("er player controller"@pPlayerController.myHUD.GetTargetLocation());
-
-pHUD = PHUD(pPlayerController.myHUD);
+//pPlayerController=PPlayerController(Instigator.Controller);
+//`log("er player controller"@pPlayerController.myHUD.GetTargetLocation());
+MyProj = super.ProjectileFire();
+/*
+//pHUD = PHUD(pPlayerController.myHUD);
 if(pPlayerController.myHUD.GetTargetLocation()==vect(0,0,0))
 	{
 		`log("...");
@@ -69,7 +70,7 @@ MyProj.Init(Normal( pPlayerController.myHUD.GetTargetLocation()- pPlayerControll
 	
 //`log(" la hitlocation del ratón" @HitLocation);
 `log(" la hitlocation del ratón en el arma" @ pPlayerController.myHUD.GetTargetLocation());
-
+*/
 
 return MyProj;
 }
@@ -102,6 +103,7 @@ defaultproperties
 	FiringStatesArray(0)=WeaponFiring
 	FiringStatesArray(1)=WeaponFiring
  
+	//WeaponFireTypes(0)=EWFT_Projectile
 	WeaponFireTypes(0)=EWFT_Projectile
 	WeaponFireTypes(1)=EWFT_InstantHit
 
@@ -126,7 +128,7 @@ defaultproperties
 	InstantHitMomentum(1)=0.0
 	InstantHitDamageTypes(0)=class'DamageType'
 	InstantHitDamageTypes(1)=class'DamageType'
-	WeaponRange=22000
+	WeaponRange=2000
  
 	ShouldFireOnRelease(0)=0
 	ShouldFireOnRelease(1)=0

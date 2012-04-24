@@ -17,6 +17,7 @@ var GFxObject raton;// _clip pelicula que controla el ratón
 var GFxObject bcursor;// cursor de la brocha
 var GFxObject cice;//cursor del cubito de hielo
 var GFxObject cct;//cursor de la torreta cañon 
+var GFxObject pmiratierraMC;//  _clip pelicula que controla el ratón punto de mira en la tierra
 //
 var bool bMouseOverUIElement;
 var bool bTowerActive;
@@ -66,6 +67,7 @@ tdcMC = GetVariableObject("_root.tdc");
  bcursor= GetVariableObject("_root.bcursor");
  cice= GetVariableObject("_root.cice");
  cct= GetVariableObject("_root.cct");
+ pmiratierraMC=GetVariableObject("_root.pmiratierra");
 
 bTowerActive=true;
 TurretReload();
@@ -124,11 +126,13 @@ function AUIVuela(bool val)
 if(!val)
 {
 	raton.GotoAndPlay("mirilla");
+	
 	TTowerActive=2;
 }else{
 //raton.GotoAndPlay("ctcannon");
 }
-
+//raton.SetBool("_visible", val);
+ pmiratierraMC.SetBool("_visible", !val);
 tdcMC.SetBool("_visible", val);
 
  tdiceMC.SetBool("_visible", val);

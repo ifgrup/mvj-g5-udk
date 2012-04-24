@@ -203,5 +203,6 @@ defaultproperties
 	creditos=1000000
 	bEarthNotFlying=true
 	bDelayedStart=false
-	m_CentroPlaneta=(X=48.000000,Y=16.000000,Z=0.000000)
+	m_CentroPlaneta=(X=528,Y=144,Z=8752)
+	//m_CentroPlaneta=(X=48.000000,Y=16.000000,Z=0.000000)
 }

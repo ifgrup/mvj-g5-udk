@@ -323,11 +323,13 @@ auto state Idle
 
 		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo)
 		{
-			`Log("encuentra enemigo???"@enemigo.Location);
-		RotaParaApuntarA(enemigo.Location);
+			
+		
 	     //  	RotaParaApuntarA(Prota.Location);
 			if (m_tiempotranscurrido>5)
 			{
+				RotaParaApuntarA(enemigo.Location);
+				`Log("encuentra enemigo???"@enemigo.Location);
 				m_tiempotranscurrido=0;
 				TiempodeMorir(enemigo.Location);
 			}
