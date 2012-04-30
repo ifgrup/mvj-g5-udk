@@ -78,11 +78,10 @@ var Float RotationAlpha;		//Curret alpha for interpolating to a new rotation
 var Rotator StartRotation;	//Beginning rotation for interpolating
 var Rotator TargetRotation;	//Desired rotations for interpolating
 
-var Vector FireLocation;		//World position of the firing socket
-var Rotator FireRotation;	//World orientation of the firing socket
+var Vector FireLocation,IniFireLocation;		//World position of the firing socket
+var Rotator FireRotation,IniFireRotation;	//World orientation of the firing socket
 
-//var SkelControlSingleBone PivotController;	//Reference to the skelcontrol in the AnimTree
-var SkelControlLookAt  PivotController;	//Reference to the skelcontrol in the AnimTree
+var SkelControlSingleBone PivotController;	//Reference to the skelcontrol in the AnimTree
 
 var Bool bCanFire;		//Is the turret in a firing state?
 var Bool bDestroyed;	//Has the turret been destroyed?
@@ -120,16 +119,27 @@ var(Turret) TurretSoundGroup TurretSounds;		//Sounds used for different turret b
 
 var(Turret) Int TurretHealth;		//Initial amount of health for the turret
 
+//variables seleccion de enemigos y disparo
+var PEnemyPawn_Minion enemigoActual;
+var float RangoDisparo;
+
+
 //VICTOR
 var float m_tiempotranscurrido;
 var int m_numticksrotacion;
 var float m_tiemporotando;
+var vector m_NormalSuelo;
+var Quat m_quatTorreta;
+
 
 event PostInitAnimTree(SkeletalMeshComponent skelcomp)
 {
 	Super.PostInitAnimTree(skelcomp);
 	if (skelcomp==TurretMesh)
-		PivotController = SkelControlLookAt (TurretMesh.FindSkelControl(TurretBones.PivotControllerName));
+	{
+		PivotController = SkelControlSingleBone(TurretMesh.FindSkelControl(TurretBones.PivotControllerName));
+		m_quatTorreta=QuatFromRotator(PivotController.BoneRotation);
+	}
 }
 
 simulated event PostBeginPlay()
@@ -161,30 +171,101 @@ simulated event PostBeginPlay()
     
 }
 
+function setNormalSuelo(vector normal)
+{
+	m_NormalSuelo=normal;
+}
+
 function RotaParaApuntarA(vector newTarget)
 {
-	local vector va,vt,va_r,vt_r;
-	local vector IniFireLocation;
-	local vector vx,vy,vz;
-	local bool bkk;
+    local vector va,vt;
+    local vector vplano1,vplano2,vplano3;
 
-	local float alfa1,alfa2;
-	local rotator rTorreta,ract,rnew,IniFireRotation,rva,rvt;
-	local float cosalfa, alfa,dpitch;
-	local Vector va_ud,vt_ud;
 
-	local vector vsigno;
-	local float pdesp;
+    local float beta;
+    local rotator rTorreta,rva,rvt;
+    local float alfa,alfa_Rad,beta_rad;
 
-	TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+    
+    local Vector dist;
+    local Quat qPitch;
+    local vector X,Y,Z;
+
+    TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
     TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
 
-	
-	PivotController.TargetLocation=newtarget;
-	//Normal(newTarget-FireLocation);
-//	(Normal(newTarget-FireLocation))
-	FlushPersistentDebugLines();
-	DrawDebugCylinder(FireLocation,newtarget,5,30,200,0,0,true);
+    //ushPersistentDebugLines();
+    
+    
+    rTorreta=PivotController.BoneRotation;
+    
+    //va es el vector del cannon. vprojCannon su proyeccion con Z=0 (en vector2D)
+    va=FireLocation-IniFireLocation; //vector de disparo actual. 
+    //va es el vector del nuevo disparo. vprojDisparo su proyeccion con Z=0 (en vector2D)
+    vt=newTarget-IniFireLocation;
+
+
+
+    //CALCULO CON ROTATOR
+    rva=Rotator(va);
+    rvt=Rotator(vt);
+
+    DrawDebugCylinder(IniFireLocation,IniFireLocation+Normal(vt)*300,3,10,200,0,0,true);
+    vPlano1=IniFireLocation;
+    vPlano2=FireLocation;
+    vPlano3=IniFireLocation+ ((vPlano2-vPlano1) cross m_NormalSuelo);
+    dist=PointProjectToPlane(newTarget,vPlano1,vPlano2,vPlano3);
+    
+    vt=dist-IniFireLocation;
+    //native static final function bool GetAngularDistance (out Vector2D OutAngularDist, Vector Direction, Vector AxisX, Vector AxisY, Vector AxisZ)
+
+    //DrawDebugCylinder(IniFireLocation,IniFireLocation+Normal(vt)*300,3,10,0,200,0,true);
+    rvt=Rotator(vt);
+    alfa=rvt.Yaw-rva.Yaw;
+    alfa=alfa*UnrRotToDeg;
+    //Ya sabemos el ángulo alfa de la rotación. Lo aplicamos antes de hacer los cálculos para el up/down:
+ 
+    if (true)
+    {
+     
+        alfa_rad=alfa*DegToRad;
+        rTorreta=QuatToRotator(m_quatTorreta);
+        GetAxes(rTorreta,X,Y,Z);
+        qPitch=QuatFromAxisAndAngle(Y,alfa_rad);
+        m_quatTorreta=QuatProduct(qPitch,m_quatTorreta);
+        rTorreta=QuatToRotator(m_quatTorreta);
+        PivotController.BoneRotation=rTorreta;
+
+    }
+    
+    //Proyeccion en el plano para up/down
+    TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+    TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
+    vPlano1=IniFireLocation;
+    vPlano2=FireLocation;
+    vPlano3=IniFireLocation+m_NormalSuelo;
+    dist=PointProjectToPlane(newTarget,vPlano1,vPlano2,vPlano3);
+    
+    vt=dist-IniFireLocation;
+    rvt=Rotator(vt);
+    rva=Rotator(va);
+    beta=(rvt.pitch-rva.Pitch);
+    beta=beta*UnrRotToDeg;
+    //`log("alfa y beta" @alfa  @beta);
+
+    if(false)
+    {
+       
+        beta_rad=beta*DegToRad;
+        rTorreta=QuatToRotator(m_quatTorreta);
+        GetAxes(rTorreta,X,Y,Z);
+        qPitch=QuatFromAxisAndAngle(Z,beta_rad);
+        m_quatTorreta=QuatProduct(qPitch,m_quatTorreta);
+        rTorreta=QuatToRotator(m_quatTorreta);
+        PivotController.BoneRotation=rTorreta;
+        
+        `log("BR " @rTorreta.Roll);
+    }
 
 }
 /*******************
@@ -301,8 +382,11 @@ auto state Idle
 	{
 		local Projectile Proj;
 		//return;
+		 TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+    TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
 
-		Proj = Spawn(class'UTProj_Rocket',self,,FireLocation,,,True);
+		
+		Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
 		Proj.Init(Normal(locaEnemigo-FireLocation));
 		
 	}
@@ -316,25 +400,75 @@ auto state Idle
 		local Actor a;
 		local Vector HitLocation, Hitnormal;
 		local PPAwn prota;
-		local PEnemyPawn_Minion enemigo;
 		
-		m_tiempotranscurrido+=Delta;
-        
+		super.Tick(Delta);
 
-		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo)
-		{
+		m_tiempotranscurrido+=Delta;
+        TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+        TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
+		
+
+			if(enemigoActual!=None) 
+			{
+				
+				if (Vsize(enemigoActual.Location-FireLocation)>RangoDisparo || enemigoActual.life==0)
+				{
+					enemigoActual=None;
+				}
+				else
+				{
+					FlushPersistentDebugLines();
+					DrawDebugCylinder(FireLocation,enemigoActual.Location,5,20,0,0,255,true);
+					DrawDebugSphere(FireLocation,80,20,255,0,0,true);
+					DrawDebugSphere(IniFireLocation,80,20,0,255,0,true);
+
+					RotaParaApuntarA(enemigoActual.Location);
+					if (m_tiempotranscurrido>0.5)
+					{
+						`Log("encuentra enemigo???"@enemigoActual.Location);
+						m_tiempotranscurrido=0;
+						TiempodeMorir(enemigoActual.Location);
+					}
+				}
+			}
+			else
+			{
+				seleccionarTarget();
+				m_tiempotranscurrido=0;
+			}
 			
 		
 	     //  	RotaParaApuntarA(Prota.Location);
-			if (m_tiempotranscurrido>5)
-			{
-				RotaParaApuntarA(enemigo.Location);
-				`Log("encuentra enemigo???"@enemigo.Location);
-				m_tiempotranscurrido=0;
-				TiempodeMorir(enemigo.Location);
-			}
-        }
+		
+        
 	}//Tick	
+
+	function seleccionarTarget()
+	{
+		local float denemigo;
+		local PEnemyPawn_Minion enemigo,tenemigo;
+		denemigo=RangoDisparo+1;
+		tenemigo=None;
+		
+		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
+		{
+			if(vsize(enemigo.Location-self.Location)<denemigo)
+			{
+				tenemigo=enemigo;
+				denemigo=vsize(enemigo.Location-self.Location);
+			}
+		}
+
+		if (tenemigo!=None)
+		{
+			enemigoActual=tenemigo;
+		}
+
+	}
+
+
+
+
 }//state
 
 
@@ -806,5 +940,6 @@ defaultproperties
 //ObjectArchetype=InterpActor'PGameContentcannon.escudocca'
     End Object
     Components.Add(DMesh)
+	RangoDisparo=2500;
 
 }

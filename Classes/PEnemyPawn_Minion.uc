@@ -5,7 +5,11 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
     if(PGame(WorldInfo.Game) != none)
         PGame(WorldInfo.Game).EnemyKilled();
 
-    Destroy();
+	
+	life--;
+	if(life == 0)
+		Destroy();
+	
 }
 
 defaultproperties
@@ -14,4 +18,5 @@ defaultproperties
 		SkeletalMesh=SkeletalMesh'Layout.GoodGuy_Blue'
 	End Object
 	GroundSpeed=100.0
+	
 }

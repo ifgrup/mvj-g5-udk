@@ -137,7 +137,7 @@ event PostRender()
 	local Vector2D DistanceCheck;
 //	local float DistanceToItem;
 	//local PPlayerController s;
-//	local PAutoTurret tc;
+	local PAutoTurret tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
 	
@@ -213,8 +213,9 @@ event PostRender()
 						//spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
 
 					}else{
-				spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
-				PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
+					tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+					tc.setNormalSuelo(HitNormal);
+					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
 					}
 					//spawn(class'MU_AutoTurret', ,,HitLocation, rTorreta,);
 				
