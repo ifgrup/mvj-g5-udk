@@ -5,7 +5,9 @@ var PPawn P; // variable to hold the pawn we bump into
 var() int DamageAmount;   //how much brain to munch
 var vector DireccionCaida;
 var vector FallDirection;
+var vector ViewX, ViewY, ViewZ,OldFloor;
 var float fTiempoDeSalto; //tiempo que lleva saltando. Si se pasa de un límite, para evitar que se pire volando, lo bajamos
+var int life;
 
 simulated function PostBeginPlay()
 {
@@ -117,6 +119,9 @@ auto state Cayendo
 		DireccionCaida=Normal(vCaida);
 		`log('Enemy entrando en estado CAYENDO');
 		bDirectHitWall = true;
+		OldFloor=vect(0,0,1);
+		GetAxes(Rotation,ViewX,ViewY,ViewZ);
+		
 	}
 	
 	/** Adds gravity to the velocity based on floor normal pawn was last on */
@@ -145,7 +150,7 @@ auto state Cayendo
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_None);
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
-
+		
 		GotoState(''); //estado default
 	}
    
@@ -184,6 +189,86 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	super.Bump( Other, OtherComp, HitNormal );
 }
 
+
+//orientar a los enemigos
+event Tick(float DeltaTime)
+{
+	super.Tick(DeltaTime);
+	acutalizaRotacion(DeltaTime);
+
+}
+
+
+function acutalizaRotacion(float DeltaTime)
+	{
+		local rotator ViewRotation;
+		local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
+		local bool bSaltando;
+
+		
+		//ClientMessage("UPdate Estado spider" $ DeltaTime);
+ 
+		//Mientras salta, Pawn.Base vale None
+		//Si tiene que saltar, saltará en la vertical que YA tiene al estar caminando sobre el planeta
+		//por lo que no hay que cambiar ninguna rotación
+		
+			MyFloor = self.Floor;
+		//Si estoy saltando, nada de transiciones de normales, sigo teniendo como normal la vertical del salto y punto
+		if ( MyFloor != OldFloor )
+		{
+			// smoothly transition between floors
+			//Para colocar al bicho en la perpendicular del suelo
+			RealFloor = MyFloor;
+			MyFloor = Normal(6*DeltaTime * MyFloor + (1 - 6*DeltaTime) * OldFloor);
+ 
+			if ( (RealFloor dot MyFloor) > 0.999 )
+			{
+				MyFloor = RealFloor;
+			}
+			else
+			{
+				// translate view direction
+				CrossDir = Normal(RealFloor Cross OldFloor);
+				FwdDir = CrossDir cross MyFloor; //Hacia delante, forward
+				OldFwdDir = CrossDir cross OldFloor; //El hacia delante que tenía antes
+				ViewX = MyFloor * (OldFloor dot ViewX) + CrossDir * (CrossDir dot ViewX) + FwdDir * (OldFwdDir dot ViewX);
+				ViewX = Normal(ViewX);
+				ViewZ = MyFloor * (OldFloor dot ViewZ) + CrossDir * (CrossDir dot ViewZ) + FwdDir * (OldFwdDir dot ViewZ);
+				ViewZ = Normal(ViewZ);
+				OldFloor = MyFloor;
+				ViewY = Normal(MyFloor cross ViewX);
+				//Pawn.mesh.SetRotation(OrthoRotation(ViewX,ViewY,ViewZ));
+			}
+		}
+ 
+		//Guardamos aLookUp para GetPlayerViewPoint
+		//mUltimoLookup=PlayerInput.aLookUp;
+
+		//Ahora giro de la cámara.
+		//Al girar por aTurn,sólo nos afectará la rotación sobre el eje Z.
+		//Por tanto, la Z quedará igual, la X es la que rotará, y la Y será el producto cartesiano de la nueva X por la Z que ya tenemos
+		/*if ( (PlayerInput.aTurn != 0))
+		{
+		   // adjust Yaw based on aTurn
+			if ( PlayerInput.aTurn != 0 )
+			{
+				ViewX = Normal(ViewX + 10 * ViewY * Sin(0.0005*DeltaTime*PlayerInput.aTurn));
+			}
+ 			// calculate new Y axis
+			ViewY = Normal(MyFloor cross ViewX);
+ 		}*/
+
+		ViewRotation = OrthoRotation(ViewX,ViewY,ViewZ);
+		
+		SetRotation(ViewRotation);
+		/*if(Pawn != None)
+		{
+			Pawn.SetRotation(ViewRotation);
+		}	*/	
+	}
+
+
+
 defaultproperties 
 {
 	Begin Object Name=WPawnSkeletalMeshComponent
@@ -216,4 +301,9 @@ defaultproperties
 	bDontPossess=false
 	//bNotifyStopFalling=true --> si quisiéramos controlar el fin del falling así, se ejecutaría StoppedFalling.
 	DamageAmount=10
+	bCanClimbUp=true
+	bCanClimbLadders=true
+	MaxStepHeight=45
+	WalkableFloorZ=0
+	life=10;
 }

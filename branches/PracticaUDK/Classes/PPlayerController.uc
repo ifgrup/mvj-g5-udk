@@ -297,13 +297,6 @@ state PlayerSpidering
 			out_rotation=QuatToRotator(qcamZ);
 			despZ=600*sin(mOffsetCamaraUpDown*degtorad);
 
-			qcamZ=QuatFromRotator(pawn.Rotation);
-			GetAxes(Pawn.Rotation,qX,qY,qZ);
-			qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
-			qcamZ=QuatProduct(qPitchZ,qcamZ);
-			out_rotation=QuatToRotator(qcamZ);
-			despZ=600*sin(mOffsetCamaraUpDown*degtorad);
-
 			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
 			out_Location = Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
 			

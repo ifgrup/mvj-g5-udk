@@ -28,7 +28,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
 		BlockNonZeroExtent=true
 		BlockZeroExtent=true
 
-		//bDisableAllRigidBody=true
+	bDisableAllRigidBody=true
 
         //Translation=(X=0,Y=0,z=-200)
     End Object
