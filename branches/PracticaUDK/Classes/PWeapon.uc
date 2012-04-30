@@ -107,7 +107,7 @@ defaultproperties
 	WeaponFireTypes(0)=EWFT_Projectile
 	WeaponFireTypes(1)=EWFT_InstantHit
 
-	WeaponProjectiles(0)=class'UTProj_Rocket'
+	WeaponProjectiles(0)=class'PMisiles'
 	WeaponProjectiles(1)=none
  
 	FireInterval(0)=+0.3

@@ -1,7 +1,7 @@
 class PEnemy_Boss extends PEnemy
     placeable;
 
-var int life;
+
 
 
 
@@ -15,5 +15,5 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 defaultproperties
 {
     MovementSpeed=128.0
-	life=10;
+	life=1000;
 }
