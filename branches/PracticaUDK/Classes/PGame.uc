@@ -10,6 +10,8 @@ var int EnemiesLeft;
 var bool bEarthNotFlying;
 var int creditos;
 var PPlayerBase PlayerBase;
+var array<PWorldPathNode> NodosMundo;
+var bool NodosCreados;
 
 struct Spawner
 {
@@ -19,12 +21,11 @@ struct Spawner
 
 struct GrupoNodos
 {
-	var int r, g, b;
+	var LinearColor Col;
 	var int id;
 	var array<PPathNode> Nodos;
 };
 
-//var array<GrupoNodos> Nodos;
 var array<GrupoNodos> Nodos;
 var array<Spawner> EnemySpawners;
 
@@ -56,8 +57,55 @@ simulated function PostBeginPlay()
 	foreach DynamicActors(class'PPlayerBase', PB)
 		PlayerBase = PB;
 
+	CreaNodosMundo();
+
 	SetTimer(1.0, false, 'ActivateSpawners');
 	super.PostBeginPlay();
+}
+
+function CreaNodosMundo()
+{
+	local PWorldPathNode pNodo;
+	local int i;
+	local int max;
+
+	foreach DynamicActors(class'PWorldPathNode', pNodo)
+	{
+		NodosMundo.AddItem(pNodo);
+	}
+
+	max = NodosMundo.Length;
+
+	for(i = 0; i < max; i++)
+	{
+		pNodo = NodosMundo[i];
+		pNodo.Inicia();
+		pNodo.Scan(false);
+	}
+
+	ReScanWorldPathNodes();
+
+	NodosCreados = true;
+}
+
+function AddWorldPathNode(PWorldPathNode pNodo)
+{
+	NodosMundo.AddItem(pNodo);
+}
+
+function ReScanWorldPathNodes()
+{
+	local array<PWorldPathNode> PN;
+	local PWorldPathNode pNodo;
+
+	foreach DynamicActors(class'PWorldPathNode', pNodo)
+	{
+		pNodo.Proyecta();
+		PN.AddItem(pNodo);
+	}
+
+	NodosMundo = PN;
+
 }
 
 function CreatePathNodes()
@@ -72,9 +120,7 @@ function CreatePathNodes()
 		{
 			GP.Nodos.AddItem(PN);
 			GP.id = PN.id;
-			GP.r = Rand(255);
-			GP.g = Rand(255);
-			GP.b = Rand(255);
+			GP.Col = MakeLinearColor(Frand(), FRand(), FRand(), 1.0);
 
 			Nodos.AddItem(GP);
 		}
@@ -87,7 +133,20 @@ function CreatePathNodes()
 
 event Tick(float DeltaTime)
 {
+	//FlushPersistentDebugLines();
+	if(NodosCreados)
+		DrawWorldNodes();
 	DrawNodes();
+}
+
+function DrawWorldNodes()
+{
+	local int i, j;
+
+	for(i = 0; i < NodosMundo.Length; i++)
+	{
+		DrawDebugSphere(NodosMundo[i].Location, 30, 10, 255, 0, 0, false);
+	}
 }
 
 function DrawNodes()
@@ -107,13 +166,13 @@ function DrawNodes()
 			else
 				v2 = GP.Nodos[i+1].Location;
 
-			DrawDebugLine(v1, v2, GP.r, GP.g, GP.b, false);
-			DrawDebugSphere(v1, 20, 10, GP.r, GP.g, GP.b, false);
+			DrawDebugLine(v1, v2, GP.Col.R * 255, GP.Col.G * 255, GP.Col.B * 255, false);
+			DrawDebugSphere(v1, 20, 10, GP.Col.R * 255, GP.Col.G * 255, GP.Col.B * 255, false);
 		}
 	}
 }
 
-function AddPathNode(int id, PPathNode pNodo)
+function AddPathNode(int id, PPathNode pNodo, optional LinearColor col)
 {
 	local int indice;
 	local GrupoNodos GP;
@@ -123,9 +182,7 @@ function AddPathNode(int id, PPathNode pNodo)
 	{
 		GP.Nodos.AddItem(pNodo);
 		GP.id = pNodo.id;
-		GP.r = Rand(255);
-		GP.g = Rand(255);
-		GP.b = Rand(255);
+		GP.Col = col;
 
 		Nodos.AddItem(GP);
 		Broadcast(none, "Creando nuevo grupo de nodos...");
@@ -203,6 +260,7 @@ defaultproperties
 	creditos=1000000
 	bEarthNotFlying=true
 	bDelayedStart=false
-	m_CentroPlaneta=(X=528,Y=144,Z=8752)
-	//m_CentroPlaneta=(X=48.000000,Y=16.000000,Z=0.000000)
+	//m_CentroPlaneta=(X=528,Y=144,Z=8752)
+	m_CentroPlaneta=(X=48.000000,Y=16.000000,Z=0.000000)
+	NodosCreados=false
 }
