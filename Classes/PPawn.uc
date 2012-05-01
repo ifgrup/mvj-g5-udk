@@ -105,7 +105,7 @@ function OrientarPawnPorNormal ( Vector normalsuelo, out Rotator pawnRotation)
 	self.Floor=normalsuelo;
 	pawnRotation=rPawn;
 	//c4 
-	DrawDebugCylinder(self.Location,self.Location+vector(rPawn)*100,5,20,100,100,0,true);
+	//DrawDebugCylinder(self.Location,self.Location+vector(rPawn)*100,5,20,100,100,0,true);
 }
 
 /** -----------------------
@@ -233,7 +233,7 @@ state PawnFallingSky
 		SetBase(Wall, HitNormal);
 		
 		//c3
-		DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
+		//DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
 		OrientarPawnPorNormal(HitNormal,routPawn);
 		//Ya ha llegado al suelo. Spidercerdo, spidercerdo..
 		GoToState(''); //vuelve el pawn al estado 'normal'
@@ -328,7 +328,8 @@ defaultproperties
 	Begin Object Class=SkeletalMeshComponent Name=WPawnSkeletalMeshComponent
 		//Your Mesh Properties
 		//SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
-		SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
+		//SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
+		SkeletalMesh=SkeletalMesh'Personaje.Ogre'
 		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
 		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
 		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'

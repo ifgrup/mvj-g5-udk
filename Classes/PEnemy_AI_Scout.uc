@@ -11,12 +11,36 @@ var int RandomTicksMax;
 var int OffX, OffY;
 var int OffsetX, OffsetY;
 var int Step;
+var array<PWorldPathNode> ListaNodosRecorridos;
+var DecalMaterial Decal;
+var MaterialInstanceConstant Mat;
+var LinearColor ColorDecal;
+var int NegX;
+var int NegY;
 
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
 	theObjective = PGame(WorldInfo.Game).PlayerBase;
-	RandomTicksMax = Rand(10) + 1;
+	//RandomTicksMax = Rand(10) + 1;
+	
+	ColorDecal = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
+
+	Mat = new class'MaterialInstanceConstant';
+	Mat.SetParent(MaterialInstanceConstant'Materiales.Material.DecalSuelo_INST');
+	Mat.SetScalarParameterValue('R', ColorDecal.R);
+	Mat.SetScalarParameterValue('G', ColorDecal.G);
+	Mat.SetScalarParameterValue('B', ColorDecal.B);
+
+	if(Rand(10) <= 5)
+		NegX = -1;
+	else
+		NegX = 1;
+
+	if(Rand(10) >= 5)
+		NegY = -1;
+	else
+		NegY = 1;
 
 	SetTimer(1, false, 'BrainTimer');
 }
@@ -41,29 +65,28 @@ function BrainTimer()
 	local float fTimer;
 
 	ClearTimer('BrainTimer');
+	FlushPersistentDebugLines();
 
-	if(VSize(OldLocation - Pawn.Location) > Step)
+	if(VSize(OldLocation - Pawn.Location) > (Step/4))
 	{
 		nodo = spawn(class'PPathNode',,,Pawn.Location);
 		nodo.id = id;
-		PGame(WorldInfo.Game).AddPathNode(id, nodo);
+		PGame(WorldInfo.Game).AddPathNode(id, nodo, ColorDecal);
 		
 		OldLocation = Pawn.Location;
 	}
 
 	RandomTicksCounter++;
 
-	if(RandomTicksCounter < RandomTicksMax)
-	{		
-		CurrentDestination = RandomDest();
-		fTimer = 1.0;
+	if(FastTrace(theObjective.Location, self.Location,,true))
+	{
+		CurrentDestination = theObjective.Location;
+		fTimer = 0.5;
 	}
 	else
 	{
-		RandomTicksCounter = 0;
-
-		CurrentDestination = theObjective.Location;
-		fTimer = 3.0;
+		CurrentDestination = RandomDest();
+		fTimer = 1;
 	}
 
 	DrawDebugInfo();
@@ -74,29 +97,65 @@ function BrainTimer()
 
 }
 
+function vector RandomPathDest()
+{
+	local PWorldPathNode pNodo;
+	local float DistanceToBase;
+
+	DistanceToBase = VSize(self.Location - theObjective.Location);
+	foreach DynamicActors(class'PWorldPathNode', pNodo)
+	{
+		if(ListaNodosRecorridos.Find(pNodo) != -1)
+			continue;
+
+		if((pNodo.DistanceToBase < DistanceToBase))
+		{
+			if(VSize(pNodo.Location - Location) < 1000)
+			{
+				DrawDebugSphere(pNodo.Location, 300, 10, 255, 255,0, true);
+				ListaNodosRecorridos.AddItem(pNodo);
+				return pNodo.Location;
+			}
+		}
+	}
+
+	return RandomDest();
+}
+
+function bool CalcMoveToDestination()
+{
+	local Vector HitLocation, HitNormal;
+	local Vector StartTrace, EndTrace;
+	local Actor pBase;
+
+	StartTrace = Pawn.Location;
+	EndTrace = theObjective.Location;
+
+	pBase = Trace(HitLocation, HitNormal, EndTrace, StartTrace, true,,, TRACEFLAG_Bullet);
+
+	return pBase.IsA('PPlayerBase');
+}
+
 function Vector RandomDest()
 {
 	local vector R;
 	local vector HitLocation, HitNormal;
 	local TraceHitInfo HitInfo;
 	local vector StartTrace, EndTrace;
+	local vector rr;
 
-	if(Rand(Step) < Step /2)
-		OffsetX = Rand(Step)+Rand(Step);
-	else
-		OffsetX = Rand(Step)-Rand(Step);
+	rr = VRandCone(self.Location, DegToRad * 360);	
 
-	if(Rand(Step) < Step /2)
-		OffsetY = Rand(Step)+Rand(Step);
-	else
-		OffsetY = Rand(Step)-Rand(Step);
+	OffsetX = Rand(Step)+Rand(Step);
+	OffsetY = Rand(Step)+Rand(Step);
 	
-	R.X = Pawn.Location.X + OffsetX;
-	R.Y = Pawn.Location.Y + OffsetY;
+	R.X = Pawn.Location.X * rr.x + OffsetX * NegX;
+	R.Y = Pawn.Location.Y * rr.Y + OffsetY * NegY;
 	R.Z = Pawn.Location.Z;
 
 	StartTrace = R;
-	EndTrace = PGame(WorldInfo.Game).GetCentroPlaneta();
+	EndTrace = theObjective.Location;
+		//PGame(WorldInfo.Game).GetCentroPlaneta();
 
 	Trace(HitLocation, HitNormal, EndTrace, StartTrace, TRUE,, HitInfo, TRACEFLAG_Bullet);
 
@@ -108,6 +167,7 @@ state MoveToDestination
 	event Tick(float DeltaTime)
 	{
 		local Pawn pDetectado;
+		local PWorldPathNode pNodo;
 		DrawDebugInfo();
 
 		if(VSize(OldDecalLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize / 2))
@@ -115,7 +175,7 @@ state MoveToDestination
 			OldDecalLocation = Pawn.Location;
 			WorldInfo.MyDecalManager.SpawnDecal
 			(
-				DecalMaterial'WP_BioRifle.Materials.Bio_Splat_Decal_001',
+				Mat,
 				Pawn.Location,
 				rotator(-Pawn.Floor),
 				PGame(WorldInfo.Game).fDecalSize * 2, PGame(WorldInfo.Game).fDecalSize * 2,
@@ -124,7 +184,7 @@ state MoveToDestination
 				FRand() * 360,,,,,,,100000
 			);
 		}
-
+		
 		foreach Pawn.OverlappingActors(class'Pawn', pDetectado, 200,,true)
 		{
 			// Me aseguro que no me estoy detectando a mi mismo
@@ -162,7 +222,7 @@ state ArrivedDestination
 
 defaultproperties
 {
-	Step=200;
-	RandomTicksCounter=0;
-	RandomTicksMax=10;
+	Step=1000
+	RandomTicksCounter=0
+	RandomTicksMax=2
 }

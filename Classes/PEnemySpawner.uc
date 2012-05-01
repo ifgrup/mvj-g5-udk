@@ -24,9 +24,10 @@ function SpawnEnemy()
 {
 	local PEnemy EN;
 	local Penemy_AI_Bot AIB;
+
     if(EnemyScout == none)
     {
-        EnemyScout = spawn(class'PEnemyPawn_Scout',,, Location);
+        EnemyScout = spawn(class'PEnemyPawn_Scout',,,Location);
 		AI = spawn(class'PEnemy_AI_Scout',,,Location);
 		AI.SetID(Group);
 		AI.Possess(EnemyScout, false);
@@ -57,5 +58,5 @@ defaultproperties
         HiddenGame=False
     End Object
     Components.Add(Sprite)
-	MaxEnemies=20;
+	MaxEnemies=1;
 }

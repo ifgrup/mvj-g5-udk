@@ -15,5 +15,5 @@ defaultproperties
 	Begin Object Name=WPawnSkeletalMeshComponent
 		SkeletalMesh=SkeletalMesh'Layout.BadGuy_Red'
 	End Object
-	GroundSpeed=200.0
+	GroundSpeed=100.0
 }

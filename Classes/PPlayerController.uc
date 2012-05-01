@@ -446,10 +446,10 @@ state PlayerSpidering
 			return;
 		pFinTrace=PPawn(Pawn).Location+Normal(direccion)*20; //Del obstáculo hacia nosotros
 		pInitTrace=pFinTrace+Normal(direccion)*120; //Hacia donde nos dirigimos
-		DrawDebugCone(pInitTrace,direccion,45,0.01,0.01,10,MakeColor(200,200,0),false);
+		//DrawDebugCone(pInitTrace,direccion,45,0.01,0.01,10,MakeColor(200,200,0),false);
 		mFloor=PPawn(Pawn).Floor;
-		DrawDebugCone(pInitTrace-(mFloor*20),pFinTrace-pInitTrace,45,0.01,0.01,10,MakeColor(200,200,0),false);
-		DrawDebugCone(pInitTrace+(mFloor*40),pFinTrace-pInitTrace,45,0.01,0.01,10,MakeColor(200,200,0),false);
+		//DrawDebugCone(pInitTrace-(mFloor*20),pFinTrace-pInitTrace,45,0.01,0.01,10,MakeColor(200,200,0),false);
+		//DrawDebugCone(pInitTrace+(mFloor*40),pFinTrace-pInitTrace,45,0.01,0.01,10,MakeColor(200,200,0),false);
 		
 		aTrace1=PPawn(Pawn).Trace(HitLocation,HitNormal,pFinTrace,pInitTrace,true,vect(12,12,12),,TRACEFLAG_Blocking);
 		aTrace2=PPawn(Pawn).Trace(HitLocation,HitNormal,pFinTrace+(mFloor*40),pInitTrace+(mFloor*40),true,vect(12,12,12),,TRACEFLAG_Blocking);
@@ -564,7 +564,7 @@ state PlayerSpidering
         bPressedJump = bSaveJump;
 
 		//drawdebugcone(pawn.Location,pawn.Floor,100,0.1,0.1,100,MakeColor(200,0,0));
-		drawdebugcone(pawn.Location,vector(PPawn(Pawn).rotation),100,0.1,0.1,100,MakeColor(0,0,200));
+		//drawdebugcone(pawn.Location,vector(PPawn(Pawn).rotation),100,0.1,0.1,100,MakeColor(0,0,200));
 		
     }
 
@@ -981,11 +981,7 @@ defaultproperties
 {
 	bNotifyFallingHitWall=true
     InputClass=class'PGame.PPlayerInput'
-	  //
-	//m_CentroPlaneta=(X=0,Y=0,Z=0)
-m_DistanciaAlCentro=8000
-
-	//m_DistanciaAlCentro=5000
+	m_DistanciaAlCentro=8000
 	m_velocidad_rotacion=1.0
 }
 
