@@ -27,10 +27,11 @@ simulated event PostBeginPlay()
 	ColorDecal = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 
 	Mat = new class'MaterialInstanceConstant';
-	Mat.SetParent(MaterialInstanceConstant'Materiales.Material.DecalSuelo_INST');
-	Mat.SetScalarParameterValue('R', ColorDecal.R);
+	Mat.SetParent(MaterialInstanceConstant'Materiales.DecalSuelo2_INST');
+	Mat.SetVectorParameterValue('Color', ColorDecal);
+	/*Mat.SetScalarParameterValue('R', ColorDecal.R);
 	Mat.SetScalarParameterValue('G', ColorDecal.G);
-	Mat.SetScalarParameterValue('B', ColorDecal.B);
+	Mat.SetScalarParameterValue('B', ColorDecal.B);*/
 
 	if(Rand(10) <= 5)
 		NegX = -1;

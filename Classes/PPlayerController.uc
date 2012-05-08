@@ -24,6 +24,8 @@ var vector CamViewX, CamViewY, CamViewZ;
  * */
 var vector mUltimoFloorAntesSalto;
 var float m_DistanciaAlCentro; //distancia que queremos mantener alrededor del planeta hasta su centro
+var float m_ZoomMaxAcercar;
+var float m_ZoomMaxAlejar;
 
 //Variables para controlar la rotación
 var Quat m_CurrentQuadFlaying;
@@ -45,6 +47,36 @@ enum EMouseEvent
 	ScrollWheelUp,
 	ScrollWheelDown,
 };
+
+
+
+var SkeletalMesh transformedmesh;
+var MaterialInterface transformedMaterial0;
+var AnimTree transformedAnimTree;
+var array<AnimSet> transformedAnimSet;
+var AnimNodeSequence transformedAnimSeq;
+var PhysicsAsset transformedPhysicsAsset;
+
+
+
+exec function derp()
+{
+	self.Pawn.GroundSpeed+=500;
+	self.Pawn.Mesh.SetSkeletalMesh(transformedMesh);
+	self.Pawn.Mesh.SetMaterial(0,MaterialInstanceConstant'VH_TheCar.TheCar_Material');
+	self.Pawn.Mesh.SetMaterial(1,MaterialInstanceConstant'VH_TheCar.TheCar_Material');
+	self.Pawn.Mesh.SetPhysicsAsset(transformedPhysicsAsset);
+	self.Pawn.Mesh.AnimSets=transformedAnimSet;
+	self.Pawn.Mesh.SetAnimTreeTemplate(transformedAnimTree);
+	self.Pawn.Mesh.SetTranslation(vect(0,0,80));
+}
+
+
+
+
+
+
+
 
 exec function ActivateDecals()
 {
@@ -764,8 +796,8 @@ state PlayerFallingSky
 
 		pPosition=PPawn(Pawn).Location;
 		vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition; //vector de dirección del prota.
-		pawn.Velocity=Normal(vAlCentro)*400;
-		pawn.Acceleration=pawn.Velocity*10;
+		pawn.Velocity=Normal(vAlCentro)*900;
+		pawn.Acceleration=pawn.Velocity*500;
 
 		//ponemos al pawn 300 unidades más abajo, porque pondremos la cámara 300 unidades más arriba para que se le vea caer
 		PPawn(pawn).SetLocation(pPosition+Normal(vAlCentro)*300);
@@ -866,14 +898,14 @@ function HandleMouseInput(EMouseEvent MouseEvent, EInputEvent InputEvent)
 					pHUD.PendingMiddlePressed = true;
 					break;
 
-				case ScrollWheelUp:
+				/*case ScrollWheelUp:
 					pHUD.PendingScrollUp = true;
 					break;
 
 				case ScrollWheelDown:
 					pHUD.PendingScrollDown = true;
 					break;
-
+				*/
 				default:
 					break;
 			}
@@ -903,7 +935,38 @@ function HandleMouseInput(EMouseEvent MouseEvent, EInputEvent InputEvent)
 
 
 
+exec function ZoomPlanetaAcerca()
+{
+	local bool bTierraAire;
+	
+	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
+	if(bTierraAire)
+	{
+		if(m_DistanciaAlCentro <= m_ZoomMaxAcercar)
+			return;
 
+		m_DistanciaAlCentro-=500;
+		PGame(WorldInfo.Game).Broadcast(self, "Acercando al planeta:"@m_DistanciaAlCentro);
+	}
+}
+
+exec function ZoomPlanetaAleja()
+{
+	local bool bTierraAire;
+	
+	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
+	if(bTierraAire)
+	{
+		if(m_DistanciaAlCentro >= m_ZoomMaxAlejar)
+			return;
+
+		m_DistanciaAlCentro+=500;
+		PGame(WorldInfo.Game).Broadcast(self, "Alejando del planeta:"@m_DistanciaAlCentro);
+	}
+
+}
 
 exec function vuela()
 {
@@ -911,10 +974,12 @@ exec function vuela()
 	
 	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
+	
 	if(bTierraAire)
 		GotoState('PlayerFallingSky');
 	else
 		GotoState('PlayerFlaying');
+
 
 }
 
@@ -979,9 +1044,14 @@ exec function MiddleMouseScrollDown()
 
 defaultproperties
 {
+	transformedMesh=SkeletalMesh'VH_Cicada.Mesh.SK_VH_Cicada'
+	transformedAnimTree=AnimTree'VH_Cicada.Anims.AT_VH_Cicada'
+	transformedPhysicsAsset=PhysicsAsset'VH_Cicada.Mesh.SK_VH_Cicada_Physics'
 	bNotifyFallingHitWall=true
     InputClass=class'PGame.PPlayerInput'
-	m_DistanciaAlCentro=8000
+	m_DistanciaAlCentro=19000
+	m_ZoomMaxAcercar=11000
+	m_ZoomMaxAlejar=19000
 	m_velocidad_rotacion=1.0
 }
 
