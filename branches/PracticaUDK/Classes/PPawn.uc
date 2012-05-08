@@ -333,36 +333,25 @@ defaultproperties
 		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
 		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
 		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
-		Translation=(Z=8.0)
-		Scale=1.075
+
+		Translation=(Z=-50.0)
+		//Scale=1.075
 		//General Mesh Properties
 		bCacheAnimSequenceNodes=FALSE
 		AlwaysLoadOnClient=true
 		AlwaysLoadOnServer=true
 		bOwnerNoSee=false
 		CastShadow=true
-		BlockRigidBody=TRUE
 		bUpdateSkelWhenNotRendered=false
 		bIgnoreControllersWhenNotRendered=TRUE
 		bUpdateKinematicBonesFromAnimation=true
 		bCastDynamicShadow=true
-		RBChannel=RBCC_Untitled3
-		RBCollideWithChannels=(Untitled3=true)
 		LightEnvironment=MyLightEnvironment
 		bOverrideAttachmentOwnerVisibility=true
 		bAcceptsDynamicDecals=FALSE
-		bHasPhysicsAssetInstance=true
-		TickGroup=TG_PreAsyncWork
-		MinDistFactorForKinematicUpdate=0.2
-		bChartDistanceFactor=true
-		RBDominanceGroup=20
 		bUseOnePassLightingOnTranslucency=TRUE
 		bPerBoneMotionBlur=true
 		HiddenGame=False
-		BlockNonZeroExtent=True
-		BlockZeroExtent=True
-		BlockActors=True
-		CollideActors=True
 	End Object
 
 	// Lo añadimos al motor
@@ -374,18 +363,12 @@ defaultproperties
 	Begin Object Name=CollisionCylinder
 		CollisionRadius=+0021.000000
 		CollisionHeight=+0044.000000
-		BlockNonZeroExtent=True
-		BlockZeroExtent=True
-		BlockActors=True
-		CollideActors=True
 	End Object
 
 	// Lo añadimos al motor
 	CylinderComponent=CollisionCylinder
 	CollisionComponent=CollisionCylinder
 	Components.Add(CollisionCylinder)
-
-	bCollideComplex=true //VMH: Creo que necesario, aunque el cilindro sigue usándolo, no ho entenc...
 	//VLR Inventario para el arma
 	InventoryManagerClass=class'PGame.PInventoryManager'
 }
