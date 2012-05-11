@@ -939,9 +939,9 @@ exec function ZoomPlanetaAcerca()
 {
 	local bool bTierraAire;
 	
-	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	//PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
-	if(bTierraAire)
+	if(!bTierraAire)
 	{
 		if(m_DistanciaAlCentro <= m_ZoomMaxAcercar)
 			return;
@@ -955,9 +955,9 @@ exec function ZoomPlanetaAleja()
 {
 	local bool bTierraAire;
 	
-	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	//PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
-	if(bTierraAire)
+	if(!bTierraAire)
 	{
 		if(m_DistanciaAlCentro >= m_ZoomMaxAlejar)
 			return;

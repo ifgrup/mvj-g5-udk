@@ -140,6 +140,7 @@ event PostRender()
 	local PAutoTurret tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
+	local bool bTierraAire;
 	
 	Super.PostRender();
 	//Casting
@@ -420,6 +421,7 @@ event PostRender()
 		{
 			PendingScrollUp = false;
 			LastMouseInteractionInterface.MouseScrollUp(CachedMouseWorldOrigin, CachedMouseWorldDirection);
+
 		}
 
 		//Scroll hacia abajo
@@ -427,6 +429,7 @@ event PostRender()
 		{
 			PendingScrollDown = false;
 			LastMouseInteractionInterface.MouseScrollDown(CachedMouseWorldOrigin, CachedMouseWorldDirection);
+
 		}
 	}
 }
