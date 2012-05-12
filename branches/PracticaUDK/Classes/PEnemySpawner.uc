@@ -58,5 +58,5 @@ defaultproperties
         HiddenGame=False
     End Object
     Components.Add(Sprite)
-	MaxEnemies=1;
+	MaxEnemies=10;
 }
