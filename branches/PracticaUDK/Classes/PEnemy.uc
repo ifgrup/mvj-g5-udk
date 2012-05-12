@@ -305,5 +305,5 @@ defaultproperties
 	bCanClimbLadders=true
 	MaxStepHeight=45
 	WalkableFloorZ=0
-	life=10;
+	life=100;
 }
