@@ -9,6 +9,12 @@ var vector ViewX, ViewY, ViewZ,OldFloor;
 var float fTiempoDeSalto; //tiempo que lleva saltando. Si se pasa de un límite, para evitar que se pire volando, lo bajamos
 var int life;
 
+
+function SetColor(LinearColor Col)
+{
+
+}
+
 simulated function PostBeginPlay()
 {
    super.PostBeginPlay();

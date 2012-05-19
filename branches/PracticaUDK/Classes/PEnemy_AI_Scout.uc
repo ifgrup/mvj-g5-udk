@@ -46,6 +46,12 @@ simulated event PostBeginPlay()
 	SetTimer(1, false, 'BrainTimer');
 }
 
+function SetColor(LinearColor Col)
+{
+	ColorDecal = Col;
+	Mat.SetVectorParameterValue('Color', ColorDecal);
+}
+
 function SetID(int i)
 {
 	id = i;
@@ -192,7 +198,7 @@ state MoveToDestination
 			if(pDetectado != Pawn)
 			{
 				WorldInfo.Game.Broadcast(self, Name@"Ha chocado con"@pDetectado.Name);
-				DrawDebugSphere(pDetectado.Location, 200, 10, 255, 0, 0, false);
+				//DrawDebugSphere(pDetectado.Location, 200, 10, 255, 0, 0, false);
 				GotoState('MoveToDestination');
 			}
 		}
