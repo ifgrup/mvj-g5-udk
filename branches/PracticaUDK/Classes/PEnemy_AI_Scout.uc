@@ -197,13 +197,8 @@ state MoveToDestination
 			// Me aseguro que no me estoy detectando a mi mismo
 			if(pDetectado != Pawn)
 			{
-<<<<<<< .mine
 				//DBG WorldInfo.Game.Broadcast(self, Name@"Ha chocado con"@pDetectado.Name);
 				//DBG DrawDebugSphere(pDetectado.Location, 200, 10, 255, 0, 0, false);
-=======
-				WorldInfo.Game.Broadcast(self, Name@"Ha chocado con"@pDetectado.Name);
-				//DrawDebugSphere(pDetectado.Location, 200, 10, 255, 0, 0, false);
->>>>>>> .r51
 				GotoState('MoveToDestination');
 			}
 		}
