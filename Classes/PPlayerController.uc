@@ -26,7 +26,8 @@ var vector mUltimoFloorAntesSalto;
 var float m_DistanciaAlCentro; //distancia que queremos mantener alrededor del planeta hasta su centro
 var float m_ZoomMaxAcercar;
 var float m_ZoomMaxAlejar;
-
+var float m_DistanciaAlCentro_desiredZoom; //Destino deseable de la distancia tras el zoom con la rueda del mouse
+var int m_stepZoom ;//unidades en las que se acerca o aleja la distancia con la rueda del mouse
 //Variables para controlar la rotación
 var Quat m_CurrentQuadFlaying;
 var Quat m_DesiredQuadFlaying;
@@ -140,7 +141,7 @@ state PlayerWalking
 	
 	event EndState(Name NextStateName)
 	{
-		WorldInfo.Game.Broadcast(self,"Saliendo de PlayerWalking");
+		//DBG WorldInfo.Game.Broadcast(self,"Saliendo de PlayerWalking");
 	}
 }
 
@@ -635,7 +636,7 @@ state PlayerSpidering
 	 * */
     event EndState(Name NextStateName)
     {
-		WorldInfo.Game.Broadcast(self,"Saliendo de PlayerSpidering");
+		//DBG WorldInfo.Game.Broadcast(self,"Saliendo de PlayerSpidering");
 		SetPhysics(PHYS_Spider);
     }
 }
@@ -672,6 +673,7 @@ state PlayerFlaying
 		m_DesiredQuadFlaying= m_CurrentQuadFlaying;
 		//DrawDebugCone(m_CentroPlaneta,pPosition-m_CentroPlaneta,m_DistanciaAlCentro,0.01,0.01,200,MakeColor(255,0,0,1),true);
 		
+		m_DistanciaAlCentro_desiredZoom=m_DistanciaAlCentro;
 	}
 
 	event EndState(Name NextState)
@@ -764,6 +766,7 @@ state PlayerFlaying
 		local Vector posCurrent, posDesired;
 		local float dist;
 
+		ActualizaZoomRueda(DeltaTime);
 		CalculaPosicionPorQuaternion(m_CurrentQuadFlaying,posCurrent);
 		CalculaPosicionPorQuaternion(m_DesiredQuadFlaying,posDesired);
 		dist=VSize(posCurrent-posDesired);
@@ -776,7 +779,39 @@ state PlayerFlaying
 			
 	}
 
-}
+	function ActualizaZoomRueda(float delta)
+	{
+		//Vamos incrementando/decrementando la distancia al centro para que el zoom sea suave
+        local float diff;
+		local float decel; //para hacerlo decelerado...
+		local float prop,sprop;
+
+        diff=abs(m_DistanciaAlCentro-m_DistanciaAlCentro_desiredZoom);
+        
+		if(diff < 1) //para evitar histéresis, just in case
+		{
+			return;
+		}
+
+		prop=((m_stepZoom-diff)/m_stepZoom)*90; //para que vaya de 0 a 90
+		sprop=abs(cos(prop*DegToRad));
+			
+		decel=sprop*delta*1000;
+		
+        if (m_DistanciaAlCentro < m_DistanciaAlCentro_desiredZoom)
+        {
+			m_DistanciaAlCentro+=decel;
+			//`log("Alejando "@decel);
+        }
+		else
+		{	
+			m_DistanciaAlCentro-=decel;
+			//`log("Acercando "@decel);
+		}
+
+	}
+
+}//State PlayerFlaying
 
 
 
@@ -943,11 +978,12 @@ exec function ZoomPlanetaAcerca()
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
 	if(!bTierraAire)
 	{
-		if(m_DistanciaAlCentro <= m_ZoomMaxAcercar)
+		if(m_DistanciaAlCentro_desiredZoom <= m_ZoomMaxAcercar)
 			return;
 
-		m_DistanciaAlCentro-=500;
-		PGame(WorldInfo.Game).Broadcast(self, "Acercando al planeta:"@m_DistanciaAlCentro);
+		m_DistanciaAlCentro_desiredZoom=m_DistanciaAlCentro-m_stepZoom;
+		//DBG PGame(WorldInfo.Game).Broadcast(self, "Acercando al planeta:"@m_DistanciaAlCentro);
+
 	}
 }
 
@@ -959,11 +995,11 @@ exec function ZoomPlanetaAleja()
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
 	if(!bTierraAire)
 	{
-		if(m_DistanciaAlCentro >= m_ZoomMaxAlejar)
+		if(m_DistanciaAlCentro_desiredZoom >= m_ZoomMaxAlejar)
 			return;
 
-		m_DistanciaAlCentro+=500;
-		PGame(WorldInfo.Game).Broadcast(self, "Alejando del planeta:"@m_DistanciaAlCentro);
+		m_DistanciaAlCentro_desiredZoom=m_DistanciaAlCentro+m_stepZoom;
+		//DBG PGame(WorldInfo.Game).Broadcast(self, "Alejando del planeta:"@m_DistanciaAlCentro);
 	}
 
 }
@@ -1049,9 +1085,11 @@ defaultproperties
 	transformedPhysicsAsset=PhysicsAsset'VH_Cicada.Mesh.SK_VH_Cicada_Physics'
 	bNotifyFallingHitWall=true
     InputClass=class'PGame.PPlayerInput'
-	m_DistanciaAlCentro=19000
+	m_DistanciaAlCentro=13000
+	m_DistanciaAlCentro_desiredZoom=19000
 	m_ZoomMaxAcercar=11000
 	m_ZoomMaxAlejar=19000
+	m_stepZoom=600
 	m_velocidad_rotacion=1.0
 }
 
