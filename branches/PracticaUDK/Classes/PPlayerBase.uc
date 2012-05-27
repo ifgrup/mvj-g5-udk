@@ -37,7 +37,7 @@ function ChangeTexture()
 		bumped=true;
 	}
 	
-	WorldInfo.Game.Broadcast(self,Name$": bumped:" @bumped);
+	//DBG WorldInfo.Game.Broadcast(self,Name$": bumped:" @bumped);
 }
 
 /** Tick

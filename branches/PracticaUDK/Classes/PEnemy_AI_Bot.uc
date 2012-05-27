@@ -98,7 +98,7 @@ state GoToNextPath
 Begin:
 	if (theObjective != None)
 	{
-		WorldInfo.Game.Broadcast(self,Name$" va hacia el path"@theObjective.Name);
+		//DBG WorldInfo.Game.Broadcast(self,Name$" va hacia el path"@theObjective.Name);
 
 		// Esta función permite ponerle un rango para que el movimiento no sea siempre
 		// en línea recta. El Pawn se moverá a cualquier punto dentro de las 100 unidades de radio

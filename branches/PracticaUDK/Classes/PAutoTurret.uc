@@ -120,17 +120,33 @@ var(Turret) TurretSoundGroup TurretSounds;		//Sounds used for different turret b
 var(Turret) Int TurretHealth;		//Initial amount of health for the turret
 
 //variables seleccion de enemigos y disparo
-var PEnemyPawn_Minion enemigoActual;
+//var PEnemyPawn_Minion enemigoActual;
+var PPawn enemigoActual;
+
 var float RangoDisparo;
 
 
 //VICTOR
-var float m_tiempotranscurrido;
 var int m_numticksrotacion;
-var float m_tiemporotando;
 var vector m_NormalSuelo;
 var Quat m_quatTorreta;
 
+var float m_tiempoDesdeAntDisparo; //tiempo desde el anterior disparo.
+var float m_TimeoutEntreDisparo; //Tiempo que debe pasar desde un disparo a otro
+var float m_TiempoDesdeInicioRotacion; //tiempo transcurrido en la última rotación
+var float m_TimeoutEntreRotacionIdle; //Tiempo que debe pasar entre una rotacion random y otra durante el Idle. Es igual al tiempo de rotacion que se le asigna
+                                  //a cada rotacion. Esto hace que la velocidad no sea constante, ya que siempre tarda lo mismo en hacer
+                                  //cada rotacion. Se podría cambiar
+var float m_TimeoutEntreRotacionDisparando;
+
+var float m_TiempoRotacionActual; //lo que tiene que taqrdar la rotacion en curso
+var float m_TiempoTranscurridoRotacionActual;
+var bool m_tocaRotacionIdle; //Para hacer que en idle haga una pasa cada m_TimeoutEntreRotacionIdle
+
+var float m_tiempoApuntando;//tiempo que llevamos apuntando al entrar en estado NuevoTarget
+var float m_tiempoNecesarioApuntar;// Tiempo calculado para que la torreta llegue a apuntar al nuevo target
+
+var bool m_InTick;
 
 event PostInitAnimTree(SkeletalMeshComponent skelcomp)
 {
@@ -176,26 +192,98 @@ function setNormalSuelo(vector normal)
 	m_NormalSuelo=normal;
 }
 
-function RotaParaApuntarA(vector newTarget)
+function DoRotation(Rotator NewRotation, Float InterpTime)
+{
+	/***
+	ClearTimer('RotateTimer');//Anulamos cualquier otra rotación que hubiera en curso
+	StartRotation = PivotController.BoneRotation;
+	TargetRotation = NewRotation;
+	RotationAlpha = 0.0;
+	TotalInterpTime = InterpTime;
+	SetTimer(0.05,true,'RotateTimer'); //25 veces por segundo is enough
+   ***/
+	//`log("DoRotation");
+	while(m_InTick)
+	{
+		`log("IN_TIIIIIIIIIIIIIICK");
+	}
+
+	m_TiempoRotacionActual=0; //Intentamos parar la rotacion actual
+	TargetRotation=NewRotation; //El nuevo Destino
+	StartRotation=PivotController.BoneRotation; //Desde donde estamos hasta el destino
+	m_TiempoRotacionActual=InterpTime;
+	m_TiempoTranscurridoRotacionActual=0;
+	
+}
+
+function RotateTimer()
+{
+	
+	RotationAlpha += (0.05/TotalInterpTime);
+	if(RotationAlpha <= TotalInterpTime)
+		PivotController.BoneRotation = RLerp(StartRotation,TargetRotation,RotationAlpha,true);
+	else
+		ClearTimer('RotateTimer');
+
+}
+
+
+//Timer global que updatea la rotacion de la torreta, para que siempre se dirija hacia el destino definido en TargetLocation
+function Tick(Float Delta)
+{
+	local float incAlfa;
+	local vector vectRotActual,vectCannon;
+	local float fdot;
+
+	super.Tick(Delta);
+	
+    m_InTick=true;
+
+	m_TiempoTranscurridoRotacionActual+=Delta;
+	
+	//Hacemos que se dirija hacia el TargetRotation, pero sólo si no ha llegado claro
+	if(m_TiempoRotacionActual !=0 && m_TiempoTranscurridoRotacionActual < (m_TiempoRotacionActual))
+	{
+	
+		incAlfa=m_TiempoTranscurridoRotacionActual/m_TiempoRotacionActual;
+		PivotController.BoneRotation = RLerp(StartRotation,TargetRotation,incAlfa,true);
+		/*
+		if(enemigoActual!=None)
+		{
+			vectRotActual=Vector(PivotController.BoneRotation);
+			vectCannon=Normal(enemigoActual.Location- IniFireLocation);
+			fdot=vectRotActual dot vectCannon;
+			if (fdot>0.995)
+			{
+				//la rotación actual ya es correcta, porque está apuntando al enemigo actual. La cancelamos
+				m_TiempoRotacionActual=m_TiempoTranscurridoRotacionActual-0.1; //Para que no entre en el if
+				`Log("Rotacion cancelada!!!");
+
+			}
+		}
+		*/
+    }
+	m_InTick=false;
+    
+}
+
+
+
+function RotaParaApuntarA(vector newTarget,float tiempoDeRotacion)
 {
     local vector va,vt;
     local vector vplano1,vplano2,vplano3;
-
-
     local float beta;
     local rotator rTorreta,rva,rvt;
     local float alfa,alfa_Rad,beta_rad;
-
-    
     local Vector dist;
     local Quat qPitch;
     local vector X,Y,Z;
 
+	//`log("Apunto");
+
     TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
     TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
-
-    //ushPersistentDebugLines();
-    
     
     rTorreta=PivotController.BoneRotation;
     
@@ -204,22 +292,17 @@ function RotaParaApuntarA(vector newTarget)
     //va es el vector del nuevo disparo. vprojDisparo su proyeccion con Z=0 (en vector2D)
     vt=newTarget-IniFireLocation;
 
-
-
     //CALCULO CON ROTATOR
     rva=Rotator(va);
     rvt=Rotator(vt);
 
-    DrawDebugCylinder(IniFireLocation,IniFireLocation+Normal(vt)*300,3,10,200,0,0,true);
+    //DrawDebugCylinder(IniFireLocation,IniFireLocation+Normal(vt)*300,3,10,200,0,0,true);
     vPlano1=IniFireLocation;
     vPlano2=FireLocation;
     vPlano3=IniFireLocation+ ((vPlano2-vPlano1) cross m_NormalSuelo);
     dist=PointProjectToPlane(newTarget,vPlano1,vPlano2,vPlano3);
     
     vt=dist-IniFireLocation;
-    //native static final function bool GetAngularDistance (out Vector2D OutAngularDist, Vector Direction, Vector AxisX, Vector AxisY, Vector AxisZ)
-
-    //DrawDebugCylinder(IniFireLocation,IniFireLocation+Normal(vt)*300,3,10,0,200,0,true);
     rvt=Rotator(vt);
     alfa=rvt.Yaw-rva.Yaw;
     alfa=alfa*UnrRotToDeg;
@@ -227,17 +310,18 @@ function RotaParaApuntarA(vector newTarget)
  
     if (true)
     {
-     
+  
         alfa_rad=alfa*DegToRad;
         rTorreta=QuatToRotator(m_quatTorreta);
         GetAxes(rTorreta,X,Y,Z);
         qPitch=QuatFromAxisAndAngle(Y,alfa_rad);
         m_quatTorreta=QuatProduct(qPitch,m_quatTorreta);
+        
         rTorreta=QuatToRotator(m_quatTorreta);
-        PivotController.BoneRotation=rTorreta;
-
+		rTorreta.Roll=0;
+        //PivotController.BoneRotation=rTorreta;
     }
-    
+
     //Proyeccion en el plano para up/down
     TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
     TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
@@ -252,8 +336,7 @@ function RotaParaApuntarA(vector newTarget)
     beta=(rvt.pitch-rva.Pitch);
     beta=beta*UnrRotToDeg;
     //`log("alfa y beta" @alfa  @beta);
-
-    if(false)
+    if(true)
     {
        
         beta_rad=beta*DegToRad;
@@ -261,135 +344,35 @@ function RotaParaApuntarA(vector newTarget)
         GetAxes(rTorreta,X,Y,Z);
         qPitch=QuatFromAxisAndAngle(Z,beta_rad);
         m_quatTorreta=QuatProduct(qPitch,m_quatTorreta);
+
         rTorreta=QuatToRotator(m_quatTorreta);
-        PivotController.BoneRotation=rTorreta;
-        
-        `log("BR " @rTorreta.Roll);
+        rTorreta.roll=0;
+        //PivotController.BoneRotation=rTorreta;
     }
 
+	DoRotation(rTorreta,tiempoDeRotacion);
 }
-/*******************
-	return;
-
-	/***DEBUG***
-    va=FireLocation-IniFireLocation;
-	FlushPersistentDebugLines();
-	DrawDebugCylinder(IniFireLocation,IniFireLocation+va*2,4,15,100,0,0,true);
-	DrawDebugCylinder(IniFireLocation,newtarget,4,15,0,100,0,true);
-	DrawDebugSphere(IniFireLocation,60,30,200,0,0,true);
-	DrawDebugSphere(FireLocation,25,30,0,0,200,true);
-    ****DEBUG***/
-
-	rTorreta=PivotController.BoneRotation; //vector de la rotación actual
-		
-
-	
-	//va es el vector del cannon. vprojCannon su proyeccion con Z=0 (en vector2D)
-	va=FireLocation-IniFireLocation; //vector de disparo actual. 
-	va_r=Normal2D(va);
-	
-	//va es el vector del nuevo disparo. vprojDisparo su proyeccion con Z=0 (en vector2D)
-	vt=newTarget-IniFireLocation;
-	vt_r=Normal2D(vt);
-		
-	cosalfa=(NoZDot(va_r,vt_r)) ;// / (VSize2D(vprojCannon)*VSize2D(vprojDisparo));
-	alfa=Acos(cosalfa)*RadToDeg;
-	
-	//Control del signo
-	vsigno=va cross vt;
-	
-
-	pdesp=alfa*DegToUnrRot;
-	if (vsigno.Z >=0)
-	{
-		`log('Arriba');
-		rTorreta.Pitch=(65535+(rTorreta.Pitch-pdesp))%65535;
-	}
-	else
-	{
-		rTorreta.Pitch=(65535+(rTorreta.Pitch+pdesp))%65535;
-		`log('Abajo');
-    }
-	
-    Normalize(rTorreta);
-    DoRotation(rTorreta,1.0);
-    return;
-
-    //AHORA PARA UP/DOWN
-	//hay que considerar la torreta ya girada, y calcular con esa rotación ya realizada
-    va=FireLocation-IniFireLocation; //vector de disparo actual. 
-	
-    
-    rva.Pitch=0;
-	rva.Yaw=pdesp;
-	rva.Roll=0;
-	va=va<<rva; //en va tenemos el disparo a donde apuntaría la torreta después de la rotación de pitch que va a hacer.
-    
-	
-    vt=newTarget-IniFireLocation;
-	
-	rva=Rotator(va);
-	rvt=Rotator(vt);
-	dpitch=rvt.pitch-rva.pitch;
-	rTorreta.yaw=(65535+(rTorreta.Yaw+dpitch))%65535;
-	`log("beta "  @dpitch * UnrRotToDeg);
-
-	FlushPersistentDebugLines();
-	DrawDebugCylinder(IniFireLocation,IniFireLocation+vector(rva)*200,4,15,100,0,0,true);
-	DrawDebugCylinder(IniFireLocation,IniFireLocation+vector(rvt)*200,4,15,0,0,200,true);
-	DrawDebugCylinder(IniFireLocation,newtarget,4,15,0,100,0,true);
-	
-
-	/*
-	va_ud.X=va.X;
-	va_ud.Y=va.Z;
-    va_ud.Z=0;
-	va_ud=Normal2d(va_ud);
-
-	vt_ud.X=vt.X;
-	vt_ud.Y=vt.Z;
-	vt_ud.z=0;
-	vt_ud=Normal2d(vt_ud);
-
-	cosalfa=(NoZDot(va_ud,vt_ud)) ;// / (VSize2D(vprojCannon)*VSize2D(vprojDisparo));
-	alfa=Acos(cosalfa)*RadToDeg;
-
-
-	pdesp=alfa*DegToUnrRot;
-
-	rTorreta.roll=(65535+(rTorreta.roll-pdesp))%65535;
-	*/
-
-    Normalize(rTorreta);
-	DoRotation(rTorreta,1.0);
-
-}
-******************/
 
 auto state Idle
 {
+
+	event BeginState(Name PreviousStateName)
+	{
+		m_tiempoDesdeAntDisparo=0;
+		m_TiempoDesdeInicioRotacion=0;
+		`log("Idle");
+	}
+
 	event TakeDamage(int Damage, Controller InstigatedBy, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 	{
 		Global.TakeDamage(Damage,InstigatedBy,HitLocation,Momentum,DamageType,HitInfo,DamageCauser);
 
 		if(TurretHealth > 0)
 		{
-			GotoState('Alert');
+			//GotoState('Alert');
 		}
 	}
 
-	function TiempodeMorir(vector locaEnemigo)
-	{
-		local Projectile Proj;
-		//return;
-		 TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
-    TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
-
-		
-		Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
-		Proj.Init(Normal(locaEnemigo-FireLocation));
-		
-	}
 
 	function Tick(Float Delta)
 	{
@@ -400,57 +383,225 @@ auto state Idle
 		local Actor a;
 		local Vector HitLocation, Hitnormal;
 		local PPAwn prota;
-		
+		local Rotator rActual;
+		local int     random;
+
 		super.Tick(Delta);
 
-		m_tiempotranscurrido+=Delta;
+		m_TiempoDesdeInicioRotacion+=Delta;
+
         TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
         TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
-		
 
-			if(enemigoActual!=None) 
+		if (m_TiempoDesdeInicioRotacion < m_TimeoutEntreRotacionIdle)
+		{
+			//Sólo recalculamos cuando la rotación en curso haya acabado.
+			//por tanto, aquí no hacemos nada
+			return;
+		}
+
+		seleccionarTarget();
+        if(enemigoActual==None) 
+        {
+			//No ha encontrado enemigo. Así que hacemos una rotación random como si estuviera apuntando
+			//hacemos que sea mínimo de 30 grados, máximo de 90
+			//Para que no sea movimiento continuo, una de cada dos veces que no haga nada
+			if (m_tocaRotacionIdle)
 			{
-				
-				if (Vsize(enemigoActual.Location-FireLocation)>RangoDisparo || enemigoActual.life==0)
+				rActual=PivotController.BoneRotation;
+				random=30+(rand(60)*DegToUnrRot);
+				if ((random%2)==0)
 				{
-					enemigoActual=None;
+					random=-random;
 				}
-				else
-				{
-					FlushPersistentDebugLines();
-					DrawDebugCylinder(FireLocation,enemigoActual.Location,5,20,0,0,255,true);
-					DrawDebugSphere(FireLocation,80,20,255,0,0,true);
-					DrawDebugSphere(IniFireLocation,80,20,0,255,0,true);
+				rActual.Yaw=(rActual.Yaw+random) %65535;
+				rActual.Roll=0;
+				rActual.Pitch=0;
+				Normalize(rActual);
+				DoRotation(rActual,m_TimeoutEntreRotacionIdle);
+			}
+			m_tocaRotacionIdle=!m_tocaRotacionIdle;
+			m_TiempoDesdeInicioRotacion=0; //Para reiniciar control del tiempo que está rotando
+		}
+		else
+		{
+			//Ha seleccionado un nuevo enemigo. Vamos a buscarlo, y cancelamos la rotación actual
+			`log("Nuevo Target seleccionado");
+			m_TiempoRotacionActual=0;//Para parar la rotacion actual
+			GoToState('NuevoTarget');
+		}
+	} //Tick de Idle
 
-					RotaParaApuntarA(enemigoActual.Location);
-					if (m_tiempotranscurrido>0.5)
-					{
-						`Log("encuentra enemigo???"@enemigoActual.Location);
-						m_tiempotranscurrido=0;
-						TiempodeMorir(enemigoActual.Location);
-					}
-				}
+	event EndState(name NextState)
+	{
+		//Porsiaca, cancelamos la rotación en curso
+		ClearTimer('RotateTimer');
+	}
+
+}//State Idle
+
+state Disparando
+{
+	event BeginState(Name PreviousStateName)
+	{
+		m_tiempoDesdeAntDisparo=0;
+		m_TiempoDesdeInicioRotacion=0;
+		//Si hemos llegado aquí es porque ya ha apuntado y está en la dirección correcta, no hay que rotar
+		`log("Estado Disparando");
+	}
+
+
+	function Tick(Float Delta)
+	{
+		local vector dirActual,dirEnemigo;
+		local float dotprot;
+
+        super.Tick(Delta);
+		TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+        TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
+		
+        m_tiempoDesdeAntDisparo+=Delta;
+		m_TiempoDesdeInicioRotacion+=Delta; //Rotacion para apuntar
+
+		if(enemigoActual!=None) 
+		{
+				
+			if (Vsize(enemigoActual.Location-FireLocation)>(RangoDisparo+200) )//|| enemigoActual.life==0)
+			{
+				enemigoActual=None;
+				`log("Estabamos disparando pero está fuera de rango. Volvemos a Idle");
+				GoToState('Idle');
+
 			}
 			else
 			{
-				seleccionarTarget();
-				m_tiempotranscurrido=0;
+				//El disparo y el recálculo de posición, a diferentes timeouts:
+				//Primero tiempo entre disparos
+				if(  m_tiempoDesdeAntDisparo> m_TimeoutEntreDisparo)
+				{
+					//TiempodeMorir(enemigoActual.Location);
+					//DisparaEnDireccionActual();
+					
+					CongelarEnemigo();
+					m_tiempoDesdeAntDisparo=0;
+				}
+
+				//Luego tiempo entre rotaciones para reapuntar
+				if (m_TiempoDesdeInicioRotacion > m_TimeoutEntreRotacionDisparando)
+				{
+					
+						m_TiempoDesdeInicioRotacion=0;
+						RotaParaApuntarA(enemigoActual.Location,m_TimeoutEntreRotacionDisparando);
+					
+				}
 			}
-			
-		
-	     //  	RotaParaApuntarA(Prota.Location);
-		
-        
+		}
+		else //Porsiaca, si no hay enemigo, volvemos a Idle
+		{
+			GoToState('Idle');
+		}
+       
 	}//Tick	
+
+}//state Disparando
+
+
+state NuevoTarget
+{
+	event BeginState(Name PreviousStateName)
+	{
+		local Vector dirActual,dirEnemigo;
+		local float dotprot;
+
+		`Log("NuevoTarget");
+
+		m_tiempoApuntando=0xFFFF; //Para que nada más empezar a tickear reapunte. Si no, el primer medio segundo se lo saltaría
+	}
+
+
+	function Tick(Float Delta)
+	{
+		local Vector dirActual,dirEnemigo;
+		local float dotprot,dist;
+
+        super.Tick(Delta);
+		m_tiempoApuntando+=Delta;
+		
+		TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+        TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
+
+        if (enemigoActual == None)
+        {
+			`log("Nada que hacer aqui, no hay target");
+			GoToState('Idle');
+			return;
+        }
+		
+		FlushPersistentDebugLines();
+		//DBG DrawDebugCylinder(FireLocation,enemigoActual.Location,5,10,0,0,255,true);
+        dist=Vsize(enemigoActual.Location-IniFireLocation);
+		if (dist > (RangoDisparo+100) )//|| enemigoActual.life==0)
+		{
+				enemigoActual=None;
+				`log("Sale de rango mientras apuntamos, volvemos a Idle");
+				GoToState('Idle');
+				return;
+		}
+
+
+		dirActual=Normal(FireLocation-IniFireLocation);
+		dirEnemigo=Normal(enemigoActual.location-IniFireLocation);
+		dotprot=dirActual dot dirEnemigo;
+		if (dotprot>0 && dotprot > 0.95)
+		{
+			//Está casi apuntado, que empiece a disparar
+			`log("A DISPARAR!!");
+			GoToState('Disparando');
+		}
+		else
+		{
+			//si no ha podido apuntar en el tiempo necesario, si falta poco volvemos a intentar, si no, a Idle 
+			if(m_tiempoApuntando>m_tiempoNecesarioApuntar) //cada medio segundo reapuntamos por si el enemigo se ha ido moviendo 
+			{
+				dirActual=Normal(FireLocation-IniFireLocation);
+				dirEnemigo=Normal(enemigoActual.location-IniFireLocation);
+
+			    FlushPersistentDebugLines();
+		        //DrawDebugCylinder(FireLocation,enemigoActual.Location,3,10,200,0,0,true);
+
+
+				dotprot=dirActual dot dirEnemigo;
+			    `log("Sin apuntar, reintentamos");
+				m_tiempoNecesarioApuntar=1.3-dotprot;
+				`log("DOT PROT REINTENTO ES: "@dotprot);
+				RotaParaApuntarA(enemigoActual.Location,m_tiempoNecesarioApuntar);
+				m_tiempoApuntando=0;
+
+			}
+		
+		}
+
+	}//Tick	
+
+}//state NuevoTarget
+
+
+
+
+
+
 
 	function seleccionarTarget()
 	{
 		local float denemigo;
-		local PEnemyPawn_Minion enemigo,tenemigo;
+		//local PEnemyPawn_Minion enemigo,tenemigo;
+		local PPawn enemigo,tenemigo;
+
 		denemigo=RangoDisparo+1;
 		tenemigo=None;
 		
-		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
+		//foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
+		foreach WorldInfo.AllPawns(class'PPawn',enemigo,self.Location,RangoDisparo)
 		{
 			if(vsize(enemigo.Location-self.Location)<denemigo)
 			{
@@ -467,9 +618,43 @@ auto state Idle
 	}
 
 
+	function TiempodeMorir(vector locaEnemigo)
+	{
+		local Projectile Proj;
+		//return;
+		TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+		TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
 
+		
+		Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
+		Proj.Init(Normal(locaEnemigo-FireLocation));
+		
+	}
 
-}//state
+	//Dispara en la direccion actual de la torreta, se supone que ya ha apuntado
+    function DisparaEnDireccionActual()
+	{
+		local Projectile Proj;
+		local PEmiter pem;
+		//return;
+		TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+		TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
+
+		
+		Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
+		Proj.Init(Normal(FireLocation-IniFireLocation));
+
+				
+	}
+
+	function CongelarEnemigo()
+	{
+		local PEmiter pem;
+		
+		`log("Congelando!!!");
+		pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
+		pem.SpawnEmitter();
+	}
 
 
 /***********************
@@ -928,18 +1113,21 @@ function RotateTimer()
 defaultproperties
 {
 
-	 Begin Object Class=StaticMeshComponent Name=DMesh
-		//Archetype=InterpActor'PGameContentcannon.escudocca'
-        //StaticMesh=StaticMesh'HU_Deco3.SM.Mesh.S_HU_Deco_SM_HydraulicSupport_C'
-		 StaticMesh=StaticMesh'PGameContentcannon.Mesh.escudocannon'
+	//Escudo que rodea a las torretas
+	Begin Object Class=StaticMeshComponent Name=DMesh
+	    StaticMesh=StaticMesh'PGameContentcannon.Mesh.escudocannon'
         BlockActors=false
         CollideActors=true
         LightEnvironment=MyLightEnvironmentrr 
-		//CollisionComponent=CollisionCylinder1
-      Scale3D=(X=20,Y=20,Z=20)
-//ObjectArchetype=InterpActor'PGameContentcannon.escudocca'
+		Scale3D=(X=20,Y=20,Z=20)
     End Object
-    Components.Add(DMesh)
-	RangoDisparo=2500;
 
+    Components.Add(DMesh)
+	RangoDisparo=1300
+	m_TimeoutEntreDisparo=5  //3 disparos por segundo
+	m_TimeoutEntreRotacionIdle=3 //Random cada 3 segundos
+	m_TimeoutEntreRotacionDisparando=0.2 //Reapunta al target 5 veces por segundo
+	m_TiempoTranscurridoRotacionActual=0
+	m_tocaRotacionIdle=true
+	m_InTick=false
 }

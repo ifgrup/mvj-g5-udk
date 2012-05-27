@@ -55,7 +55,7 @@ state PawnFalling
 	{
 
 		`log('pawn en estado Falling');
-		WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
+		//DBG WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
 		FallDirection = -Floor;
 		
         // Direct hit wall enabled just for the custom falling
@@ -145,7 +145,7 @@ auto state Cayendo
 	event Tick(float delta)
 	{
 		//`log("->" @self.Location @self.Velocity);
-		DrawDebugCone(self.Location,Velocity,100,0.01,0.1,20,MakeColor(200,0,0));
+		//DBG DrawDebugCone(self.Location,Velocity,100,0.01,0.1,20,MakeColor(200,0,0));
 		ApplyGravity(delta);
 	}
 	// cuando llegue al suelo:
