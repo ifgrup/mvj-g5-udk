@@ -61,8 +61,8 @@ function DrawDebugInfo()
 {
 	if(theObjective != none)
 	{
-		DrawDebugLine(Pawn.Location, CurrentDestination, 0, 255, 0, false);
-		DrawDebugSphere(CurrentDestination, 20, 20, 0, 255, 0, false);
+		//DBG DrawDebugLine(Pawn.Location, CurrentDestination, 0, 255, 0, false);
+		//DBG DrawDebugSphere(CurrentDestination, 20, 20, 0, 255, 0, false);
 	}
 }
 
@@ -96,7 +96,7 @@ function BrainTimer()
 		fTimer = 1;
 	}
 
-	DrawDebugInfo();
+	//DBG DrawDebugInfo();
 
 	SetTimer(fTimer, false, 'BrainTimer');
 
@@ -119,7 +119,7 @@ function vector RandomPathDest()
 		{
 			if(VSize(pNodo.Location - Location) < 1000)
 			{
-				DrawDebugSphere(pNodo.Location, 300, 10, 255, 255,0, true);
+				//DBG DrawDebugSphere(pNodo.Location, 300, 10, 255, 255,0, true);
 				ListaNodosRecorridos.AddItem(pNodo);
 				return pNodo.Location;
 			}
@@ -175,7 +175,7 @@ state MoveToDestination
 	{
 		local Pawn pDetectado;
 		local PWorldPathNode pNodo;
-		DrawDebugInfo();
+		//DBG DrawDebugInfo();
 
 		if(VSize(OldDecalLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize / 2))
 		{
@@ -197,8 +197,13 @@ state MoveToDestination
 			// Me aseguro que no me estoy detectando a mi mismo
 			if(pDetectado != Pawn)
 			{
+<<<<<<< .mine
+				//DBG WorldInfo.Game.Broadcast(self, Name@"Ha chocado con"@pDetectado.Name);
+				//DBG DrawDebugSphere(pDetectado.Location, 200, 10, 255, 0, 0, false);
+=======
 				WorldInfo.Game.Broadcast(self, Name@"Ha chocado con"@pDetectado.Name);
 				//DrawDebugSphere(pDetectado.Location, 200, 10, 255, 0, 0, false);
+>>>>>>> .r51
 				GotoState('MoveToDestination');
 			}
 		}
@@ -220,7 +225,7 @@ state ArrivedDestination
 {
 	event BeginState(name PreviousStateName)
 	{
-		WorldInfo.Game.Broadcast(self, Name@" ha llegado a destino");
+		//DBG WorldInfo.Game.Broadcast(self, Name@" ha llegado a destino");
 		Pawn.Acceleration = vect(0,0,0);
 		Pawn.Velocity = vect(0,0,0);
 		StopLatentExecution();

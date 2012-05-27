@@ -123,7 +123,7 @@ state PawnFalling
 	{
 
 		`log('pawn en estado Falling');
-		WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
+		//DBG WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
 		FallDirection = -Floor;
 		
         // Direct hit wall enabled just for the custom falling

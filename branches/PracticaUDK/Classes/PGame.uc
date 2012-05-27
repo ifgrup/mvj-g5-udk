@@ -146,7 +146,7 @@ function DrawWorldNodes()
 
 	for(i = 0; i < NodosMundo.Length; i++)
 	{
-		DrawDebugSphere(NodosMundo[i].Location, 30, 10, 255, 0, 0, false);
+		//DBG DrawDebugSphere(NodosMundo[i].Location, 30, 10, 255, 0, 0, false);
 	}
 }
 
@@ -167,8 +167,8 @@ function DrawNodes()
 			else
 				v2 = GP.Nodos[i+1].Location;
 
-			DrawDebugLine(v1, v2, GP.Col.R * 255, GP.Col.G * 255, GP.Col.B * 255, false);
-			DrawDebugSphere(v1, 20, 10, GP.Col.R * 255, GP.Col.G * 255, GP.Col.B * 255, false);
+			//DBG DrawDebugLine(v1, v2, GP.Col.R * 255, GP.Col.G * 255, GP.Col.B * 255, false);
+			//DBG DrawDebugSphere(v1, 20, 10, GP.Col.R * 255, GP.Col.G * 255, GP.Col.B * 255, false);
 		}
 	}
 }
