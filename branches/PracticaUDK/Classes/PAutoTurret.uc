@@ -36,6 +36,7 @@ struct TurretEmitterGroup
 	var() ParticleSystem DamageEmitter;
 	var() ParticleSystem MuzzleFlashEmitter;
 	var() ParticleSystem DestroyEmitter;
+	var() ParticleSystem EnConstruccion;
 	var() Float MuzzleFlashDuration;
 	var() Name DamageEmitterParamName;
 	var() Bool bStopDamageEmitterOnDeath;
@@ -89,6 +90,7 @@ var Bool bDestroyed;	//Has the turret been destroyed?
 var ParticleSystemComponent DamageEffect;		//PSys component for playing damage effects
 var ParticleSystemComponent MuzzleFlashEffect;	//PSys component for playing muzzle flashes
 var ParticleSystemComponent DestroyEffect;		//PSys component for playing destruction effects
+var ParticleSystemComponent EnConstruccionEffect;		//PSys component for playing destruction effects
 
 var Int MaxTurretHealth;		//Max health for this turret
 var Float FullRevTime;	//Seconds to make full rev at min rot rate
@@ -120,8 +122,8 @@ var(Turret) TurretSoundGroup TurretSounds;		//Sounds used for different turret b
 var(Turret) Int TurretHealth;		//Initial amount of health for the turret
 
 //variables seleccion de enemigos y disparo
-//var PEnemyPawn_Minion enemigoActual;
-var PPawn enemigoActual;
+var PEnemyPawn_Minion enemigoActual;
+//var PPawn enemigoActual;
 
 var float RangoDisparo;
 
@@ -146,7 +148,8 @@ var bool m_tocaRotacionIdle; //Para hacer que en idle haga una pasa cada m_Timeo
 var float m_tiempoApuntando;//tiempo que llevamos apuntando al entrar en estado NuevoTarget
 var float m_tiempoNecesarioApuntar;// Tiempo calculado para que la torreta llegue a apuntar al nuevo target
 
-var bool m_InTick;
+var int m_TiempoEnConstruccion; //Segundos que estará en construccion
+
 
 event PostInitAnimTree(SkeletalMeshComponent skelcomp)
 {
@@ -176,16 +179,44 @@ simulated event PostBeginPlay()
 	TurretMesh.AttachComponentToSocket(DamageEffect, TurretBones.DamageSocket);
 	TurretMesh.AttachComponentToSocket(MuzzleFlashEffect, TurretBones.FireSocket);
 	TurretMesh.AttachComponentToSocket(DestroyEffect, TurretBones.DestroySocket);
+	
+	TurretMesh.AttachComponentToSocket(EnConstruccionEffect, TurretBones.FireSocket); //De momento ahi
 
 	DamageEffect.SetTemplate(TurretEmitters.DamageEmitter);
 	MuzzleFlashEffect.SetTemplate(TurretEmitters.MuzzleFlashEmitter);
 	DestroyEffect.SetTemplate(TurretEmitters.DestroyEmitter);
-	
+	EnConstruccionEffect.SetTemplate(TurretEmitters.EnConstruccion);
+
 	/*IMPRESCINDIBLE ponerla sin físicas para que no aplique nada sobre ella y la controlemos nosotros*/
 	SetPhysics(PHYS_None);
+
+
 	
     
 }
+
+ //Para sistema de partículas en construccion
+ function InicioConstruccion()
+ {
+	local Vector escala;
+	
+	TurretMesh.SetHidden(true);
+	EnConstruccionEffect.ActivateSystem();
+	escala=vect(5,5,5);
+	EnConstruccionEffect.SetScale3D(escala); //Porque inicialmente se ve mu shiquinino ;)
+ }
+
+ function FinConstruccion()
+ {
+	TurretMesh.SetHidden(false);
+	EnConstruccionEffect.DeactivateSystem();
+ }
+
+
+//Funciones a sobreescribir en cada hija
+ function DisparoTorreta();
+
+
 
 function setNormalSuelo(vector normal)
 {
@@ -203,10 +234,6 @@ function DoRotation(Rotator NewRotation, Float InterpTime)
 	SetTimer(0.05,true,'RotateTimer'); //25 veces por segundo is enough
    ***/
 	//`log("DoRotation");
-	while(m_InTick)
-	{
-		`log("IN_TIIIIIIIIIIIIIICK");
-	}
 
 	m_TiempoRotacionActual=0; //Intentamos parar la rotacion actual
 	TargetRotation=NewRotation; //El nuevo Destino
@@ -232,39 +259,16 @@ function RotateTimer()
 function Tick(Float Delta)
 {
 	local float incAlfa;
-	local vector vectRotActual,vectCannon;
-	local float fdot;
-
 	super.Tick(Delta);
 	
-    m_InTick=true;
-
 	m_TiempoTranscurridoRotacionActual+=Delta;
 	
 	//Hacemos que se dirija hacia el TargetRotation, pero sólo si no ha llegado claro
 	if(m_TiempoRotacionActual !=0 && m_TiempoTranscurridoRotacionActual < (m_TiempoRotacionActual))
 	{
-	
 		incAlfa=m_TiempoTranscurridoRotacionActual/m_TiempoRotacionActual;
 		PivotController.BoneRotation = RLerp(StartRotation,TargetRotation,incAlfa,true);
-		/*
-		if(enemigoActual!=None)
-		{
-			vectRotActual=Vector(PivotController.BoneRotation);
-			vectCannon=Normal(enemigoActual.Location- IniFireLocation);
-			fdot=vectRotActual dot vectCannon;
-			if (fdot>0.995)
-			{
-				//la rotación actual ya es correcta, porque está apuntando al enemigo actual. La cancelamos
-				m_TiempoRotacionActual=m_TiempoTranscurridoRotacionActual-0.1; //Para que no entre en el if
-				`Log("Rotacion cancelada!!!");
-
-			}
-		}
-		*/
     }
-	m_InTick=false;
-    
 }
 
 
@@ -353,7 +357,29 @@ function RotaParaApuntarA(vector newTarget,float tiempoDeRotacion)
 	DoRotation(rTorreta,tiempoDeRotacion);
 }
 
-auto state Idle
+auto state EnConstruccion
+{
+	event BeginState(Name PreviousStateName)
+	{
+		`log("En Construccion");
+		InicioConstruccion(); //Funcion Virtual a sobreescribir
+		m_TiempoRotacionActual=0; //Utilizo esta variable por no crear otra sólo para eso.
+		//VIVA EL C++ Y LAS VARIABLES STATIC!!!! CUANTO LO ECHO DE MENOSSSS!!! :D
+	}
+
+	function Tick(Float Delta)
+	{
+		m_TiempoRotacionActual+=delta;
+		if (m_TiempoRotacionActual > m_TiempoEnConstruccion)
+		{
+			`log("Dejo de estar En Construccion");
+			FinConstruccion();//Funcion Virtual a sobreescribir
+			GotoState('Idle');
+		}
+	}
+}
+
+state Idle
 {
 
 	event BeginState(Name PreviousStateName)
@@ -376,13 +402,6 @@ auto state Idle
 
 	function Tick(Float Delta)
 	{
-		local Float currDot;
-		local Float thisDot;
-		local PEnemy P;
-		local Bool bHasTarget;
-		local Actor a;
-		local Vector HitLocation, Hitnormal;
-		local PPAwn prota;
 		local Rotator rActual;
 		local int     random;
 
@@ -448,13 +467,12 @@ state Disparando
 		m_TiempoDesdeInicioRotacion=0;
 		//Si hemos llegado aquí es porque ya ha apuntado y está en la dirección correcta, no hay que rotar
 		`log("Estado Disparando");
+	
 	}
 
 
 	function Tick(Float Delta)
 	{
-		local vector dirActual,dirEnemigo;
-		local float dotprot;
 
         super.Tick(Delta);
 		TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
@@ -479,10 +497,8 @@ state Disparando
 				//Primero tiempo entre disparos
 				if(  m_tiempoDesdeAntDisparo> m_TimeoutEntreDisparo)
 				{
-					//TiempodeMorir(enemigoActual.Location);
-					//DisparaEnDireccionActual();
-					
-					CongelarEnemigo();
+					DisparoTorreta(); //Función a sobrescribir en cada torreta hija!!
+
 					m_tiempoDesdeAntDisparo=0;
 				}
 
@@ -510,11 +526,7 @@ state NuevoTarget
 {
 	event BeginState(Name PreviousStateName)
 	{
-		local Vector dirActual,dirEnemigo;
-		local float dotprot;
-
 		`Log("NuevoTarget");
-
 		m_tiempoApuntando=0xFFFF; //Para que nada más empezar a tickear reapunte. Si no, el primer medio segundo se lo saltaría
 	}
 
@@ -594,14 +606,14 @@ state NuevoTarget
 	function seleccionarTarget()
 	{
 		local float denemigo;
-		//local PEnemyPawn_Minion enemigo,tenemigo;
-		local PPawn enemigo,tenemigo;
+		local PEnemyPawn_Minion enemigo,tenemigo;
+		//local PPawn enemigo,tenemigo;
 
 		denemigo=RangoDisparo+1;
 		tenemigo=None;
 		
-		//foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
-		foreach WorldInfo.AllPawns(class'PPawn',enemigo,self.Location,RangoDisparo)
+		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
+		//foreach WorldInfo.AllPawns(class'PPawn',enemigo,self.Location,RangoDisparo)
 		{
 			if(vsize(enemigo.Location-self.Location)<denemigo)
 			{
@@ -631,30 +643,8 @@ state NuevoTarget
 		
 	}
 
-	//Dispara en la direccion actual de la torreta, se supone que ya ha apuntado
-    function DisparaEnDireccionActual()
-	{
-		local Projectile Proj;
-		local PEmiter pem;
-		//return;
-		TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
-		TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
 
-		
-		Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
-		Proj.Init(Normal(FireLocation-IniFireLocation));
 
-				
-	}
-
-	function CongelarEnemigo()
-	{
-		local PEmiter pem;
-		
-		`log("Congelando!!!");
-		pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
-		pem.SpawnEmitter();
-	}
 
 
 /***********************
@@ -1118,16 +1108,17 @@ defaultproperties
 	    StaticMesh=StaticMesh'PGameContentcannon.Mesh.escudocannon'
         BlockActors=false
         CollideActors=true
-        LightEnvironment=MyLightEnvironmentrr 
+        //LightEnvironment=MyLightEnvironmentrr 
 		Scale3D=(X=20,Y=20,Z=20)
     End Object
 
     Components.Add(DMesh)
+	//TurretMesh se asigna en cada torreta hija con la mesh que corresponde a la propia torreta
 	RangoDisparo=1300
-	m_TimeoutEntreDisparo=5  //3 disparos por segundo
+	m_TimeoutEntreDisparo=0.33  //3 disparos por segundo
 	m_TimeoutEntreRotacionIdle=3 //Random cada 3 segundos
 	m_TimeoutEntreRotacionDisparando=0.2 //Reapunta al target 5 veces por segundo
 	m_TiempoTranscurridoRotacionActual=0
 	m_tocaRotacionIdle=true
-	m_InTick=false
+	m_TiempoEnConstruccion=5 //5 segundos en construccion. Cada hija lo podrá redefinir
 }
