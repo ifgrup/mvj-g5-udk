@@ -71,6 +71,13 @@ defaultproperties
 	DamageEffect=ParticleSystemComponent2
 	Components.Add(ParticleSystemComponent2)
 	
+
+	Begin Object Class=ParticleSystemComponent Name=ParticleSystemComponentEnConstruccion
+		SecondsBeforeInactive=3.0
+	End Object
+	EnConstruccionEffect=ParticleSystemComponentEnConstruccion
+	Components.Add(ParticleSystemComponentEnConstruccion)
+
 	TurretBones={(
 				DestroySocket=FireLocation,
 				DamageSocket=FireLocation,
