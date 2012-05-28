@@ -54,12 +54,15 @@ function SpawnEnemy()
 		if(CanSpawnEnemy())
 		{
 			EN = spawn(class'PEnemyPawn_Minion',,, Location);
-			EN.SetColor(Col2);
-			AIB = spawn(class'PEnemy_AI_Bot',,, Location);
-			AIB.SetID(Group);
-			Enemy.AddItem(EN);
-			AIBot.AddItem(AIB);
-			AIB.Possess(EN, false);
+			if (EN!=None) //Proteccion Víctor
+			{
+				EN.SetColor(Col2);
+				AIB = spawn(class'PEnemy_AI_Bot',,, Location);
+				AIB.SetID(Group);
+				Enemy.AddItem(EN);
+				AIBot.AddItem(AIB);
+				AIB.Possess(EN, false);
+			}
 		}
 	}
 }
