@@ -44,7 +44,6 @@ defaultproperties
     End Object
     
 	TurretMesh=torretask //Por eso podemos acceder a la mesh con TurretMesh ;)
-	
 	CollisionComponent=torretask
     bCollideComplex=true
 	
@@ -113,5 +112,5 @@ defaultproperties
 	ProjClass=class'PGame.PMisiles'
 	TurretHealth=500
 	RoundsPerSec=50
-	
+	RangoDisparo=3000
 }

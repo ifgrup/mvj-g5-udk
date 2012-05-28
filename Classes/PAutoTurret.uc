@@ -101,6 +101,8 @@ var Int OrigMinRotRate;	//Beginning value of MinTurretRotRate
 
 /*Designer editable variables*/
 var(Turret) SkeletalMeshComponent TurretMesh;				//SkelMeshComp for the turret
+var(Turret) StaticMeshComponent ShieldMesh;				//Mesh del escudo protector
+
 var(Turret) DynamicLightEnvironmentComponent LightEnvironmentrr;	//LightEnvironment for the turret
 var(Turret) SkeletalMesh DestroyedMesh;						//SkelMesh to show when turret is destroyed
 
@@ -200,7 +202,10 @@ simulated event PostBeginPlay()
  {
 	local Vector escala;
 	
+	//Ocultamos la mesh de la torreta y la del escudo para mostrar el sistema de partículas de EnConstruccion
 	TurretMesh.SetHidden(true);
+	ShieldMesh.SetHidden(true);
+	
 	EnConstruccionEffect.ActivateSystem();
 	escala=vect(5,5,5);
 	EnConstruccionEffect.SetScale3D(escala); //Porque inicialmente se ve mu shiquinino ;)
@@ -208,7 +213,9 @@ simulated event PostBeginPlay()
 
  function FinConstruccion()
  {
+	//Volvemos a mostrar la torreta y su escudo
 	TurretMesh.SetHidden(false);
+	ShieldMesh.SetHidden(false);
 	EnConstruccionEffect.DeactivateSystem();
  }
 
@@ -1111,8 +1118,8 @@ defaultproperties
         //LightEnvironment=MyLightEnvironmentrr 
 		Scale3D=(X=20,Y=20,Z=20)
     End Object
-
-    Components.Add(DMesh)
+	ShieldMesh=DMesh
+	Components.Add(DMesh)
 	//TurretMesh se asigna en cada torreta hija con la mesh que corresponde a la propia torreta
 	RangoDisparo=1300
 	m_TimeoutEntreDisparo=0.33  //3 disparos por segundo

@@ -27,6 +27,7 @@ var float m_DistanciaAlCentro; //distancia que queremos mantener alrededor del p
 var float m_ZoomMaxAcercar;
 var float m_ZoomMaxAlejar;
 var float m_DistanciaAlCentro_desiredZoom; //Destino deseable de la distancia tras el zoom con la rueda del mouse
+var float m_distZoomActual;// Distancia actual que debe recorrerse con la rueda. Se actualiza a cada nuevo evento
 var int m_stepZoom ;//unidades en las que se acerca o aleja la distancia con la rueda del mouse
 //Variables para controlar la rotación
 var Quat m_CurrentQuadFlaying;
@@ -785,7 +786,7 @@ state PlayerFlaying
         local float diff;
 		local float decel; //para hacerlo decelerado...
 		local float prop,sprop;
-
+        
         diff=abs(m_DistanciaAlCentro-m_DistanciaAlCentro_desiredZoom);
         
 		if(diff < 1) //para evitar histéresis, just in case
@@ -793,10 +794,10 @@ state PlayerFlaying
 			return;
 		}
 
-		prop=((m_stepZoom-diff)/m_stepZoom)*90; //para que vaya de 0 a 90
-		sprop=abs(cos(prop*DegToRad));
+		prop=(diff/m_distZoomActual)*90; //irá de 90 a 0
+		sprop=abs(sin(prop*DegToRad));
 			
-		decel=sprop*delta*1000;
+		decel=sprop*delta*1000*(m_distZoomActual/m_stepZoom); //Ponderamos en funcion de la distancia actual respecto al step
 		
         if (m_DistanciaAlCentro < m_DistanciaAlCentro_desiredZoom)
         {
@@ -981,7 +982,8 @@ exec function ZoomPlanetaAcerca()
 		if(m_DistanciaAlCentro_desiredZoom <= m_ZoomMaxAcercar)
 			return;
 
-		m_DistanciaAlCentro_desiredZoom=m_DistanciaAlCentro-m_stepZoom;
+		m_DistanciaAlCentro_desiredZoom-=m_stepZoom;
+		m_distZoomActual=abs(m_DistanciaAlCentro_desiredZoom-m_DistanciaAlCentro);
 		//DBG PGame(WorldInfo.Game).Broadcast(self, "Acercando al planeta:"@m_DistanciaAlCentro);
 
 	}
@@ -998,7 +1000,8 @@ exec function ZoomPlanetaAleja()
 		if(m_DistanciaAlCentro_desiredZoom >= m_ZoomMaxAlejar)
 			return;
 
-		m_DistanciaAlCentro_desiredZoom=m_DistanciaAlCentro+m_stepZoom;
+		m_DistanciaAlCentro_desiredZoom+=m_stepZoom;
+		m_distZoomActual=abs(m_DistanciaAlCentro_desiredZoom-m_DistanciaAlCentro);
 		//DBG PGame(WorldInfo.Game).Broadcast(self, "Alejando del planeta:"@m_DistanciaAlCentro);
 	}
 
@@ -1085,8 +1088,7 @@ defaultproperties
 	transformedPhysicsAsset=PhysicsAsset'VH_Cicada.Mesh.SK_VH_Cicada_Physics'
 	bNotifyFallingHitWall=true
     InputClass=class'PGame.PPlayerInput'
-	m_DistanciaAlCentro=13000
-	m_DistanciaAlCentro_desiredZoom=19000
+	m_DistanciaAlCentro=19000
 	m_ZoomMaxAcercar=11000
 	m_ZoomMaxAlejar=19000
 	m_stepZoom=600
