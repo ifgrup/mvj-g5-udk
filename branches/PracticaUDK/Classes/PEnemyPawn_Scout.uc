@@ -4,7 +4,7 @@ var MaterialInstanceConstant mat;
 var SkeletalMeshComponent ColorMesh;
 var LinearColor Col1;
 
-function PostBeginPlay()
+simulated function PostBeginPlay()
 {
 	Col1 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 	mat = new class'MaterialInstanceConstant';

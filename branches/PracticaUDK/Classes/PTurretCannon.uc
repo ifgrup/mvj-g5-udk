@@ -3,16 +3,29 @@ class PTurretCannon extends PAutoTurret
 
 
 
+//Funcion definida en PAutoTurret, redefinida en cada hija
+function DisparoTorreta()
+{
+	local Projectile Proj;
+	`Log("DIsparo Torreta");
+	
+	TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+	TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
+	
+	Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
+	Proj.Init(Normal(FireLocation-IniFireLocation));
+}
+
+
 defaultproperties
 {
 
-	 Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironmentrr
+	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironmentrr
         bEnabled=TRUE
     End Object
     Components.Add(MyLightEnvironmentrr)
-Begin Object class=SkeletalMeshComponent name=torretask
-        
-		AnimTreeTemplate=AnimTree'PGameContentcannon.basecannonAnimTree'
+	Begin Object class=SkeletalMeshComponent name=torretask
+    	AnimTreeTemplate=AnimTree'PGameContentcannon.basecannonAnimTree'
 		AnimSets(0)=AnimSet'PGameContentcannon.basecannon'
 		
 		PhysicsAsset=PhysicsAsset'PGameContentcannon.cannonrudk_Physics'
@@ -22,18 +35,15 @@ Begin Object class=SkeletalMeshComponent name=torretask
 		
 		//bDisableAllRigidBody=true//para que no se caigan las torretas 
 
-
 		CollideActors=true 
 		BlockActors=true
 		BlockNonZeroExtent=true
 		BlockZeroExtent=true
-
-	bDisableAllRigidBody=true
-
+		bDisableAllRigidBody=true
         //Translation=(X=0,Y=0,z=-200)
     End Object
     
-	TurretMesh=torretask
+	TurretMesh=torretask //Por eso podemos acceder a la mesh con TurretMesh ;)
 	
 	CollisionComponent=torretask
     bCollideComplex=true
@@ -41,10 +51,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
 	bDisableClientSidePawnInteractions=true
 	Components.Add(torretask) 
 	
-
-
-
-
+    //Sistemas de partículas propios de TurretCannon
 	Begin Object Class=ParticleSystemComponent Name=ParticleSystemComponent0
 		SecondsBeforeInactive=1
 	End Object
@@ -63,6 +70,13 @@ Begin Object class=SkeletalMeshComponent name=torretask
 	DamageEffect=ParticleSystemComponent2
 	Components.Add(ParticleSystemComponent2)
 	
+	Begin Object Class=ParticleSystemComponent Name=ParticleSystemComponentEnConstruccion
+		SecondsBeforeInactive=3.0
+	End Object
+	EnConstruccionEffect=ParticleSystemComponentEnConstruccion
+	Components.Add(ParticleSystemComponentEnConstruccion)
+	
+
 	TurretBones={(
 				DestroySocket=FireLocation,
 				DamageSocket=FireLocation,
@@ -83,7 +97,8 @@ Begin Object class=SkeletalMeshComponent name=torretask
 					DamageEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
 					MuzzleFlashEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
 					DestroyEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
-					DamageEmitterParamName=DamageParticles
+					EnConstruccion=ParticleSystem'PGameParticles.Particles.EnConstruccion',
+					DamageEmitterParamName=DamageParticles					
 					)}
 
 	TurretRotations={(
