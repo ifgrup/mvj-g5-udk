@@ -27,7 +27,7 @@ simulated event PostBeginPlay()
 	ColorDecal = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 
 	Mat = new class'MaterialInstanceConstant';
-	Mat.SetParent(MaterialInstanceConstant'Materiales.DecalSuelo2_INST');
+	Mat.SetParent(MaterialInstanceConstant'Materiales.Decals.DecalSuelo1_INST');
 	Mat.SetVectorParameterValue('Color', ColorDecal);
 	/*Mat.SetScalarParameterValue('R', ColorDecal.R);
 	Mat.SetScalarParameterValue('G', ColorDecal.G);
