@@ -39,11 +39,14 @@ var bool pauseMenu;
 var PGFxUI_PauseMenu		PauseMenuMovie;
 //var PMainMenu		PauseMenuMovie;
 var bool	bEnableActorOverlays;
+var SoundCue musica,musicamenu;
+
+
 
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
-
+	PlaySound(musica);
 	//Si estamos utilizando Scaleform, crear la pelicula
 	if(UsingScaleform)
 	{
@@ -541,7 +544,7 @@ function TogglePauseMenu()
 	CloseOtherMenus();
 
         PlayerOwner.SetPause(True);
-
+ 
         if (PauseMenuMovie == None)
         {
 	        PauseMenuMovie = new class'PGFxUI_PauseMenu';
@@ -551,11 +554,13 @@ function TogglePauseMenu()
             PauseMenuMovie.bEnableGammaCorrection = FALSE;
 			PauseMenuMovie.LocalPlayerOwnerIndex = class'Engine'.static.GetEngine().GamePlayers.Find(LocalPlayer(PlayerOwner.Player));
             PauseMenuMovie.SetTimingMode(TM_Real);
+			 
         }
 
 		SetVisible(false);
         PauseMenuMovie.Start();
 	   PauseMenuMovie.PlayOpenAnimation();
+	 
 
 		// Do not prevent 'escape' to unpause if running in mobile previewer
 		if( !WorldInfo.IsPlayInMobilePreview() )
@@ -651,5 +656,7 @@ defaultproperties
 	CursorTexture=Texture2D'EngineResources.Cursors.Arrow'
 	UsingScaleform=true
 	pauseMenu=false
+	musica=SoundCue'PGameMusicrr.musica2'
+	musicamenu=SoundCue'PGameMusicrr.intro2dgame_2_Cue'
 }
 
