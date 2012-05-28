@@ -1,5 +1,16 @@
 class PTurretIce extends PAutoTurret
 	placeable;
+
+//Funcion definida en PAutoTurret, redefinida en cada hija
+function DisparoTorreta()
+{
+	local PEmiter pem;
+		
+	`Log("DIsparo Ice");
+	pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
+	pem.SpawnEmitter();
+}
+
 defaultproperties
 {
 
@@ -7,7 +18,7 @@ defaultproperties
         bEnabled=TRUE
     End Object
     Components.Add(MyLightEnvironmentrr)
-Begin Object class=SkeletalMeshComponent name=torretask
+	Begin Object class=SkeletalMeshComponent name=torretask
         
 		AnimTreeTemplate=AnimTree'PGameContentTice.baseIceAnimTree'
 		AnimSets(0)=AnimSet'PGameContentTice.basecannon'
@@ -25,7 +36,7 @@ Begin Object class=SkeletalMeshComponent name=torretask
 		BlockNonZeroExtent=true
 		BlockZeroExtent=true
 
-	bDisableAllRigidBody=true
+		bDisableAllRigidBody=true
 
         //Translation=(X=0,Y=0,z=-200)
     End Object
@@ -80,7 +91,8 @@ Begin Object class=SkeletalMeshComponent name=torretask
 					DamageEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
 					MuzzleFlashEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
 					DestroyEmitter=ParticleSystem'WP_LinkGun.Effects.P_FX_LinkGun_3P_Beam_MF_Red',
-					DamageEmitterParamName=DamageParticles
+					DamageEmitterParamName=DamageParticles,
+					EnConstruccion=ParticleSystem'PGameParticles.Particles.EnConstruccion'
 					)}
 
 	TurretRotations={(
