@@ -10,7 +10,6 @@ var int EnemiesLeft;
 var bool bEarthNotFlying;
 var int creditos;
 var PPlayerBase PlayerBase;
-var array<PWorldPathNode> NodosMundo;
 var bool NodosCreados;
 
 struct Spawner
@@ -26,8 +25,15 @@ struct GrupoNodos
 	var array<PPathNode> Nodos;
 };
 
+struct GrupoNodosMundo
+{
+	var int id;
+	var array<PWorldPathNode> Nodos;
+};
+
 var array<GrupoNodos> Nodos;
 var array<Spawner> EnemySpawners;
+var array<GrupoNodosMundo> NodosMundo;
 
 var bool bSpawnBoss;
 var Vector  m_CentroPlaneta;
@@ -38,6 +44,8 @@ simulated function PostBeginPlay()
 	local PPlayerBase PB;
 
 	local Spawner SP;
+
+	local InteractiveFoliageActor IFA;
 
 
     foreach DynamicActors(class'PEnemySpawner', ES)
@@ -61,52 +69,80 @@ simulated function PostBeginPlay()
 
 	if(EnemySpawners.Length != 0)
 		SetTimer(1.0, false, 'ActivateSpawners');
+
 	super.PostBeginPlay();
 }
 
 function CreaNodosMundo()
 {
 	local PWorldPathNode pNodo;
-	local int i;
-	local int max;
 
-	foreach DynamicActors(class'PWorldPathNode', pNodo)
+	local Vector vInicial;
+	local Rotator rRotacion;
+
+	local Vector HitLocation,HitNormal;
+	local int i,j;
+	local int deltaAngulo;
+	local int id;
+
+	deltaAngulo = 15 * DegToUnrRot;
+	vInicial = vect(0, 0, 15000);
+
+	NodosMundo.Add(5);
+
+	for (i = 0; i < 65535; i += deltaAngulo)
 	{
-		NodosMundo.AddItem(pNodo);
+		for (j = 0; j < 65535; j += deltaAngulo)
+		{
+			rRotacion.Yaw += deltaAngulo;
+			vInicial = TransformVectorByRotation(rRotacion, vInicial);
+			Trace(HitLocation, HitNormal, m_CentroPlaneta, m_CentroPlaneta + vInicial, true, vect(0, 0, 1));
+			if(CanSpawnNode(HitLocation) == false)
+				continue;
+			//DrawDebugSphere(HitLocation,50,25,255,0,0,true);
+			id = Rand(5);
+			pNodo = Spawn(class'PWorldPathNode',,, HitLocation);
+			//DrawDebugCylinder(m_CentroPlaneta, m_CentroPlaneta + vInicial, 25, 25, 0, 255, 0, true);
+
+			pNodo.id = id;
+
+			NodosMundo[pNodo.id].id = pNodo.id;
+			NodosMundo[pNodo.id].Nodos.AddItem(pNodo);
+		}
+
+		rRotacion.Pitch += deltaAngulo;
+		rRotacion.Yaw = 0;
 	}
-
-	max = NodosMundo.Length;
-
-	for(i = 0; i < max; i++)
-	{
-		pNodo = NodosMundo[i];
-		pNodo.Inicia();
-		pNodo.Scan(false);
-	}
-
-	ReScanWorldPathNodes();
 
 	NodosCreados = true;
 }
 
-function AddWorldPathNode(PWorldPathNode pNodo)
+function bool CanSpawnNode(Vector loc)
 {
-	NodosMundo.AddItem(pNodo);
-}
-
-function ReScanWorldPathNodes()
-{
-	local array<PWorldPathNode> PN;
-	local PWorldPathNode pNodo;
-
-	foreach DynamicActors(class'PWorldPathNode', pNodo)
+	local PNoSpawnVolume vol;
+	foreach AllActors(class'PNoSpawnVolume', vol)
 	{
-		pNodo.Proyecta();
-		PN.AddItem(pNodo);
+		if(vol.ContainsPoint(loc))
+			return false;
 	}
 
-	NodosMundo = PN;
+	return true;
+}
 
+function array<PWorldPathNode> ObtenerNodosMundo(int id)
+{
+	return NodosMundo[id].Nodos;
+}
+
+/// Devuelve un id random de todos los posibles nodos
+function int ObtenerIdNodosMundo()
+{
+	return Rand(NodosMundo.Length);
+}
+
+function DeleteWorldPathNode(int id, int i)
+{
+	NodosMundo[id].Nodos.Remove(i, 1);
 }
 
 function CreatePathNodes()
@@ -134,10 +170,30 @@ function CreatePathNodes()
 
 event Tick(float DeltaTime)
 {
+	local int i;
+	local int j;
+	local vector v0;
+	local vector v1;
+
 	//FlushPersistentDebugLines();
 	if(NodosCreados)
 		DrawWorldNodes();
 	DrawNodes();
+
+	for(i = 0; i < NodosMundo.Length; ++i)
+	{
+		for(j = 0; j < NodosMundo[i].Nodos.Length; ++j)
+		{
+			if(j+1 >= NodosMundo[i].Nodos.Length)
+				v1 = NodosMundo[i].Nodos[0].Location;
+			else
+				v1 = NodosMundo[i].Nodos[j+1].Location;
+	
+			v0 = NodosMundo[i].Nodos[j].Location;
+			DrawDebugLine(v0, v1, 255, 0, 0, false);
+			//DrawDebugSphere(v0, 200, 10, 255, 0, 0, false);
+		}
+	}
 }
 
 function DrawWorldNodes()
@@ -256,9 +312,9 @@ defaultproperties
 	HUDType=class'PGame.PHUD'
     	EnemiesLeft=10
     	bScoreDeaths=false
-	fDecalSize=512.0f
+	fDecalSize=256.0f
 	bActivateDecalsOnWalk=false
-	creditos=1000000
+	creditos=1000
 	bEarthNotFlying=true
 	bDelayedStart=false
 	//m_CentroPlaneta=(X=528,Y=144,Z=8752)

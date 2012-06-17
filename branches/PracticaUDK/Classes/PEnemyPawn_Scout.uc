@@ -41,5 +41,5 @@ defaultproperties
 
 	ColorMesh=WPawnSkeletalMeshComponent
 
-	GroundSpeed=100.0
+	GroundSpeed=300.0
 }

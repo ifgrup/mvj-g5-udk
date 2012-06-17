@@ -36,6 +36,8 @@ var float m_velocidad_rotacion;
 var Vector m_posicionPawn; //Para ir guardando la posicion del pawn mientras volamos, porque parece que no se actualiza???
 var bool m_vCaidaMax; //al caer al planeta, hemos llegadoa velocidad máxima de caida
 
+var UberPostProcessEffect PPE;
+
 /**
  *Gestión del ratón RR
  * 
@@ -659,7 +661,6 @@ state PlayerFlaying
 		//Colocamos al Pawn volando, prolongando su Z actual:
         `log("PC Flaying 2");
 
-	
 		pPosition=PPawn(Pawn).Location;
 		Centro2Pawn=Normal(pPosition-PGame(WorldInfo.Game).GetCentroPlaneta());
 		pPosition=PGame(WorldInfo.Game).GetCentroPlaneta()+Centro2Pawn*m_DistanciaAlCentro;
@@ -1088,10 +1089,11 @@ defaultproperties
 	transformedPhysicsAsset=PhysicsAsset'VH_Cicada.Mesh.SK_VH_Cicada_Physics'
 	bNotifyFallingHitWall=true
     InputClass=class'PGame.PPlayerInput'
-	m_DistanciaAlCentro=19000
-	m_ZoomMaxAcercar=11000
+	m_DistanciaAlCentro=12000
+	m_ZoomMaxAcercar=0
 	m_ZoomMaxAlejar=19000
 	m_stepZoom=600
 	m_velocidad_rotacion=1.0
+	bGodMode=true
 }
 
