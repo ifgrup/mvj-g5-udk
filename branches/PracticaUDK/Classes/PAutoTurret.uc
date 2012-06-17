@@ -556,7 +556,7 @@ state NuevoTarget
 			return;
         }
 		
-		FlushPersistentDebugLines();
+		//LOLOFlushPersistentDebugLines();
 		//DBG DrawDebugCylinder(FireLocation,enemigoActual.Location,5,10,0,0,255,true);
         dist=Vsize(enemigoActual.Location-IniFireLocation);
 		if (dist > (RangoDisparo+100) )//|| enemigoActual.life==0)
@@ -585,7 +585,7 @@ state NuevoTarget
 				dirActual=Normal(FireLocation-IniFireLocation);
 				dirEnemigo=Normal(enemigoActual.location-IniFireLocation);
 
-			    FlushPersistentDebugLines();
+			    //LOLOFlushPersistentDebugLines();
 		        //DrawDebugCylinder(FireLocation,enemigoActual.Location,3,10,200,0,0,true);
 
 
@@ -1110,16 +1110,25 @@ function RotateTimer()
 defaultproperties
 {
 
+
 	//Escudo que rodea a las torretas
 	Begin Object Class=StaticMeshComponent Name=DMesh
 	    StaticMesh=StaticMesh'PGameContentcannon.Mesh.escudocannon'
-        BlockActors=false
+        BlockActors=true
         CollideActors=true
+		BlockNonZeroExtent=true
+		BlockZeroExtent=true
+		RBCollideWithChannels=(Pawn=true)
+		BlockRigidBody=true
+		
         //LightEnvironment=MyLightEnvironmentrr 
 		Scale3D=(X=20,Y=20,Z=20)
     End Object
+
+	//bCollideComplex=true
 	ShieldMesh=DMesh
 	Components.Add(DMesh)
+
 	//TurretMesh se asigna en cada torreta hija con la mesh que corresponde a la propia torreta
 	RangoDisparo=1300
 	m_TimeoutEntreDisparo=0.33  //3 disparos por segundo

@@ -62,7 +62,6 @@ var AnimNodeSequence transformedAnimSeq;
 var PhysicsAsset transformedPhysicsAsset;
 
 
-
 exec function derp()
 {
 	self.Pawn.GroundSpeed+=500;
@@ -88,6 +87,7 @@ exec function ActivateDecals()
 
 	ClientMessage("Estado de las decals"@PGame(WorldInfo.Game).bActivateDecalsOnWalk);
 }
+
 
 
 /**
@@ -260,124 +260,6 @@ state PlayerSpidering
 			return false;
 	}
 
-	//Devuelve dónde estará mirando el jugador,la cámara vamos ;)
-    simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
-    {
-
-        local vector  CamDirX, CamDirY,CamDirZ;    
-        local vector  HitLocation, HitNormal,CamStart,tmpCamStart,tmpCamEnd;
-        local Rotator rProta;
-        local float dist,fs;
-		local float despx,despz;
-		local quat  qpitchZ,qCamZ;
-		local vector qX,qY,qZ;
-		local bool bCamaraUPDown;
-
-        super.GetPlayerViewPoint(out_Location, out_Rotation);
-        if(Pawn != none)
-        {
-            Pawn.Mesh.SetOwnerNoSee(false);
-            CamStart=Pawn.Location;
-            rProta=PPawn(Pawn).Rotation; //Hacia donde mira el prota.La pasamos a coordenadas de mundo:
-            //rProta.Pitch+=PlayerInput.aLookUp;
-            GetAxes(rProta,CamDirX,CamDirY,CamDirz);
-            //Tenemos el sist.coordenadas de hacia donde está mirando el prota,en coordenadas de mundo.
-            //Como queremos estar siempre detrás, sólo nos interesa desplazar la cámara sólo en X, dejando la Y a cero
-
-            //Calculamos desplazamiento up/down de la cámara. 
-            //PlayerInput.aLookup no es absoluto, sino que depende sólo de la velocidad del movimiento del mouse.
-            //Para controlar si la cámara está más arriba o abajo, vamos acumulando el valor,
-            //modulándolo con sin 
-            
-            
-			
-    		//Debemos intentar mantener la distancia de la cámara al jugador.
-            //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
-			//Consideramos mOffsetCamaraUpDown como el ángulo de inclinación de la cámara
-			despX=350;//300*sin(mOffsetCamaraUpDown*degtorad);
-			
-	
-			
-			//DrawDebugCone(pawn.Location,vector(out_rotation),100,0.1,0.1,50,MakeColor(255,0,0));
-			//La rotación la debemos modificar en up/down, rotando sobre el eje Y actual del Rotator
-			//para ello, benditos quaternions:
-			bCamaraUPDown=DebeHacerseUPDownCamara();
-			if (bCamaraUPDown)
-			{
-				fs=Sin(0.001*mUltimoLookup); //utilizamos mUltimoLookup porque aquí vale cero PlayerInput, parece que sólo puede leerse 
-										  //en PlayerMove o ProcessMove ???
-            
-				mOffsetCamaraUpDown+=fs;
-
-				//Control de inclinación up/down máximo de la cámara. Con Clamp me hacía cosas raras, así que if de toda la vida
-				if(mOffsetCamaraUpDown<15.0)
-					mOffsetCamaraUpDown=15.0;
-			
-				if(mOffsetCamaraUpDown>65.0)
-					mOffsetCamaraUpDown=65.0;
-			}
-			else
-			{
-				//si hemos bajado rápido, puede que el salto de ángulo sea grande. Por eso vamos decrementando el ángulo
-				//hasta que lleguemos a 15.0
-				if (mOffsetCamaraUpDown >15.0)
-					mOffsetCamaraUpDown-=0.05;
-				else
-					mOffsetCamaraUpDown=15.0;
-			}
-		    //`log ("moffset " @mOffsetCamaraUpDown);
-			qcamZ=QuatFromRotator(pawn.Rotation);
-			GetAxes(Pawn.Rotation,qX,qY,qZ);
-			qPitchZ=QuatFromAxisAndAngle(qY,mOffsetCamaraUpDown*DegToRad);
-			qcamZ=QuatProduct(qPitchZ,qcamZ);
-			out_rotation=QuatToRotator(qcamZ);
-			despZ=600*sin(mOffsetCamaraUpDown*degtorad);
-
-			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
-			out_Location = Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
-			
-			//DrawDebugCone(pawn.Location,vector(out_rotation),100,0.1,0.1,50,MakeColor(0,0,255));
-	
-
-			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
-            //Lanzamos un 'rayo' desde la cámara hasta el bicho, y si encontramos algún obstáculo por medio, ponemos la cámara
-            //donde está el obstáculo, para evitar tener esa pared en medio. Si hubiera más de dos obstáculos, el segundo nos seguiría
-            //tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
-            //utilizamos ;)
-        
-            if (Trace(HitLocation, HitNormal, out_Location,Pawn.Location, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
-            {
-                //Hay contacto. Ponemos la cámara en el obstáculo
-                out_Location=HitLocation;
-
-                //Y ahora, como hemos hecho que la cámara se mueve más cerca del bicho, puede ser que la hayamos puesto
-                //justo encima del bicho. En tal caso, veríamos cosas raras, por lo que comprobamos si estamos dentro del bicho, y
-                //en tal caso, ocultamos el bicho para poder seguir viendo con normalidad.
-                tmpCamStart=CamStart;
-                tmpCamEnd=HitLocation;
-                //Ponemos Z's a cero, que es como proyectar al suelo la posición de la cámara y del jugador
-                tmpCamStart.Z=0;
-                tmpCamEnd.Z=0;
-                //Comprobamos si la distancia entre esas dos proyecciones, es menos que el radio de colisión + un cierto porcentaje
-                //y también si la Z del punto de colisión, vamos, la nueva cámara, está dentro del cilindro de colisión
-                dist=VSize(tmpCamEnd-tmpCamStart);
-                //`Log(dist);
-                if ( (dist < Pawn.GetCollisionRadius()*2.0) && 
-                      (HitLocation.Z<Pawn.Location.Z+Pawn.CylinderComponent.CollisionHeight) &&
-                      (HitLocation.Z>Pawn.Location.Z-Pawn.CylinderComponent.CollisionHeight))
-                {
-                    //Estamos dentro del bicho. Ocultamos su mesh
-                    Pawn.Mesh.SetHidden(True);
-                }
-                else
-                {
-                    Pawn.Mesh.SetHidden(False);
-                }
-            }//Trace para ver si hay obstáculos
-        }
-    }//GetPlayerViewPoint
-
-
 
 	/**
 	 * Evento que se ejecuta cuando caes sobre algo al caminar normal (PlayerWalking).
@@ -465,11 +347,13 @@ state PlayerSpidering
     }
 
 
+
 	/**
 	 * bAlgoDelante valdrá !=0 si hay algo delante con lo que colisiona, impidiendo el avance
 	 * valdrá false si puede seguir palante sin problemas
 	 */
 	
+
     function CheckDelantePawn(Vector direccion,out int bAlgoDelante)
 	{
 		local Vector pFinTrace,pInitTrace;
@@ -477,6 +361,10 @@ state PlayerSpidering
 		local Actor aTrace1,aTrace2,aTrace3;
 		local Vector mFloor;
 	
+	   
+		bAlgoDelante=0;
+		return;
+
 
 		if (direccion==vect(0,0,0))
 			return;
@@ -617,7 +505,23 @@ state PlayerSpidering
 		}
 		else
 		{
-			OldFloor=PPawn(Pawn).Floor;
+			//ÑAPA
+			//Parece que hay veces en las que el BaseChanged del Pawn no se ejecuta o se ejecuta cuando le sale de los
+			//cataplines, y se pone el PC en Spider antes de que el Pawn esté en el suelo.
+			//Por tanto, el floor es 0,0,0, y el OldFloor que se rellena aquí es 0,0,0, y eso provoca que
+			//luego nunca se cambie, y el UpdateRotation no cambie nunca la rotación. Maravilloso.
+			//Lo controlamos poniendo el vector en 0,0,1. Se producirá un efecto raro de cojones, pero habrá rotación
+			//al tick siguiente y se pondrá bien en principio...
+			if(PPawn(Pawn).Floor==vect(0,0,0))
+			{
+				`log("KAGADA");
+				GoToState('PlayerSpidering');
+				return;
+			}
+			else
+			{
+				OldFloor=PPawn(Pawn).Floor;
+			}
 			GetAxes(PPawn(Pawn).Rotation,ViewX,ViewY,ViewZ);
 		}
 
@@ -1084,6 +988,8 @@ exec function MiddleMouseScrollDown()
 
 defaultproperties
 {
+	
+	cameraclass=class 'PGame.PCamera'
 	transformedMesh=SkeletalMesh'VH_Cicada.Mesh.SK_VH_Cicada'
 	transformedAnimTree=AnimTree'VH_Cicada.Anims.AT_VH_Cicada'
 	transformedPhysicsAsset=PhysicsAsset'VH_Cicada.Mesh.SK_VH_Cicada_Physics'

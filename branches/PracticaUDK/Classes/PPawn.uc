@@ -17,12 +17,123 @@ class PPawn extends GamePawn;
 var DynamicLightEnvironmentComponent LightEnvironment;
 var vector FallDirection;
 var float fTiempoDeSalto; //tiempo que lleva saltando. Si se pasa de un límite, para evitar que se pire volando, lo bajamos
+var vector m_TranslateZ;
+var bool m_VenimosDeBump;
+var vector m_ULtimoFloorAntesSalto; //Por si en el salto el floor se ha perdido al saltar, chocar, etc
+var int m_DistanciaAlSuelo; //Distancia del robot al suelo
 
-function PostBeginPlay()
+
+var Actor m_BasePlaneta;
+var bool m_BasePlanetaGuardado;
+
+event Tick(float DeltaTime)
+{
+    local vector vlocation,vnormal;
+	local vector vZ;
+
+	super.Tick(DeltaTime);
+	//if (self.IsInState('PawnFalling') || self.IsInState('PawnFallingSky') || self.IsInState('PawnFlaying'))
+
+	if (!self.IsInState('PPawn'))
+	{
+		//No hacemos nada si no está caminando
+		return;
+	}
+		
+	//Actualizamos el Floor, que nos hará falta para el salto, sobretodo después de chocar contra algo
+	if (m_ULtimoFloorAntesSalto!=self.Floor)
+	{
+		self.m_ULtimoFloorAntesSalto=self.Floor;
+		`log("FT "@self.m_ULtimoFloorAntesSalto);
+	};
+
+	//Calculamos la distancia del bicho al suelo
+	trace(vlocation,vnormal,self.Location - Floor*300,self.Location,true,vect(0,0,1));
+
+	//FlushPersistentDebugLines();
+	//DrawDebugSphere(vlocation,10,50,200,0,0,true);
+	vZ.X=0;
+	vZ.Y=0;
+	vz.Z=vsize(location-vlocation)-m_DistanciaAlSuelo;
+	mesh.SetTranslation(-vz);
+}
+
+
+function ReboteRespectoA(Actor Other)
+{
+	local Vector newLocation;
+	local Vector retroceso;
+	
+	m_VenimosDeBump=true; //Para control del salto
+
+	//Hacemos que la velocidad sea la opuesta al vector formado por PAwn.Location -> Other.Location
+	retroceso=Normal(self.Location-Other.Location);
+    //Nos colocamos ligeramente alejados del colisionado, por intentar evitar que si ha entrado en la caja de colision,
+	//el inicio del salto siga estando dentro de la caja y vuelva a ejecutarse el Bump
+	newLocation=self.Location+retroceso*2;
+	self.SetLocation(newLocation);
+
+	//Si estoy saltando y choco,hago salto en dirección contraria, de forma análoga que si estoy caminando
+	//Por tanto, no hay que hacer distinción, si bumpea por salto o por andar tiene que hacer exactamente lo mismo.
+
+	self.Velocity=retroceso*100;
+	self.DoJump(true);
+	
+	m_VenimosDeBump=false;
+}
+
+
+
+event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
+{
+	if(PAutoTurret(Other)!= None)
+	{  //Es una torreta. Rebotamos
+		`log("Bump contra Torreta"@Other.Name);
+		ReboteRespectoA(Other);
+	}
+	else
+	{
+		`log("Bump contra Noseque"@Other.Name);
+	}
+	
+}
+
+
+event Touch(Actor Other,PrimitiveComponent OtherComp, Vector HitLocation, Vector HitNormal)
+{
+	`log("TOUUUUUUCH!!");
+}
+event bool EncroachingOn(Actor Other)
+{
+	`log("ENCROACHING OOOOOOOOON!!");
+	
+	return true; //to cancel the move
+}
+
+event EncroachedBy(Actor Other)
+{
+	`log("ENCROACHED BYYY!!");
+}
+
+event RanInto (Actor Other)
+{
+	`log("RANITOOOOO!!");
+
+
+}
+
+
+simulated function PostBeginPlay()
 {
 	local ParticleSystemComponent PSC;
 
-	Super.PostBeginPlay();
+	super.PostBeginPlay();
+	//CollisionComponent = Mesh;
+    // Turning collision on for skelmeshcomp and off for cylinder
+	CylinderComponent.SetActorCollision(false, false);
+	Mesh.SetActorCollision(true, true);
+	Mesh.SetTraceBlocking(true, true);
+
 	if (self.Mesh.GetSocketByName('Socket_Cabeza') != none)
 	{
 		PSC = new () class'ParticleSystemComponent';
@@ -84,6 +195,7 @@ function PostBeginPlay()
 	}
 }
 
+
 /**
  * Añadimos el arma al inventario
  * 
@@ -93,6 +205,10 @@ function AddDefaultInventory()
 	InvManager.CreateInventory(class'PGame.PWeapon');
 }
 
+exec function qbase()
+{
+	`log("La Base actual es "@self.Base);
+}
 /** BaseChange
  * Función que se llamará una única vez por Pawn cada vez que cambie el
  * objeto físico sobre el que esté posado el Pawn.
@@ -101,10 +217,37 @@ function AddDefaultInventory()
  */
 singular event BaseChange()
 {
-	//`log('Base Changed');
+	local vector direc;
+
+	if (Base!=None) `log('Base Changed '@self.Base.Name);
+	else `log('Base Changed to None');
+    
 	if(PPaintCanvas(self.Base) != none)
 	{
 		PPaintCanvas(self.Base).ChangeTexture();
+	}
+
+	if (!m_BasePlanetaGuardado && Base.Name=='StaticMeshActor_1')
+	{
+		//El planeta. Lo guardamos
+		m_BasePlaneta=Base;
+		m_BasePlanetaGuardado=true;
+	}
+	//Hacemos lo mismo que en Bump pa probar
+	if(Base!=None && Base.Name!= 'StaticMeshActor_1')
+	{
+	     if(PAutoTurret (Base) != None)
+	     {  //Es una torreta. Rebotamos
+			ReboteRespectoA(Base);
+	     }
+		 else
+		 {
+			//Por si nos subimos a un extremo de un objeto y el spyder trepa...
+			direc=Base.Location-self.Location;
+			self.SetLocation(self.Location+Normal(-direc)*5); //Nos alejamos un pelín
+		 	self.SetBase(m_BasePlaneta);
+
+		 }
 	}
 }
 
@@ -131,18 +274,49 @@ event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
  */
 function bool DoJump( bool bUpdating )
 {
+	local vector tmpFloor;
+
 	// Si podemos saltar...
-	if(bJumpCapable && !bIsCrouched && !bWantsToCrouch && Physics == PHYS_Spider)
+	//Controlamos que no vengamos del Bump contra la torreta en este if. En el else sí se hace ese salto
+
+	//IMPORTANTE!!!
+	//Por cosas del UDK que desconozco, es mejor pasarle al Estado PawnFalling del salto la dirección de caída
+	//con el floor que ahora sabemos que tenemos, o en el bump, si ya estaba saltando, como el Floor será de 0,0,1, 
+	//hará cositas raras. Por tanto, FallDirection lo inicializamos aquí, y no en el BeginState de PawnFalling.
+	//A tener en cuenta por si se necesita el salto desde otro sitio.
+
+	if(!m_VenimosDeBump && bJumpCapable && !bIsCrouched && !bWantsToCrouch && Physics == PHYS_Spider)
 	{
 		// Calculamos la velocidad a partir de la constante de salto + el vector de suelo
-		Velocity += JumpZ * Floor;
+		tmpFloor=Floor;
+		if (Floor == vect(0,0,1) || Floor== vect(0,0,0))
+		{
+			`log ("No lo entiendo...");
+			tmpFloor=m_ULtimoFloorAntesSalto;
+		}
 
+		Velocity += JumpZ * tmpFloor;
+		FallDirection = -tmpFloor;
 		// Y vamos al estado PawnFalling
+		`log('SALTO NORMAL  ' @tmpFloor);
 		GotoState('PawnFalling');
 		//`log('DoJump de PPawn');
 		return true;
 	}
-	`log('DoJump de PPawn NO PUEDE SALTAR');
+ 	`log('DoJump de PPawn NO PUEDE SALTAR');
+	//Si no puede saltar porque ya está saltando, no salta.
+	//Pero si está saltando y la petición de salto viene desde el evento Bump, significa que durante el recorrido
+	//del salto, ha encontrado una colisión, y se ha solicitado que salte hacia atrás.
+	//En ese caso, sí que lo permitimos
+	if(m_VenimosDeBump)
+	{
+		`log('SALTO por BUMP ' @m_ULtimoFloorAntesSalto);
+		DrawDebugCylinder(self.Location,self.Location+m_ULtimoFloorAntesSalto*100,4,10,0,0,255,true);
+		Velocity += JumpZ * m_ULtimoFloorAntesSalto;
+		FallDirection = -m_ULtimoFloorAntesSalto;
+		GotoState('PawnFalling');
+		return true;
+	}
 	return false;
 }
 
@@ -190,7 +364,8 @@ state PawnFalling
 
 		`log('pawn en estado Falling');
 		//DBG WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
-		FallDirection = -Floor;
+		//VMH: Lo inicializo en DoJump 
+		//FallDirection = -Floor;
 		
         // Direct hit wall enabled just for the custom falling
 		bDirectHitWall = true;
@@ -255,8 +430,10 @@ state PawnFalling
 	{
 		FallDirection = vect(0,0,0); // CLEAR DESTINATION FLOOR
 		bDirectHitWall = false; 
+		SetPhysics(PHYS_None); 
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
-		`log('el pawn deja de esar en Falling');
+		
+		`log('el pawn deja de esar en Falling y va a '@NextState);
 	}
 }
 
@@ -303,7 +480,7 @@ state PawnFallingSky
 		OrientarPawnPorNormal(HitNormal,routPawn);
 		//Ya ha llegado al suelo. Spidercerdo, spidercerdo..
 		GoToState(''); //vuelve el pawn al estado 'normal'
-		PC.GotoState('PlayerSpidering');
+		//En el END State, ponemos al PC en PlayerSpidering
 		if(PPaintCanvas(Wall) != none)
 		{
 			PPaintCanvas(Wall).ChangeTexture();
@@ -312,11 +489,15 @@ state PawnFallingSky
    
 	event EndState(Name NextState)
 	{
+		local PPlayerController PC;
+
 		FallDirection = vect(0,0,0); // CLEAR DESTINATION FLOOR
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_None);
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
-		`log('el pawn deja de esar en FallingSky');
+		`log('el pawn deja de esar en FallingSky y va a '@NextState);
+		PC = PPlayerController(Instigator.Controller);
+		PC.GotoState('PlayerSpidering');
 	}
 }
 
@@ -369,6 +550,7 @@ defaultproperties
 	bDirectHitWall=true
 	bRollToDesired=True
 	
+
 	// Elimina el sprite del editor
 	Components.Remove(Sprite)
 
@@ -380,6 +562,7 @@ defaultproperties
 		bIsCharacterLightEnvironment=TRUE
 		bUseBooleanEnvironmentShadowing=FALSE
 	End Object
+
 
 	// Una vez configurada la iluminación, la añadimos al renderizador...
 	Components.Add(MyLightEnvironment)
@@ -395,13 +578,16 @@ defaultproperties
 		//Your Mesh Properties
 		//SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
 		//SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
+		//SkeletalMesh=SkeletalMesh'Personaje.Ogre'
 		SkeletalMesh=SkeletalMesh'Giru.Giru'
-		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
-		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
-		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
+		//AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
+		//PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
+		//PhysicsAsset=PhysicsAsset'Personaje.Ogre_Physics_V2'
+		PhysicsAsset=PhysicsAsset'Giru.Giru_Physics'
+		//AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
+
 		Scale=1.5
-		//Translation=(Z=0.0)
-		//Scale=1.075
+
 		//General Mesh Properties
 		bCacheAnimSequenceNodes=FALSE
 		AlwaysLoadOnClient=true
@@ -425,6 +611,7 @@ defaultproperties
 	Components.Add(WPawnSkeletalMeshComponent)
 
 
+
 	// Esto tiene algo que ver con el modelo físico de colisiones del modelo
 	Begin Object Name=CollisionCylinder
 		CollisionRadius=+0021.000000
@@ -433,8 +620,23 @@ defaultproperties
 
 	// Lo añadimos al motor
 	CylinderComponent=CollisionCylinder
+
+	//Components.Remove(CollisionCylinder)
+
 	CollisionComponent=CollisionCylinder
 	Components.Add(CollisionCylinder)
 	//VLR Inventario para el arma
 	InventoryManagerClass=class'PGame.PInventoryManager'
+
+	//Para colisiones:
+	bCollideComplex=true
+	BlockRigidBody=true
+	bCollideActors=true
+	bCollideWorld=true
+	CollisionType=COLLIDE_BlockAll
+	
+	m_BasePlaneta = None
+	m_BasePlanetaGuardado = false
+
+	m_DistanciaAlSuelo=30
 }
