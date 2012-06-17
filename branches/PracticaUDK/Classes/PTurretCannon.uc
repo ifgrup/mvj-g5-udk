@@ -2,7 +2,6 @@ class PTurretCannon extends PAutoTurret
 	placeable;
 
 
-
 //Funcion definida en PAutoTurret, redefinida en cada hija
 function DisparoTorreta()
 {
@@ -25,29 +24,38 @@ defaultproperties
     End Object
     Components.Add(MyLightEnvironmentrr)
 	Begin Object class=SkeletalMeshComponent name=torretask
-    	AnimTreeTemplate=AnimTree'PGameContentcannon.basecannonAnimTree'
+    	SkeletalMesh=SkeletalMesh'PGameContentcannon.cannonrudk'
+
+		AnimTreeTemplate=AnimTree'PGameContentcannon.basecannonAnimTree'
 		AnimSets(0)=AnimSet'PGameContentcannon.basecannon'
 		
-		PhysicsAsset=PhysicsAsset'PGameContentcannon.cannonrudk_Physics'
 		bHasPhysicsAssetInstance=true
-        SkeletalMesh=SkeletalMesh'PGameContentcannon.cannonrudk'
+		PhysicsAsset=PhysicsAsset'PGameContentcannon.cannonrudk_Physics'
+        
         LightEnvironment=MyLightEnvironmentrr
 		
-		//bDisableAllRigidBody=true//para que no se caigan las torretas 
+		bDisableAllRigidBody=true//para que no se caigan las torretas cuando las toquemos ##@|#|""$!!!
 
 		CollideActors=true 
 		BlockActors=true
 		BlockNonZeroExtent=true
 		BlockZeroExtent=true
-		bDisableAllRigidBody=true
+		BlockRigidBody=true
         //Translation=(X=0,Y=0,z=-200)
     End Object
-    
+
 	TurretMesh=torretask //Por eso podemos acceder a la mesh con TurretMesh ;)
 	CollisionComponent=torretask
-    bCollideComplex=true
+	//Colisiones, su puta madre
+	bCollideComplex=true 
+	bCanStepUpOn=false
+	BlockRigidBody=true
+	bCollideActors=true
+	bCollideWorld=true
+	CollisionType=COLLIDE_BlockAll
 	
-	bDisableClientSidePawnInteractions=true
+	//VMHbDisableClientSidePawnInteractions=true
+
 	Components.Add(torretask) 
 	
     //Sistemas de partículas propios de TurretCannon
@@ -113,4 +121,7 @@ defaultproperties
 	TurretHealth=500
 	RoundsPerSec=50
 	RangoDisparo=3000
+
+	
+
 }

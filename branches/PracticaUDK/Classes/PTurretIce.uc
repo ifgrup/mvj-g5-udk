@@ -22,7 +22,7 @@ defaultproperties
         
 		AnimTreeTemplate=AnimTree'PGameContentTice.baseIceAnimTree'
 		AnimSets(0)=AnimSet'PGameContentTice.basecannon'
-		
+		//USAMOS LAS MISMAS COLISIONES QUE LA TURRETCANON, POR LO QUE USAMOS SU PHYSICS ASSET!!
 		PhysicsAsset=PhysicsAsset'PGameContentcannon.cannonrudk_Physics'
 		bHasPhysicsAssetInstance=true
         SkeletalMesh=SkeletalMesh'PGameContentTice.icecannonrudk'
@@ -114,5 +114,5 @@ defaultproperties
 	ProjClass=class'PGame.PMisiles'
 	TurretHealth=500
 	RoundsPerSec=50
-	
+	m_TimeoutEntreDisparo=3 //Disparo de hielo cada 3 segundos
 }
