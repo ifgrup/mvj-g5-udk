@@ -2,7 +2,7 @@
  * Configuración general del juego
  * */
 
-class PGame extends FrameworkGame;
+class PGame extends GameInfo;
 
 var const float fDecalSize;
 var bool bActivateDecalsOnWalk;
