@@ -209,7 +209,6 @@ function acutalizaRotacion(float DeltaTime)
 	{
 		local rotator ViewRotation;
 		local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
-		local bool bSaltando;
 
 		
 		//ClientMessage("UPdate Estado spider" $ DeltaTime);

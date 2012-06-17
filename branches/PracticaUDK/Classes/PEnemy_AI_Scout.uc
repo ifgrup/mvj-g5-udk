@@ -15,8 +15,11 @@ var array<PWorldPathNode> ListaNodosRecorridos;
 var DecalMaterial Decal;
 var MaterialInstanceConstant Mat;
 var LinearColor ColorDecal;
-var int NegX;
-var int NegY;
+var bool HasPath;
+var int id_Path;
+var float DestinationOffset;
+var bool ArrivedCurrentDestination;
+var Actor Destination;
 
 simulated event PostBeginPlay()
 {
@@ -32,16 +35,6 @@ simulated event PostBeginPlay()
 	/*Mat.SetScalarParameterValue('R', ColorDecal.R);
 	Mat.SetScalarParameterValue('G', ColorDecal.G);
 	Mat.SetScalarParameterValue('B', ColorDecal.B);*/
-
-	if(Rand(10) <= 5)
-		NegX = -1;
-	else
-		NegX = 1;
-
-	if(Rand(10) >= 5)
-		NegY = -1;
-	else
-		NegY = 1;
 
 	SetTimer(1, false, 'BrainTimer');
 }
@@ -59,20 +52,50 @@ function SetID(int i)
 
 function DrawDebugInfo()
 {
-	if(theObjective != none)
-	{
-		//DBG DrawDebugLine(Pawn.Location, CurrentDestination, 0, 255, 0, false);
-		//DBG DrawDebugSphere(CurrentDestination, 20, 20, 0, 255, 0, false);
-	}
+	DrawDebugLine(Pawn.Location, CurrentDestination, 0, 255, 0, false);
+	DrawDebugSphere(CurrentDestination, 20, 20, 0, 255, 0, false);
 }
 
 function BrainTimer()
 {
 	local PPathNode nodo;
+	local array<PWorldPathNode> pWNodos;
+	local PPlayerBase pBase;
 	local float fTimer;
+	local int i;
+	local int j;
+	local float distancia, tmp;
 
 	ClearTimer('BrainTimer');
-	FlushPersistentDebugLines();
+	//FlushPersistentDebugLines();
+
+	// si no tengo un destino
+	if(HasPath == false)
+	{
+		ArrivedCurrentDestination = false;
+		// busco el más cercano
+		id_Path = PGame(WorldInfo.Game).ObtenerIdNodosMundo();
+		pWNodos = PGame(WorldInfo.Game).ObtenerNodosMundo(id_Path);
+		j = 0;
+		distancia = VSize(pWNodos[0].Location - self.Location);
+		for(i = 0; i < pWNodos.Length; ++i)
+		{
+			tmp = VSize(pWNodos[i].Location - self.Location);
+			if(distancia > tmp)
+			{
+				distancia = tmp;
+				j = i;
+			}
+		}
+
+		// me lo asigno
+		PGame(WorldInfo.Game).Broadcast(self, "El nodo mas cercano es el"@pWNodos[j].Name);
+		DrawDebugSphere(pWNodos[j].Location, 500, 10, 0, 255, 0, false);
+		HasPath = true;
+		CurrentDestination = pWNodos[j].Location;
+		Destination = pWNodos[j];
+		PGame(WorldInfo.Game).DeleteWorldPathNode(id_Path, j);
+	}
 
 	if(VSize(OldLocation - Pawn.Location) > (Step/4))
 	{
@@ -92,11 +115,10 @@ function BrainTimer()
 	}
 	else
 	{
-		CurrentDestination = RandomDest();
 		fTimer = 1;
 	}
 
-	//DBG DrawDebugInfo();
+	DrawDebugInfo();
 
 	SetTimer(fTimer, false, 'BrainTimer');
 
@@ -104,69 +126,36 @@ function BrainTimer()
 
 }
 
-function vector RandomPathDest()
+function Vector NextPath()
 {
-	local PWorldPathNode pNodo;
-	local float DistanceToBase;
+	local array<PWorldPathNode> pWNodos;
+	local int i;
+	local int j;
+	local float distancia, tmp;
 
-	DistanceToBase = VSize(self.Location - theObjective.Location);
-	foreach DynamicActors(class'PWorldPathNode', pNodo)
+	ArrivedCurrentDestination = false;
+	// busco el más cercano
+	pWNodos = PGame(WorldInfo.Game).ObtenerNodosMundo(id_Path);
+	
+	j = 0;
+	distancia = 100000;
+
+	for(i = 0; i < pWNodos.Length; ++i)
 	{
-		if(ListaNodosRecorridos.Find(pNodo) != -1)
-			continue;
-
-		if((pNodo.DistanceToBase < DistanceToBase))
+		tmp = VSize(pWNodos[i].Location - Pawn.Location);
+		if(distancia > tmp && pWNodos[i].id == id_Path)
 		{
-			if(VSize(pNodo.Location - Location) < 1000)
-			{
-				//DBG DrawDebugSphere(pNodo.Location, 300, 10, 255, 255,0, true);
-				ListaNodosRecorridos.AddItem(pNodo);
-				return pNodo.Location;
-			}
+			distancia = tmp;
+			j = i;
 		}
 	}
 
-	return RandomDest();
-}
-
-function bool CalcMoveToDestination()
-{
-	local Vector HitLocation, HitNormal;
-	local Vector StartTrace, EndTrace;
-	local Actor pBase;
-
-	StartTrace = Pawn.Location;
-	EndTrace = theObjective.Location;
-
-	pBase = Trace(HitLocation, HitNormal, EndTrace, StartTrace, true,,, TRACEFLAG_Bullet);
-
-	return pBase.IsA('PPlayerBase');
-}
-
-function Vector RandomDest()
-{
-	local vector R;
-	local vector HitLocation, HitNormal;
-	local TraceHitInfo HitInfo;
-	local vector StartTrace, EndTrace;
-	local vector rr;
-
-	rr = VRandCone(self.Location, DegToRad * 360);	
-
-	OffsetX = Rand(Step)+Rand(Step);
-	OffsetY = Rand(Step)+Rand(Step);
-	
-	R.X = Pawn.Location.X * rr.x + OffsetX * NegX;
-	R.Y = Pawn.Location.Y * rr.Y + OffsetY * NegY;
-	R.Z = Pawn.Location.Z;
-
-	StartTrace = R;
-	EndTrace = theObjective.Location;
-		//PGame(WorldInfo.Game).GetCentroPlaneta();
-
-	Trace(HitLocation, HitNormal, EndTrace, StartTrace, TRUE,, HitInfo, TRACEFLAG_Bullet);
-
-	return HitLocation;
+	// me lo asigno
+	PGame(WorldInfo.Game).Broadcast(self, "Voy hacia el nodo "@pWNodos[j].Name);
+	DrawDebugSphere(pWNodos[j].Location, 500, 10, 0, 255, 0, true);
+	Destination = pWNodos[j];
+	PGame(WorldInfo.Game).DeleteWorldPathNode(id_Path, j);
+	return pWNodos[j].Location;
 }
 
 state MoveToDestination
@@ -174,10 +163,9 @@ state MoveToDestination
 	event Tick(float DeltaTime)
 	{
 		local Pawn pDetectado;
-		local PWorldPathNode pNodo;
-		//DBG DrawDebugInfo();
+		DrawDebugInfo();
 
-		if(VSize(OldDecalLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize / 2))
+		if(VSize(OldDecalLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize))
 		{
 			OldDecalLocation = Pawn.Location;
 			WorldInfo.MyDecalManager.SpawnDecal
@@ -185,10 +173,10 @@ state MoveToDestination
 				Mat,
 				Pawn.Location,
 				rotator(-Pawn.Floor),
-				PGame(WorldInfo.Game).fDecalSize * 2, PGame(WorldInfo.Game).fDecalSize * 2,
-				PGame(WorldInfo.Game).fDecalSize * 4,
+				PGame(WorldInfo.Game).fDecalSize, PGame(WorldInfo.Game).fDecalSize,
+				PGame(WorldInfo.Game).fDecalSize,
 				true,
-				FRand() * 360,,,,,,,100000
+				0,,,,,,,100000
 			);
 		}
 		
@@ -212,8 +200,16 @@ Begin:
 		Pawn.Velocity = vect(0,0,0);
 		GotoState('ArrivedDestination');
 	}
-	
-	MoveTo(CurrentDestination);
+	else if(VSize(theObjective.Location - Pawn.Location) < Step * 4)
+	{
+		Destination = theObjective;
+	}
+	else if(VSize(CurrentDestination - Pawn.Location) < DestinationOffset)
+	{
+		CurrentDestination = NextPath();
+	}
+
+	MoveToward(Destination,,DestinationOffset/2, false, true);
 }
 
 state ArrivedDestination
@@ -232,4 +228,8 @@ defaultproperties
 	Step=1000
 	RandomTicksCounter=0
 	RandomTicksMax=2
+	HasPath=false
+	id_Path=0
+	ArrivedCurrentDestination=false
+	DestinationOffset=200;
 }

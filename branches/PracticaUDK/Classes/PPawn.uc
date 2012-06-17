@@ -11,12 +11,78 @@
 
 // Siempre debemos derivar nuestra clase Pawn de GamePawn
 class PPawn extends GamePawn;
-
+// 
 
 // Para que a nuestro Pawn le afecte la iluminación
 var DynamicLightEnvironmentComponent LightEnvironment;
 var vector FallDirection;
 var float fTiempoDeSalto; //tiempo que lleva saltando. Si se pasa de un límite, para evitar que se pire volando, lo bajamos
+
+function PostBeginPlay()
+{
+	local ParticleSystemComponent PSC;
+
+	Super.PostBeginPlay();
+	if (self.Mesh.GetSocketByName('Socket_Cabeza') != none)
+	{
+		PSC = new () class'ParticleSystemComponent';
+		if (PSC != none)
+		{
+			PSC.SetTemplate(ParticleSystem'CTF_Flag_IronGuard.Effects.P_CTF_Flag_IronGuard_Idle_Blue');
+			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Cabeza');
+		}
+	}
+
+	if (self.Mesh.GetSocketByName('Socket_Brazo_Derecho') != None)
+	{
+		PSC = new () class'ParticleSystemComponent';
+		if (PSC != None)
+		{
+			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
+			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Brazo_Derecho');
+		}
+	}
+
+	if (self.Mesh.GetSocketByName('Socket_Antebrazo_Derecho') != none)
+	{
+		PSC = new () class'ParticleSystemComponent';
+		if (PSC != none)
+		{
+			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
+			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Antebrazo_Derecho');
+		}
+	}
+
+	if (self.Mesh.GetSocketByName('Socket_Brazo_Izquierdo') != None)
+	{
+		PSC = new () class'ParticleSystemComponent';
+		if (PSC != None)
+		{
+			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
+			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Brazo_Izquierdo');
+		}
+	}
+
+	if (self.Mesh.GetSocketByName('Socket_Antebrazo_Izquierdo') != none)
+	{
+		PSC = new () class'ParticleSystemComponent';
+		if (PSC != none)
+		{
+			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
+			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Antebrazo_Izquierdo');
+		}
+	}
+
+	if (self.Mesh.GetSocketByName('Socket_Base') != none)
+	{
+		PSC = new () class'ParticleSystemComponent';
+		if (PSC != none)
+		{
+			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
+			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Base');
+		}
+	}
+}
 
 /**
  * Añadimos el arma al inventario
@@ -329,12 +395,12 @@ defaultproperties
 		//Your Mesh Properties
 		//SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
 		//SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
-		SkeletalMesh=SkeletalMesh'Personaje.Ogre'
+		SkeletalMesh=SkeletalMesh'Giru.Giru'
 		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
 		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
 		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
-
-		Translation=(Z=-50.0)
+		Scale=1.5
+		//Translation=(Z=0.0)
 		//Scale=1.075
 		//General Mesh Properties
 		bCacheAnimSequenceNodes=FALSE
