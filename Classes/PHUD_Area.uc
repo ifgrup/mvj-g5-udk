@@ -5,6 +5,7 @@ class PHUD_Area extends pawn;
 var PointLightComponent m_luz;
 var ParticleSystem m_ParticleSystem;
 var EmitterSpawnable m_Emitter;
+var Color c,c2;
 
 event PostBeginPlay()
 {
@@ -16,8 +17,19 @@ event PostBeginPlay()
 function posicionarLuz(vector pos)
 {
 	m_luz.SetTranslation(pos);
+	
 }
 
+function interruptor(bool encendido)
+{
+//m_luz.SetEnabled(encendido);
+	if(encendido){
+m_luz.SetLightProperties(500.0,c,);
+	}else{
+m_luz.SetLightProperties(150.0,c2,);
+	}
+
+}
 
 DefaultProperties
 {
@@ -28,11 +40,14 @@ DefaultProperties
 		CastDynamicShadows = TRUE
 		LightColor = (r=255,g=0,b=0)
 		Brightness = 100
+	
 		
 	End Object
 	m_luz= LaLuz
 	Components.Add(LaLuz);
 
 	m_ParticleSystem=ParticleSystem'PGameParticles.Particles.CristalesCuarzo'
+	c=(r=0,g=255,b=0)
+	c2=(r=255,g=0,b=0)
 	
 }
