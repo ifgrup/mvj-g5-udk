@@ -34,6 +34,8 @@ var PGFx pGFx;
 var PGame game;
 
 
+
+
 //rr new PauseMenu
 var bool pauseMenu;
 var PGFxUI_PauseMenu		PauseMenuMovie;
@@ -41,12 +43,16 @@ var PGFxUI_PauseMenu		PauseMenuMovie;
 var bool	bEnableActorOverlays;
 var SoundCue musica,musicamenu;
 
+//PHUD_Area
+var PHUD_Area area;
 
 
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
 	PlaySound(musica);
+	area=Spawn(class'PHUD_Area',,,,,,true);
+	area.interruptor(false);
 	//Si estamos utilizando Scaleform, crear la pelicula
 	if(UsingScaleform)
 	{
@@ -184,7 +190,12 @@ event PostRender()
 
 	//Si MouseInteractionInterface es nulo, significa que el mouse no esta encima de nningun item
 	if(MouseInteractionInterface == none)
-	{		
+	{	
+		area.SetLocation(HitLocation+HitNormal*100);
+					area.SetRotation(rTorreta);
+	area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
+
+
 		//Si se presiona el boton izquierdo del mouse 
 		if(PendingLeftPressed)
 		{
@@ -201,6 +212,7 @@ event PostRender()
 			//reload dice si la torreta esta recargada. bTowerActive si esta habilitada por credito
 		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.TTowerActive!=2 )
 		    {
+
 				`log("la pgfx ttower active " @pGFx.TTowerActive);
 				pPlayerController = PPlayerController(PlayerOwner);
 
@@ -210,6 +222,8 @@ event PostRender()
 				{
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
+					
+
 					if(pGFx.TTowerActive==0)
 					{
 						`log("Vamos a spawnear una torreta ice");
@@ -293,6 +307,9 @@ event PostRender()
 				}
 			}*/
 		}
+	}else{//si estamos encima de 
+	area.SetLocation(HitLocation+HitNormal*100);
+	area.interruptor(false);
 	}
 
 	/****   Controlar mouse over y out  ****/
