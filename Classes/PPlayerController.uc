@@ -38,6 +38,16 @@ var bool m_vCaidaMax; //al caer al planeta, hemos llegadoa velocidad máxima de c
 
 var UberPostProcessEffect PPE;
 
+
+//Control de caida PlayerFallingSky
+var float m_tiempoCayendo;
+var float m_acercandoCamaraCayendo;
+var float m_aceleracionCaidaLibre;
+var vector m_PosInicialCamaraCayendo;
+var bool m_inicioAcercamiento;
+var float m_tiempoCaidaSinMoverCamara;
+var bool m_cambioEstadoPropulsores;
+
 /**
  *Gestión del ratón RR
  * 
@@ -498,7 +508,7 @@ state PlayerSpidering
 	event BeginState(Name PreviousStateName)
 	{
 		`Log("__________________________BEGIN STATE PLAYERCONTROLLER.PLAYERSPIDERING_____________________");
-		if (PreviousStateName!='PlayerFallingSky')
+		if (PreviousStateName!='PlayerRecienCaido' )
 		{
 			OldFloor = vect(0,0,1);
 			GetAxes(Rotation,ViewX,ViewY,ViewZ);
@@ -723,7 +733,7 @@ state PlayerFlaying
 
 state PlayerFallingSky
 {
-	ignores SeePlayer, HearNoise, Bump;
+	ignores SeePlayer, HearNoise;//, Bump;
   
 	/**
 	 * Inicialización del estado.
@@ -732,18 +742,63 @@ state PlayerFallingSky
 	{
 		/*Simplemente, vamos cayendo, hasta que el Pawn nos avise de que estamos en el suelo */
 		local Vector pPosition,vAlCentro;
+        local PPawn elPaun;
 
+		
         `log("PC Falling Sky");
+		elPaun=PPawn(pawn);
 
-		pPosition=PPawn(Pawn).Location;
+		
+		pPosition=elPaun.Location;
+		m_PosInicialCamaraCayendo=pPosition;
+
 		vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition; //vector de dirección del prota.
-		pawn.Velocity=Normal(vAlCentro)*900;
-		pawn.Acceleration=pawn.Velocity*500;
+		
+		elPaun.Velocity=Normal(vAlCentro)*1000;//*10000;
+		elPaun.Acceleration=pawn.Velocity*50000;
 
 		//ponemos al pawn 300 unidades más abajo, porque pondremos la cámara 300 unidades más arriba para que se le vea caer
-		PPawn(pawn).SetLocation(pPosition+Normal(vAlCentro)*300);
-		PPawn(Pawn).GotoState('PawnFallingSky');
+		elPaun.SetLocation(pPosition+Normal(vAlCentro)*300);
+		elPaun.GotoState('PawnFallingSky');
 		m_vCaidaMax=false;
+		m_tiempoCayendo=0;
+		m_acercandoCamaraCayendo=1; //Es un factor
+		m_aceleracionCaidaLibre=1;
+		m_inicioAcercamiento=false; 
+
+		elPaun.EstadoPropulsores(false); //Apagamos los propulsores
+		m_cambioEstadoPropulsores=false;
+		//elPaun.OrientarPropulsores(elPaun.Rotation);
+	}
+
+	event PlayerTick(float DeltaTime)
+	{
+		super.PlayerTick(DeltaTime);
+
+		//Primero control de la cámara
+		m_tiempoCayendo+=DeltaTime;
+		if (m_tiempoCayendo > m_tiempoCaidaSinMoverCamara)
+		{
+			//Guardamos la distancia actual de la camara hasta el pawn, para ir decrementándola
+			if(!m_inicioAcercamiento)
+			{
+				m_inicioAcercamiento=true;
+				m_acercandoCamaraCayendo=vsize(PPawn(Pawn).Location-m_PosInicialCamaraCayendo);
+			}
+			m_acercandoCamaraCayendo-=800*DeltaTime; //La vamos decrementando
+			m_acercandoCamaraCayendo=FClamp(m_acercandoCamaraCayendo,300,30000);
+			`log("La distancia es "@m_acercandoCamaraCayendo);
+
+			//Update de la aceleración
+			m_aceleracionCaidaLibre*=1+DeltaTime/5;
+		}
+
+		//Propulsores apagados un segundo (Caída libre), y luego se encienden
+		if (m_tiempoCayendo>1 && !m_cambioEstadoPropulsores)
+		{
+			ppawn(pawn).EstadoPropulsores(true); 
+			m_cambioEstadoPropulsores=true;
+		}
 
 	}
 
@@ -765,45 +820,59 @@ state PlayerFallingSky
 		pPosition=PPawn(pawn).Location;
 		alPlaneta=PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition;
 		
-		out_Location=PPawn(pawn).Location-Normal(alPlaneta)*300; //Para que la cámara esté por encima del pawn y se vea
+		//Primero estamos medio segundo sin mover la cámara, viendo la caída libre
+		if (m_tiempoCayendo < m_tiempoCaidaSinMoverCamara)
+		{
+			out_Location=m_PosInicialCamaraCayendo;
+		}
+		else
+		{
+			//Cuando pasa medio segundo, acercamos la cámara rápidamente hasta una distancia mínima del pawn, 
+			//en la que nos mantendremos hasta que el pawn se estoñe contra el suelo
+			/////out_Location=PPawn(pawn).Location-Normal(alPlaneta)*300; //Para que la cámara esté por encima del pawn y se vea
+			out_location=PPawn(pawn).Location-Normal(alPlaneta)*m_acercandoCamaraCayendo;
+		}
+
 		out_Rotation=PPawn(pawn).Rotation; //No la cambiamos en toda la bajada
 
 	}
     
-	/*
+	
 	function PlayerMove(float aDeltaTime)
 	{
 		//vamos acercando el pawn al planeta
 		local Vector pPosition;
 		local Vector alPlaneta;
-		
+		local Vector step;
 
 		super.PlayerMove(aDeltaTime);
 
 		pPosition=PPawn(pawn).Location;
-		alPlaneta=m_CentroPlaneta-pPosition;
+		alPlaneta=PGame(WorldInfo.Game).GetCentroPlaneta()-pPosition;
 		//Caida libre hasta el suelo
 		//controlamos la velocidad máxima
-		
-		if(vsize(Pawn.Velocity)>700)
-		{
-			m_vCaidaMax=true;
-		}
+	
+		step=Normal(alPlaneta)*aDeltaTime*800*m_aceleracionCaidaLibre;
+		PPawn(pawn).SetLocation(pPosition+step);
 
-		if (m_vCaidaMax && vsize(Pawn.Velocity)>300)
-		{   //Si hemos llegado a velocidad máxima, vamos decelerando
-			PPawn(Pawn).Velocity*=0.95;
-			`log("decelerando");
-
-		}
-        
 		ProcessMove(aDeltaTime,PPawn(Pawn).Acceleration,DCLICK_None ,Rotator(vect(0,0,0)));
-		//ProcessMove(aDeltaTime,normal(alPlaneta)*500,DCLICK_None ,Rotator(vect(0,0,0)));
-		
-		`log(""@vsize(pawn.velocity) @vsize(Acceleration));
 		
 	}
-    */
+}
+
+/************************************************************************************************************************/
+state PlayerRecienCaido
+{
+	//Todo vacío, no queremos que haga nada
+	event BeginState(Name prevstate)
+	{
+		`log("asdkasda");
+	}
+
+	event EndState(Name nextstate)
+	{
+		`log("__asdkasda");
+	}
 
 }
 
@@ -996,10 +1065,11 @@ defaultproperties
 	bNotifyFallingHitWall=true
     InputClass=class'PGame.PPlayerInput'
 	m_DistanciaAlCentro=12000
-	m_ZoomMaxAcercar=0
+	m_ZoomMaxAcercar=12000
 	m_ZoomMaxAlejar=19000
 	m_stepZoom=600
 	m_velocidad_rotacion=1.0
-	bGodMode=true
+	//bGodMode=true
+	m_tiempoCaidaSinMoverCamara=1.0
 }
 

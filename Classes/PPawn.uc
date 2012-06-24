@@ -26,6 +26,11 @@ var int m_DistanciaAlSuelo; //Distancia del robot al suelo
 var Actor m_BasePlaneta;
 var bool m_BasePlanetaGuardado;
 
+//Los sistemas de partículas del robot, para poder encenderlos y apagarlos todos juntos:
+var array<ParticleSystemComponent>	m_ParticulasPropulsoresRobot;
+var vector m_NormalAlCaerSuelo;
+var bool m_RecienEstrellado;
+
 event Tick(float DeltaTime)
 {
     local vector vlocation,vnormal;
@@ -141,6 +146,7 @@ simulated function PostBeginPlay()
 		{
 			PSC.SetTemplate(ParticleSystem'CTF_Flag_IronGuard.Effects.P_CTF_Flag_IronGuard_Idle_Blue');
 			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Cabeza');
+			m_ParticulasPropulsoresRobot.AddItem(PSC);
 		}
 	}
 
@@ -151,6 +157,7 @@ simulated function PostBeginPlay()
 		{
 			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
 			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Brazo_Derecho');
+			m_ParticulasPropulsoresRobot.AddItem(PSC);
 		}
 	}
 
@@ -161,6 +168,7 @@ simulated function PostBeginPlay()
 		{
 			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
 			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Antebrazo_Derecho');
+			m_ParticulasPropulsoresRobot.AddItem(PSC);
 		}
 	}
 
@@ -171,6 +179,7 @@ simulated function PostBeginPlay()
 		{
 			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
 			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Brazo_Izquierdo');
+			m_ParticulasPropulsoresRobot.AddItem(PSC);
 		}
 	}
 
@@ -181,6 +190,7 @@ simulated function PostBeginPlay()
 		{
 			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
 			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Antebrazo_Izquierdo');
+			m_ParticulasPropulsoresRobot.AddItem(PSC);
 		}
 	}
 
@@ -191,8 +201,42 @@ simulated function PostBeginPlay()
 		{
 			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
 			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Base');
+			m_ParticulasPropulsoresRobot.AddItem(PSC);
 		}
 	}
+}
+
+
+function EstadoPropulsores(bool bEstado)
+{
+	local int i;
+
+	for (i=0;i<m_ParticulasPropulsoresRobot.Length;i++)
+	{
+		if(bEstado)
+		{
+			m_ParticulasPropulsoresRobot[i].ActivateSystem();
+		}
+		else
+		{
+			m_ParticulasPropulsoresRobot[i].DeactivateSystem();
+		}
+	}
+}
+
+function OrientarPropulsores(Rotator pRotator)
+{
+	local int i;
+	local Rotator r;
+
+	for (i=0;i<m_ParticulasPropulsoresRobot.Length;i++)
+	{
+		//m_ParticulasPropulsoresRobot[i].SetRotation(pRotator);
+		r=m_ParticulasPropulsoresRobot[i].Rotation;
+		r.Pitch+=32000;
+		m_ParticulasPropulsoresRobot[i].SetRotation(r);
+	}
+
 }
 
 
@@ -254,6 +298,7 @@ singular event BaseChange()
 // called when the pawn lands or hits another surface
 event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 {
+	
 	//`log('Hit Wall neng');
 	GotoState('');
 	SetBase(Wall, HitNormal);
@@ -345,7 +390,8 @@ function OrientarPawnPorNormal ( Vector normalsuelo, out Rotator pawnRotation)
 	self.Floor=normalsuelo;
 	pawnRotation=rPawn;
 	//c4 
-	//DrawDebugCylinder(self.Location,self.Location+vector(rPawn)*100,5,20,100,100,0,true);
+	//DrawDebugCylinder(self.Location,self.Location+vector(rPawn)*100,5,20,255,0,0,true);
+	//DrawDebugCylinder(self.Location,self.Location+normalSuelo*100,5,20,0,255,0,true);
 }
 
 /** -----------------------
@@ -409,16 +455,12 @@ state PawnFalling
 	{
 		// switch pawn back to standard state
 		local PPlayerController PC;
-//		local rotator routPawn;
 
 		GotoState('');
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn");
 		`log('el pawn ha caido al suelo despues de saltar');
 		SetBase(Wall, HitNormal);
-
-		//c3
-		//DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
 
 		if(PPaintCanvas(Wall) != none)
 		{
@@ -452,14 +494,9 @@ state PawnFallingSky
 	event BeginState(Name PrevName)
 	{
 		`log('pawn cayendo del cielo');
-		FallDirection = -Floor; //el Floor se lo deberá asignar PC al enviarle a este estado
-
 		// Direct hit wall enabled just for the custom falling
 		bDirectHitWall = true;
 		//No tocamos las físicas, que siga en flying como en PC
-		//La velocidad se la indicamos en PlayerController antes de poner el pawn en este estado
-		//Acceleration=Velocity*10;
-		
 	}
 
 	// cuando llegue al suelo:
@@ -467,43 +504,73 @@ state PawnFallingSky
 	{
 		// switch pawn back to standard state
 		local PPlayerController PC;
-		local Rotator routPawn;
 
-		
+
 		PC = PPlayerController(Instigator.Controller);
-		PC.ClientMessage("HitWallPawn al caer del cielo");
+		PC.ClientMessage("HitWallPawn al caer del cielo_________________________________________");
 		`log('el pawn ha caido al suelo despues de bajar de vista aerea');
 		SetBase(Wall, HitNormal);
 		
-		//c3
-		//DrawDebugCylinder(self.Location,self.Location+HitNormal*150,4,30,0,200,0,true);
-		OrientarPawnPorNormal(HitNormal,routPawn);
-		//Ya ha llegado al suelo. Spidercerdo, spidercerdo..
-		GoToState(''); //vuelve el pawn al estado 'normal'
-		//En el END State, ponemos al PC en PlayerSpidering
 		if(PPaintCanvas(Wall) != none)
 		{
 			PPaintCanvas(Wall).ChangeTexture();
 		}
+
+		//Se acaba de estoñar contra el suelo.
+		//Guardamos la normal del piñazo para luego orientar el Pawn más tade
+		m_NormalAlCaerSuelo=HitNormal;
+		GoToState('PawnRecienCaido'); 
 	}
-   
+
 	event EndState(Name NextState)
 	{
-		local PPlayerController PC;
 
-		FallDirection = vect(0,0,0); // CLEAR DESTINATION FLOOR
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_None);
-		SetPhysics(PHYS_Spider); // "Glue" back to surface
+		SetPhysics(PHYS_Spider); // "Glue" back to surface. Si no, se iría cayendo
 		`log('el pawn deja de esar en FallingSky y va a '@NextState);
-		PC = PPlayerController(Instigator.Controller);
-		PC.GotoState('PlayerSpidering');
 	}
 }
 
+//STATE PawnRecienCaido
+state PawnRecienCaido
+{
+	//ignores HitWall;
 
+	event BeginState(Name prevstate)
+	{
+		//S.Particules de caida, y a los dos segundos, volvemos al estao normal.
+		//Al PlayerController le ponemos también en un estado dummy para que no pueda hacer nada el jugador
+		local PPlayerController PC;
 
+		PC = PPlayerController(Instigator.Controller);
+		PC.GotoState('PlayerRecienCaido');
 
+		SetTimer(2,false,'TimerCaida');
+	}
+
+	function TimerCaida()
+	{
+
+		//Apagamos el sistema de partículas, y volvemos a la normalidad
+		GoToState('');
+
+	}
+	
+	event EndState(Name nexstate)
+	{
+		local PPlayerController PC;
+		local Rotator routPawn;
+
+		PC = PPlayerController(Instigator.Controller);
+   
+		OrientarPawnPorNormal(m_NormalAlCaerSuelo,routPawn);
+		PC.GotoState('PlayerSpidering'); //--> OJO con la ÑAPA en player Controller para coger el floor inicial...
+
+		EstadoPropulsores(true);
+	}
+
+}
 
 
 //STATE PAWNFLAYING:
@@ -638,5 +705,5 @@ defaultproperties
 	m_BasePlaneta = None
 	m_BasePlanetaGuardado = false
 
-	m_DistanciaAlSuelo=30
+	m_DistanciaAlSuelo=40
 }
