@@ -64,32 +64,50 @@ event Tick(float DeltaTime)
 }
 
 
-function ReboteRespectoA(Actor Other)
+function ReboteRespectoA(Actor Other, float aceleracion_caida = JumpZ)
 {
 	local Vector newLocation;
 	local Vector retroceso;
-	
+	local float jump_z_temp;
+		
 	m_VenimosDeBump=true; //Para control del salto
 
-	//Hacemos que la velocidad sea la opuesta al vector formado por PAwn.Location -> Other.Location
-	retroceso=Normal(self.Location-Other.Location);
-    //Nos colocamos ligeramente alejados del colisionado, por intentar evitar que si ha entrado en la caja de colision,
+	//Hacemos que la velocidad sea la opuesta al vector formado por PAwn.Location -> Other.Location	retroceso=Normal(self.Location-Other.Location);
+	//Nos colocamos ligeramente alejados del colisionado, por intentar evitar que si ha entrado en la caja de colision,
 	//el inicio del salto siga estando dentro de la caja y vuelva a ejecutarse el Bump
+	retroceso=Normal(self.Location-Other.Location);
 	newLocation=self.Location+retroceso*2;
 	self.SetLocation(newLocation);
+
 
 	//Si estoy saltando y choco,hago salto en dirección contraria, de forma análoga que si estoy caminando
 	//Por tanto, no hay que hacer distinción, si bumpea por salto o por andar tiene que hacer exactamente lo mismo.
 
-	self.Velocity=retroceso*100;
+	self.Velocity=retroceso*Fclamp(Vsize(Velocity),100,300); 
+	
+    //Guardamos el jumpz anterior para luego restaurarlo.
+	jump_z_temp = self.JumpZ;
+	self.JumpZ = aceleracion_caida;
+
+   //just in case, podríamos poner  como floor de salto contra torreta el de la normal de la torreta
+   //por si el impacto es en un montículo de terreno con inclinación muy diferente a dicha normal,
+   //evitar un raro efecto
+   //De momento, lo comento, ya veremos si es necesario
+    /*
+	if (PAutoTurret(Other) != None)
+	{
+		m_ULtimoFloorAntesSalto = PAutoTurret(Other).m_NormalSuelo;
+	}
+    */
 	self.DoJump(true);
+	self.JumpZ = jump_z_temp; //restauramos jupz
 	
 	m_VenimosDeBump=false;
 }
 
 
 
-event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
+singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
 {
 	if(PAutoTurret(Other)!= None)
 	{  //Es una torreta. Rebotamos
@@ -99,6 +117,7 @@ event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
 	else
 	{
 		`log("Bump contra Noseque"@Other.Name);
+		ReboteRespectoA(Other,200);
 	}
 	
 }
@@ -287,9 +306,13 @@ singular event BaseChange()
 		 else
 		 {
 			//Por si nos subimos a un extremo de un objeto y el spyder trepa...
+			ReboteRespectoA(Base, 200);
+			/* Esto era la opción de simplemente alejarlo un pelín, pero daba problemas
+			 * No lo borro just in case, aunque si se demuestra que lo del rebote funciona, a eliminarlo ;)
 			direc=Base.Location-self.Location;
 			self.SetLocation(self.Location+Normal(-direc)*5); //Nos alejamos un pelín
 		 	self.SetBase(m_BasePlaneta);
+			*/
 
 		 }
 	}
@@ -356,7 +379,7 @@ function bool DoJump( bool bUpdating )
 	if(m_VenimosDeBump)
 	{
 		`log('SALTO por BUMP ' @m_ULtimoFloorAntesSalto);
-		DrawDebugCylinder(self.Location,self.Location+m_ULtimoFloorAntesSalto*100,4,10,0,0,255,true);
+		DrawDebugCylinder(self.Location,self.Location+m_ULtimoFloorAntesSalto*100,4,10,0,255,255,true);
 		Velocity += JumpZ * m_ULtimoFloorAntesSalto;
 		FallDirection = -m_ULtimoFloorAntesSalto;
 		GotoState('PawnFalling');
