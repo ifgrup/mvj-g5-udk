@@ -476,8 +476,9 @@ state PlayerSpidering
 		
 		if (PPawn(pawn).GetStateName()=='PawnFalling' ) //&& PPAwn(pawn).bSaltoAcabado)
 		{
-			//`log("Estas saltando, no te muevas!");
-			NewAccel=vect(0,0,0);
+			//Si está saltando, seguramente por un rebote, dejamos que se mueva durante el salto, pero
+			//sólo un poquito, para poder evitar rebotes infinitos si siempre rebota en el mismo sitio
+			NewAccel= NewAccel /10; //Si lo ponemos en vect(0,0,0), no se puede mover mientras salta
 		}
 
         if ( VSize(NewAccel) < 1.0 )
