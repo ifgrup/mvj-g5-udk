@@ -90,5 +90,5 @@ defaultproperties
 	ColorMesh=BaseMesh
 	Components.Add(BaseMesh)
 
-	MaxEnemies=0;
+	MaxEnemies=5;
 }
