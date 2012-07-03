@@ -35,13 +35,46 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 
 defaultproperties
 {
+	
 	Begin Object Name=WPawnSkeletalMeshComponent
-		SkeletalMesh=SkeletalMesh'Gelatinos.Walker.GelatinoBipedoEsqueleto'
+		//SkeletalMesh=SkeletalMesh'Gelatinos.Walker.GelatinoBipedoEsqueleto'
+		//Translation=(Z=-70.0)
+		//Scale=3
+		
+		//ogro
+		/*
+		SkeletalMesh=SkeletalMesh'Ogro.Ogre'
+		AnimTreeTemplate=AnimTree'Ogro.Ogro_AnimTree'
+		PhysicsAsset=PhysicsAsset'Ogro.Ogre_Physics_V2'
+		AnimSets(0)=AnimSet'Ogro.Ogro_Anim'
 		Translation=(Z=-70.0)
-		Scale=0.7
+		Scale=3
+		*/
+		//otro para demo
+		SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
+		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
+		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
+		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
+		Scale=3
+
+		bCacheAnimSequenceNodes=FALSE
+		AlwaysLoadOnClient=true
+		AlwaysLoadOnServer=true
+		bOwnerNoSee=false
+		CastShadow=true
+		bUpdateSkelWhenNotRendered=false
+		bIgnoreControllersWhenNotRendered=TRUE
+		bUpdateKinematicBonesFromAnimation=true
+		bCastDynamicShadow=true
+		LightEnvironment=MyLightEnvironment
+		bOverrideAttachmentOwnerVisibility=true
+		bAcceptsDynamicDecals=FALSE
+		bUseOnePassLightingOnTranslucency=TRUE
+		bPerBoneMotionBlur=true
+		HiddenGame=False
 	End Object
 
-	ColorMesh=WPawnSkeletalMeshComponent
-
-	GroundSpeed=100.0
+	//ColorMesh=WPawnSkeletalMeshComponent
+	 Mesh=WPawnSkeletalMeshComponent
+	GroundSpeed=300.0
 }

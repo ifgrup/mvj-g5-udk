@@ -669,12 +669,25 @@ defaultproperties
 		//SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
 		//SkeletalMesh=SkeletalMesh'Layout.BadGuy_Green'
 		//SkeletalMesh=SkeletalMesh'Personaje.Ogre'
-		SkeletalMesh=SkeletalMesh'Giru.Giru'
+		
 		//AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
 		//PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
 		//PhysicsAsset=PhysicsAsset'Personaje.Ogre_Physics_V2'
-		PhysicsAsset=PhysicsAsset'Giru.Giru_Physics'
+	
 		//AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
+
+
+		//ogro
+
+		SkeletalMesh=SkeletalMesh'Ogro.Ogre'
+		AnimTreeTemplate=AnimTree'Ogro.Ogro_AnimTree'
+		PhysicsAsset=PhysicsAsset'Ogro.Ogre_Physics_V2'
+		AnimSets(0)=AnimSet'Ogro.Ogro_Anim'
+
+		//giru
+		//SkeletalMesh=SkeletalMesh'Giru.Giru'
+		//PhysicsAsset=PhysicsAsset'Giru.Giru_Physics'
+
 
 		Scale=1.5
 
