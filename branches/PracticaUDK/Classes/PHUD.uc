@@ -46,6 +46,9 @@ var SoundCue musica,musicamenu;
 //PHUD_Area
 var PHUD_Area area;
 
+//Distanciua de la torreta para poder colocar otra
+var Vector distanciatorreta;
+
 
 simulated event PostBeginPlay()
 {
@@ -150,7 +153,7 @@ event PostRender()
 	local PTurretCannon tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
-	local bool bTierraAire;
+	local bool bTierraAire,pct;
 	
 	Super.PostRender();
 	//Casting
@@ -193,7 +196,9 @@ event PostRender()
 	{	
 		area.SetLocation(HitLocation+HitNormal*100);
 					area.SetRotation(rTorreta);
-	area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
+					pct=PuedocolocarTorreta(HitLocation,HitNormal);
+	area.interruptor(pct);
+	//area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
 
 
 		//Si se presiona el boton izquierdo del mouse 
@@ -210,7 +215,7 @@ event PostRender()
 
 			//bMouseOverUIElement me dice siestoy encima del propio clip de flash.En talcaso obviamente no podemos actuar encima suyo
 			//reload dice si la torreta esta recargada. bTowerActive si esta habilitada por credito
-		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.TTowerActive!=2 )
+		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.TTowerActive!=2 && pct )
 		    {
 
 				`log("la pgfx ttower active " @pGFx.TTowerActive);
@@ -307,9 +312,9 @@ event PostRender()
 				}
 			}*/
 		}
-	}else{//si estamos encima de 
+	/*}else{//si estamos encima de 
 	area.SetLocation(HitLocation+HitNormal*100);
-	area.interruptor(false);
+	area.interruptor(false);*/
 	}
 
 	/****   Controlar mouse over y out  ****/
@@ -486,7 +491,7 @@ function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocatio
 	//Hacer Trace para saber sobre que esta el raton
 	//Iteramos sobre todo lo que intersecciona la traza para devolver el objeto mas cercano que sea
 	//del tipo TITMouseInterfaceInteractionInterface
-	foreach TraceActors(class'Actor', HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,,,TRACEFLAG_Bullet)
+	foreach TraceActors(class'Actor', HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,vect(0,0,0),,TRACEFLAG_Bullet)
 	{
 		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
 		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
@@ -501,6 +506,57 @@ function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocatio
 	return none;
 }
 
+//control para colocar torreta 
+
+function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector HitNormal)
+{
+	local PMouseInteractionInterface MouseInteractionInterface;
+	local PPlayerInput pPlayerInput;
+	local Vector2D MousePosition;
+	local Actor HitActor;
+
+	//Asegurarnos de que tenemos canvas y player owner validos
+	if(Canvas == none || PlayerOwner == none)
+		return false;
+
+	//Casting
+	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput);
+
+	//Asegurarnos de que el player input es valido
+	if(pPlayerInput == none)
+		return false;
+
+	//La posicion del mouse que esta guardada como intPoint se necesita como Vector2D
+	MousePosition.X = pPlayerInput.MousePosition.X;
+	MousePosition.Y = pPlayerInput.MousePosition.Y;
+	//Hacer la deproyeccion de la posicion del mouse en pantalla
+	//y guardar los valores del mundo del origen y la direccion
+	Canvas.DeProject(MousePosition, CachedMouseWorldOrigin, CachedMouseWorldDirection);
+
+	//Hacer Trace para saber sobre que esta el raton
+	//Iteramos sobre todo lo que intersecciona la traza para devolver el objeto mas cercano que sea
+	//del tipo TITMouseInterfaceInteractionInterface
+	foreach TraceActors(class'Actor', HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,distanciatorreta,,TRACEFLAG_Bullet)
+	{
+		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
+		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
+		//MouseInteractionInterface = PTurretCannon(HitActor);
+ 
+		if(MouseInteractionInterface != none)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+
+
+
+
+/*
 function Vector GetMouseWorldLocation()
 {
 	local PPlayerInput pPlayerInput;
@@ -529,7 +585,7 @@ function Vector GetMouseWorldLocation()
 	`Log("Normal" @HitNormal);
 	return HitLocation;
 }
-
+*/
 
 
 //rr new
@@ -675,5 +731,6 @@ defaultproperties
 	pauseMenu=false
 	musica=SoundCue'PGameMusicrr.musica2'
 	musicamenu=SoundCue'PGameMusicrr.intro2dgame_2_Cue'
+	distanciatorreta=(X=350,Y=350,Z=350)
 }
 
