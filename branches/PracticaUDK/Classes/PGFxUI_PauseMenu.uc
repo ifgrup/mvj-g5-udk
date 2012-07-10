@@ -98,7 +98,7 @@ function OnPressRStartButton(GFxClikWidget.EventData ev)
 function OnPressMenuButton(GFxClikWidget.EventData ev)
 {
 	//UTPlayerController(GetPC()).QuitToMainMenu();	
-	ConsoleCommand("Open PGameMenu");
+	ConsoleCommand("Open PGameMenuini");
 }
 function PlayOpenAnimation()
 {
