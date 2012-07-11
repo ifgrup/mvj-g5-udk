@@ -11,7 +11,7 @@ var bool bEarthNotFlying;
 var int creditos;
 var PPlayerBase PlayerBase;
 var bool NodosCreados;
-
+var int EScoutLeft;
 struct Spawner
 {
 	var int id;
@@ -55,6 +55,7 @@ simulated function PostBeginPlay()
 			SP.SpawnPoint = ES;
 			SP.id = ES.Group;
 			EnemySpawners.AddItem(SP);
+			EScoutLeft++;
 		}
     }
 
@@ -294,6 +295,43 @@ function EnemyKilled()
         ActivateSpawners();
     }
 }
+
+function ScoutKilled()
+{
+
+EScoutLeft--;
+ if(EScoutLeft <= 0)
+	MapaFinalizado();
+}
+
+
+
+//control de Game Over
+function BaseDestrozada()
+{
+`log("Base destrozada");
+
+    consolecommand("Open PGameMenuini");
+
+
+}
+
+
+function GameOver()
+{
+
+consolecommand("Open PGameMenuini");
+
+
+}
+
+
+function MapaFinalizado()
+{
+
+
+}
+
 
 function ScoreObjective(PlayerReplicationInfo Scorer, Int Score)
 {

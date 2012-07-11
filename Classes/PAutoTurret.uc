@@ -124,9 +124,9 @@ var(Turret) TurretSoundGroup TurretSounds;		//Sounds used for different turret b
 var(Turret) Int TurretHealth;		//Initial amount of health for the turret
 
 //variables seleccion de enemigos y disparo
-//var PEnemyPawn_Minion enemigoActual;
+var PEnemyPawn_Minion enemigoActual;
 //var PPawn enemigoActual;
-var PEnemy enemigoActual;
+//var PEnemy enemigoActual;
 
 var float RangoDisparo;
 
@@ -614,15 +614,15 @@ state NuevoTarget
 	function seleccionarTarget()
 	{
 		local float denemigo;
-		//local PEnemyPawn_Minion enemigo,tenemigo;
+		local PEnemyPawn_Minion enemigo,tenemigo;
 		//local PPawn enemigo,tenemigo;
-		local PEnemy  enemigo,tenemigo;
+		//local PEnemy  enemigo,tenemigo;
 		denemigo=RangoDisparo+1;
 		tenemigo=None;
 		
-		//foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
+		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
 		//foreach WorldInfo.AllPawns(class'PPawn',enemigo,self.Location,RangoDisparo)
-			foreach WorldInfo.AllPawns(class'PEnemy',enemigo,self.Location,RangoDisparo)
+			//foreach WorldInfo.AllPawns(class'PEnemy',enemigo,self.Location,RangoDisparo)
 		{
 			if(vsize(enemigo.Location-self.Location)<denemigo)
 			{
