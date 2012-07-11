@@ -29,7 +29,10 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
         PGame(WorldInfo.Game).EnemyKilled();
 	life--;
 	if(life == 0)
+	{
+		PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos+400);
 		Destroy();
+	}
   
 }
 
