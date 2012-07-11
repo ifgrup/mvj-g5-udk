@@ -14,6 +14,10 @@ var bool bumped;
 var StaticMeshComponent ColorMesh;
 var MaterialInstanceConstant mat;
 
+
+var int life;
+
+
 /** PostBeginPlay
  * Justo al crear el objeto, obtenemos el material de su Mesh.
  * Este material se le habrá asignado mediante el Editor.
@@ -64,6 +68,23 @@ event Tick(float DeltaTime)
 	mat.SetScalarParameterValue('matLoading', CantidadColor);
 }
 
+
+
+event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+{
+    if(PGame(WorldInfo.Game) != none)
+        PGame(WorldInfo.Game).basedestrozada();
+	life--;
+	if(life == 0)
+	{
+		
+		PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos+400);
+		Destroy();
+	}
+  
+}
+
+
 /** DefaultProperties
  * Propiedades por defecto del objeto físico dentro del juego
  * Inicializamos variables, asignamos la iluminación y el objeto
@@ -99,4 +120,6 @@ DefaultProperties
 
 	CantidadColor=0
 	bumped=false
+
+	life=20
 }

@@ -93,7 +93,7 @@ function OnPressExitButton(GFxClikWidget.EventData ev)
 function OnPressRStartButton(GFxClikWidget.EventData ev)
 {
 	//UTPlayerController(GetPC()).QuitToMainMenu();	
-	ConsoleCommand("Open PGamePlanet01");
+	ConsoleCommand("Open Test");
 }
 function OnPressMenuButton(GFxClikWidget.EventData ev)
 {
