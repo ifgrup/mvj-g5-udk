@@ -8,7 +8,7 @@ var vector FallDirection;
 var vector ViewX, ViewY, ViewZ,OldFloor;
 var float fTiempoDeSalto; //tiempo que lleva saltando. Si se pasa de un límite, para evitar que se pire volando, lo bajamos
 var int life;
-
+var int m_puntos_al_morir; //Puntos que da al jugador cuando lo mata
 
 function SetColor(LinearColor Col)
 {
@@ -270,6 +270,7 @@ function acutalizaRotacion(float DeltaTime)
 		{
 			Pawn.SetRotation(ViewRotation);
 		}	*/	
+		
 	}
 
 
@@ -294,7 +295,13 @@ defaultproperties
 		RBDominanceGroup=20
 		bUseOnePassLightingOnTranslucency=TRUE
 		HiddenGame=False
-		CollideActors=false
+		
+		
+		BlockNonZeroExtent=true
+		BlockZeroExtent=true
+		BlockActors=true
+		CollideActors=true
+		
 	End Object
 
 	RagdollLifespan=180.0 //how long the dead body will hang around for
@@ -310,5 +317,5 @@ defaultproperties
 	bCanClimbLadders=true
 	MaxStepHeight=45
 	WalkableFloorZ=0
-	life=10;
+	life=100;
 }

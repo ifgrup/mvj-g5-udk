@@ -299,9 +299,11 @@ function EnemyKilled()
 function ScoutKilled()
 {
 
-EScoutLeft--;
- if(EScoutLeft <= 0)
-	MapaFinalizado();
+	EScoutLeft--;
+	if(EScoutLeft <= 0)
+	{
+		MapaFinalizado();
+	}
 }
 
 

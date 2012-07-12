@@ -44,9 +44,14 @@ var float m_tiempoCayendo;
 var float m_acercandoCamaraCayendo;
 var float m_aceleracionCaidaLibre;
 var vector m_PosInicialCamaraCayendo;
+var float m_minDistanciaCamaraCayendo;
 var bool m_inicioAcercamiento;
 var float m_tiempoCaidaSinMoverCamara;
 var bool m_cambioEstadoPropulsores;
+var float m_ultimoATurn; //Para que la camara pueda acceder a este valor
+var rotator m_Rotation_4cam;
+var rotator m_Rotation_4pawn;
+
 
 /**
  *Gestión del ratón RR
@@ -172,10 +177,13 @@ state PlayerSpidering
      * */
 	function UpdateRotation(float DeltaTime)
 	{
-		local rotator ViewRotation;
+		local rotator ViewRotation,lRotation;
 		local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
 		local bool bSaltando;
-
+		local Vector ViewX_4pawn,ViewY_4pawn;
+		local Vector lastX,lastY,lastZ;
+		local float faTurn_discreto;
+		local int signo;
 		//ClientMessage("UPdate Estado spider" $ DeltaTime);
  
 		//Mientras salta, Pawn.Base vale None
@@ -226,28 +234,76 @@ state PlayerSpidering
  
 		//Guardamos aLookUp para GetPlayerViewPoint
 		mUltimoLookup=PlayerInput.aLookUp;
-
 		//Ahora giro de la cámara.
 		//Al girar por aTurn,sólo nos afectará la rotación sobre el eje Z.
 		//Por tanto, la Z quedará igual, la X es la que rotará, y la Y será el producto cartesiano de la nueva X por la Z que ya tenemos
 		if ( (PlayerInput.aTurn != 0))
 		{
+			m_ultimoATurn = PlayerInput.aTurn;
 		   // adjust Yaw based on aTurn
+
 			if ( PlayerInput.aTurn != 0 )
 			{
 				ViewX = Normal(ViewX + 10 * ViewY * Sin(0.0005*DeltaTime*PlayerInput.aTurn));
+				//Discretizamos el aTurn del pawn en escalas de 300, para que la rotación no haga flicker
+				//Para que el nivel empiece en 1, sumanos 1*signo a la escala discreta calculada
+				//El sin de la rotación del pawn lo hacemos constante para que siempre sea el mismo
+				//o si no también hará flicker. Esto puede hacer que en cada máquina sea diferente.
+				//Lo suyo sería rotar x grados sobre el ViewX calculado.
+				//Si vemos que es diferente en cada máquina, lo haré así.
+				//El código de abajo comentado con KKK es una primera aproximación
+
+				signo=PlayerInput.aTurn/abs(PlayerInput.aTurn);
+				faTurn_discreto=int(PlayerInput.aTurn/300) + 1*signo ; //nivel de discretización
+				faTurn_discreto=faTurn_discreto*300; 
+				//`log("aTurn "@PlayerInput.aTurn  @faTurn_discreto);
+				ViewX_4pawn = Normal(ViewX + 10 * ViewY * Sin(0.00002*faTurn_discreto));
+				GetAxes(Pawn.Rotation,lastX,lastY,lastZ);
+				ViewX_4pawn=VInterpTo(lastx,ViewX_4pawn,DeltaTime*1.1,30);
 			}
+
  			// calculate new Y axis
 			ViewY = Normal(MyFloor cross ViewX);
+			//ViewY_4cam = ViewY;
+			ViewY_4pawn = Normal(MyFloor cross ViewX_4pawn);
  		}
+		else
+		{   //Si no hay movimiento, volvemos a la posición normal en la que la rotación del pawn es igual
+			//que la de la cámara
+			m_ultimoATurn=0;
+			ViewY_4pawn = ViewY;
+			ViewX_4pawn = ViewX;
 
+		}
+
+		//Y ahora, asignamos al Pawn la rotación que hemos hecho para él
+		//Pero para el resto de cosas, la 'correcta', para que sea la que utilice la cámara y el controller
 		ViewRotation = OrthoRotation(ViewX,ViewY,ViewZ);
+		m_Rotation_4pawn = OrthoRotation(ViewX_4pawn,ViewY_4pawn,ViewZ);
+
+		/***********KKK*************/
+		/*
+		if ( PlayerInput.aTurn != 0 )
+		{
+			lRotation=ViewRotation;
+			GetAxes(Pawn.Rotation,lastX,lastY,lastZ);
+			lRotation.Yaw+=4000*signo;
+			lastx = TransformVectorByRotation(lRotation,vect(1,0,0),false);
+			lasty = Normal(MyFloor cross lastx);
+			m_Rotation_4pawn = OrthoRotation(lastx,lasty,ViewZ);
+		}
+		*/
 		
-		SetRotation(ViewRotation);
+		
+		SetRotation(m_Rotation_4pawn);
 		if(Pawn != None)
 		{
-			Pawn.SetRotation(ViewRotation);
+			Pawn.SetRotation(m_Rotation_4pawn);
 		}		
+
+		//Y la rotación para los efectos de cámara, la guardamos.
+		//IMPORTANTE entonces, que siempre que queramos la rotación de cámara usemos esta, y no Pawn.Rotation
+		m_Rotation_4cam=ViewRotation;
 	}
 
 	//Funcion que devuelve en el booleano parametro si se debe hacer rotacion up/down de la camara.
@@ -478,7 +534,15 @@ state PlayerSpidering
 		{
 			//Si está saltando, seguramente por un rebote, dejamos que se mueva durante el salto, pero
 			//sólo un poquito, para poder evitar rebotes infinitos si siempre rebota en el mismo sitio
-			NewAccel= NewAccel /10; //Si lo ponemos en vect(0,0,0), no se puede mover mientras salta
+			//Pero si el salto se ha prolongado demasiado al ir volando, lo evitamos
+			if (PPawn(pawn).m_permiteMoverSaltando)
+			{
+				NewAccel= NewAccel /10; //Si lo ponemos en vect(0,0,0), no se puede mover mientras salta
+			}
+			else
+			{
+				NewAccel = vect(0,0,0);
+			}
 		}
 
         if ( VSize(NewAccel) < 1.0 )
@@ -787,7 +851,7 @@ state PlayerFallingSky
 				m_acercandoCamaraCayendo=vsize(PPawn(Pawn).Location-m_PosInicialCamaraCayendo);
 			}
 			m_acercandoCamaraCayendo-=800*DeltaTime; //La vamos decrementando
-			m_acercandoCamaraCayendo=FClamp(m_acercandoCamaraCayendo,300,30000);
+			m_acercandoCamaraCayendo=FClamp(m_acercandoCamaraCayendo,m_minDistanciaCamaraCayendo,30000);
 			`log("La distancia es "@m_acercandoCamaraCayendo);
 
 			//Update de la aceleración
@@ -867,15 +931,30 @@ state PlayerRecienCaido
 	//Todo vacío, no queremos que haga nada
 	event BeginState(Name prevstate)
 	{
-		`log("asdkasda");
+		`log("Recien estonyao");
+		//Es el pawn quien nos pone en este estado al estoñarse (Pawn en estado PawnRecienCaido)
+		//Y es el pawn quien con su timer nos devuelve a la situación normal luego
+
 	}
 
 	event EndState(Name nextstate)
 	{
-		`log("__asdkasda");
+		`log("Fin de estonyamiento");
 	}
 
-}
+	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
+	{
+		local Vector alPlaneta;
+		local Vector pPosition;
+		
+		pPosition = PPawn(pawn).Location;
+		alPlaneta = PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition;
+		
+		out_Location = pPosition - Normal (alPlaneta) * m_minDistanciaCamaraCayendo;
+		out_Rotation=PPawn(pawn).Rotation;
+	}
+
+}//state PlayerRecienCaido
 
 /**
  * Eventos de Ratón RR
@@ -1072,5 +1151,6 @@ defaultproperties
 	m_velocidad_rotacion=1.0
 	//bGodMode=true
 	m_tiempoCaidaSinMoverCamara=1.0
+	m_minDistanciaCamaraCayendo = 150
 }
 
