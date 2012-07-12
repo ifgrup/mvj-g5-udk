@@ -49,6 +49,8 @@ var PHUD_Area area;
 //Distanciua de la torreta para poder colocar otra
 var Vector distanciatorreta;
 
+var int Pixel_X_Mirilla;
+var int Pixel_Y_Mirilla;
 
 simulated event PostBeginPlay()
 {
@@ -587,6 +589,34 @@ function Vector GetMouseWorldLocation()
 }
 */
 
+function Vector GetMirillaWorldLocation()
+{
+	local PPlayerInput pPlayerInput;
+	local Vector2D MousePosition;
+	local Vector MouseWorldOrigin, MouseWorldDirection, HitLocation, HitNormal;
+
+	//player owner y canvas validos?
+	if(Canvas == none || PlayerOwner == none)
+		return vect(0, 0, 0);
+
+	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput);
+
+	if(pPlayerInput == none)
+		return vect(0, 0, 0);
+
+	//Pasar la posicion del mouse de intPoint a Vector2D
+
+	MousePosition.X = Pixel_X_Mirilla;
+	MousePosition.Y = Pixel_Y_Mirilla;
+	//Deproyectar el mouse
+	Canvas.DeProject(MousePosition, MouseWorldOrigin, MouseWorldDirection);
+
+	//Hacer una traza para saber la posicion del mouse en el mundo
+	Trace(HitLocation, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin, true,,, TRACEFLAG_Bullet);
+	return HitLocation;
+}
+
+
 
 //rr new
 /*function SetPauseMenu(bool val)
@@ -732,5 +762,7 @@ defaultproperties
 	musica=SoundCue'PGameMusicrr.musica2'
 	musicamenu=SoundCue'PGameMusicrr.intro2dgame_2_Cue'
 	distanciatorreta=(X=350,Y=350,Z=350)
+	Pixel_X_Mirilla = 642
+	Pixel_Y_Mirilla = 362
 }
 

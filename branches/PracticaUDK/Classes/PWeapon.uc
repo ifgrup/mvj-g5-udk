@@ -1,10 +1,12 @@
 class PWeapon extends UDKWeapon;
 //class PWeapon extends UTWeap_RocketLauncher_Content;
+/*
 simulated function TimeWeaponEquipping()
 {
-	AttachWeaponTo( Instigator.Mesh,'WeaponPoint' );
+	AttachWeaponTo( Instigator.Mesh,'SocketCabeza' );
 	super.TimeWeaponEquipping();
 }
+*/
 
 simulated function AttachWeaponTo(SkeletalMeshComponent MeshCpnt, optional Name SocketName)
 {
@@ -41,38 +43,32 @@ simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, optiona
 
 simulated function Projectile ProjectileFire()
 {
-local Projectile MyProj;
-//local PHUD pHUD;
-//local Vector HitLocation, HitNormal;
-//local PPlayerController pPlayerController;
-//local vector FinalLocation;
-    //local vector X,Y,Z;
-//local Pawn Holder;
-//local PMouseInteractionInterface MouseInteractionInterface;
-//pPlayerController=PPlayerController(Instigator.Controller);
-//`log("er player controller"@pPlayerController.myHUD.GetTargetLocation());
-MyProj = super.ProjectileFire();
-/*
-//pHUD = PHUD(pPlayerController.myHUD);
-if(pPlayerController.myHUD.GetTargetLocation()==vect(0,0,0))
+	local Projectile MyProj;
+	local PPlayerController pPlayerController;
+	local Vector PosInicialDisparo,Dir;
+	local Vector DestinoDisparo;
+
+	// Spawn projectile
+	pPlayerController=PPlayerController(Instigator.Controller);
+	PosInicialDisparo = PPawn(pPlayerController.Pawn).GetPosicionSocketCabeza();
+	
+	DestinoDisparo = PHud(pPlayerController.myHUD).GetMirillaWorldLocation() ;
+	if (DestinoDisparo == vect(0,0,0))
 	{
-		`log("...");
-	}else{
+		return None;
+	}
+	
+	Dir =Normal(DestinoDisparo - PosInicialDisparo);//lo dirigimos al tagetlocatión
+	
 
-MyProj = super.ProjectileFire();
-MyProj.Init(Normal( pPlayerController.myHUD.GetTargetLocation()- pPlayerController.Pawn.Location));//lo dirigimos al tagetlocatión
-
+	MyProj = Spawn(GetProjectileClass(), Self,, PosInicialDisparo);
+	if( MyProj != None && !MyProj.bDeleteMe )
+	{
+		MyProj.Init( Dir );
 	}
 
-//MouseInteractionInterface=pHUD.GetMouseActor(HitLocation,HitNormal);
-//MouseInteractionInterface.GetHitLocation();
-
-	
-//`log(" la hitlocation del ratón" @HitLocation);
-`log(" la hitlocation del ratón en el arma" @ pPlayerController.myHUD.GetTargetLocation());
-*/
-
-return MyProj;
+	pPlayerController.StopFire();
+	return MyProj;
 }
 /*simulated event SetPosition(UDKPawn Holder)
 {
@@ -94,12 +90,13 @@ return MyProj;
 
 defaultproperties
 {
+	/*
 	Begin Object Class=SkeletalMeshComponent Name=WeaponMesh
 		SkeletalMesh=SkeletalMesh'WP_LinkGun.Mesh.SK_WP_LinkGun_3P'
 	End Object
 	Mesh=WeaponMesh
 	Components.Add(WeaponMesh)
-
+   */
 	FiringStatesArray(0)=WeaponFiring
 	FiringStatesArray(1)=WeaponFiring
  

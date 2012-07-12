@@ -72,14 +72,15 @@ event Tick(float DeltaTime)
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
-    if(PGame(WorldInfo.Game) != none)
-        PGame(WorldInfo.Game).basedestrozada();
+    
 	life--;
 	if(life == 0)
 	{
-		
-		PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos+400);
 		Destroy();
+		if(PGame(WorldInfo.Game) != none)
+		{
+			PGame(WorldInfo.Game).basedestrozada();
+		}
 	}
   
 }

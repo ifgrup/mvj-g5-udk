@@ -12,6 +12,7 @@ var Vector CamOffset;
 var float CameraZOffset;
 var float CameraScale, CurrentCameraScale; /** multiplier to default camera distance */
 var float CameraScaleMin, CameraScaleMax;
+var float m_anguloUpDown;
 
 function UpdateViewTarget(out TViewTarget OutVT, float DeltaTime)
 {
@@ -79,6 +80,8 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
 		local vector qX,qY,qZ;
 		local bool bCamaraUPDown;
 		local PPlayerController ppc;
+		local float fGiroCamZ;
+		local Rotator rot4cam;
 
 		
 		ppc=PPlayerController(PCOwner);
@@ -87,9 +90,9 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
         {
 
             CamStart=ppc.Pawn.Location;
-            rProta=ppc.Pawn.Rotation; //Hacia donde mira el prota.La pasamos a coordenadas de mundo:
-			out_CamRot=rProta;
-            GetAxes(rProta,CamDirX,CamDirY,CamDirz);
+			rot4cam=ppc.m_Rotation_4cam;
+			out_CamRot=rot4cam;
+            GetAxes(rot4cam,CamDirX,CamDirY,CamDirz);
             //Tenemos el sist.coordenadas de hacia donde está mirando el prota,en coordenadas de mundo.
             //Como queremos estar siempre detrás, sólo nos interesa desplazar la cámara sólo en X, dejando la Y a cero
 
@@ -101,33 +104,44 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
        		//Debemos intentar mantener la distancia de la cámara al jugador.
             //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
 			//Consideramos mOffsetCamaraUpDown como el ángulo de inclinación de la cámara
-			despX=350;//300*sin(mOffsetCamaraUpDown*degtorad);
+			despX=115;//300*sin(mOffsetCamaraUpDown*degtorad);
 			despZ=100; 
 			//La rotación la debemos modificar en up/down, rotando sobre el eje Y actual del Rotator
 			//para ello, benditos quaternions:
-			
-            /**********************************************
-             ********************************************** 
-             * DE MOMENTO NO HACEMOS ROTACION UP/DOWN, YA VEREMOS SI LA USAMOS LUEGO
-			//`log ("moffset " @mOffsetCamaraUpDown);
-			qcamZ=QuatFromRotator(ppc.Pawn.Rotation);
-			GetAxes(ppc.Pawn.Rotation,qX,qY,qZ);
-			
-			qPitchZ=QuatFromAxisAndAngle(qY,ppc.mOffsetCamaraUpDown*DegToRad);
+
+	
+			if (ppc.mUltimoLookup != 0)
+			{
+				m_anguloUpDown -= sin(0.003 * ppc.mUltimoLookup);
+				m_anguloUpDown = fclamp (m_anguloUpDown, -20 ,35);
+				//`log("Angulo " @m_anguloUpDown);
+			}	
+						
+			//`log("En camara, lookup "@ppc.mUltimoLookup @fGiroCamZ);
+			qcamZ=QuatFromRotator(rot4cam);
+			GetAxes(rot4cam,qX,qY,qZ);
+			qPitchZ=QuatFromAxisAndAngle(qy,m_anguloUpDown*DegToRad);
 			qcamZ=QuatProduct(qPitchZ,qcamZ);
-			out_CamRot=QuatToRotator(qcamZ);
-			despZ=600*sin(ppc.mOffsetCamaraUpDown*degtorad);
-			************************************************/
+			//Una vez hecha la rotación para mover la cámara, actualizamos CamDirX y CamDirZ
+			//out_CamRot = RInterpTo(rot4cam,QuatToRotator(qcamZ),fDeltaTime*10,1000,true);
+			out_CamRot = QuatToRotator(qcamZ) ;
+			GetAxes(out_CamRot,CamDirX,CamDirY,CamDirz);
+
+
+
 
 			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
-			out_CamLoc = ppc.Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
-			
+			//out_CamLoc = ppc.Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
+			//out_CamLoc = (ppc.Pawn.Location - vsize(ppawn(ppc.Pawn).m_TranslateZ)*CamDirZ ) -(CamDirX*despX) ;
+			//out_CamLoc = (ppc.Pawn.Location ) -(CamDirX* (despX-vsize(ppawn(ppc.Pawn).m_TranslateZ))) ;
+			out_CamLoc = (ppc.Pawn.Location ) -(CamDirX*despX) + (CamDirY*53); //*abs(m_anguloUpDown)/40);
+
 			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
             //Lanzamos un 'rayo' desde la cámara hasta el bicho, y si encontramos algún obstáculo por medio, ponemos la cámara
             //donde está el obstáculo, para evitar tener esa pared en medio. Si hubiera más de dos obstáculos, el segundo nos seguiría
             //tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
             //utilizamos ;)
-        
+
             if (Trace(HitLocation, HitNormal, out_CamLoc,ppc.Pawn.Location, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
             {
                 //Hay contacto. Ponemos la cámara en el obstáculo

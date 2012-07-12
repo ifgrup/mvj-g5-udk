@@ -126,12 +126,12 @@ function AUIVuela(bool val)
 if(!val)
 {
 	raton.GotoAndPlay("mirilla");
-	
 	TTowerActive=2;
 }else{
 //raton.GotoAndPlay("ctcannon");
+
 }
-//raton.SetBool("_visible", val);
+raton.SetBool("_visible", val);
  pmiratierraMC.SetBool("_visible", !val);
 tdcMC.SetBool("_visible", val);
 
