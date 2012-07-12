@@ -30,11 +30,42 @@ var bool m_BasePlanetaGuardado;
 var array<ParticleSystemComponent>	m_ParticulasPropulsoresRobot;
 var vector m_NormalAlCaerSuelo;
 var bool m_RecienEstrellado;
+var bool m_permiteMoverSaltando;
+
+//Guardamos valores del translateZ para hacer la media y que el translate sea más suave
+var array<float> m_array_translatez;
+
+
+function float CalcularMediaTranslateZ(float valorZ)
+{
+	local int i;
+	local float z;
+	local int tam;
+	tam=20;
+
+	//añadimos al array, y calculamos la media
+	m_array_translatez.AddItem(valorZ);
+	if (m_array_translatez.Length > tam)
+	{
+		m_array_translatez.Remove(0,1);
+	}
+	z=0;
+	for (i=0;i<m_array_translatez.Length;i++)
+	{
+		z+=m_array_translatez[i]/m_array_translatez.Length;
+	}
+	//`log("Filtro vale "@z @m_array_translatez.Length @valorZ);
+	return z;
+}
 
 event Tick(float DeltaTime)
 {
     local vector vlocation,vnormal;
 	local vector vZ;
+	local vector rx,ry,rz;
+	local vector posActual;
+	local float valorZ;
+
 
 	super.Tick(DeltaTime);
 	//if (self.IsInState('PawnFalling') || self.IsInState('PawnFallingSky') || self.IsInState('PawnFlaying'))
@@ -49,18 +80,40 @@ event Tick(float DeltaTime)
 	if (m_ULtimoFloorAntesSalto!=self.Floor)
 	{
 		self.m_ULtimoFloorAntesSalto=self.Floor;
-		`log("FT "@self.m_ULtimoFloorAntesSalto);
+		//`log("FT "@self.m_ULtimoFloorAntesSalto);
 	};
 
 	//Calculamos la distancia del bicho al suelo
-	trace(vlocation,vnormal,self.Location - Floor*300,self.Location,true,vect(0,0,1));
+	GetAxes(Rotation,rx,ry,rz);
+	posActual = self.Location; 
 
-	//FlushPersistentDebugLines();
-	//DrawDebugSphere(vlocation,10,50,200,0,0,true);
+	trace(vlocation,vnormal,posActual - rz*200,posActual,true,vect(1,1,1));
+	FlushPersistentDebugLines();
+	
+	//DrawDebugCylinder(self.Location,self.Location-Floor*300,5,5,0,10,10,true);
+	//DrawDebugCylinder(self.Location,self.Location-rz*200,5,15,0,0,255,true);
+	//DrawDebugCylinder(posActual,vlocation,5,15,0,0,255,true);
+	if (vlocation == vect(0,0,0))
+		`log("Trace nulo");
+	
+	//DrawDebugSphere(posActual,5,50,200,0,0,true);
+	//DrawDebugSphere(vlocation,5,50,200,200,0,true);
+	
+
 	vZ.X=0;
 	vZ.Y=0;
-	vz.Z=vsize(location-vlocation)-m_DistanciaAlSuelo;
+	valorZ = vsize( Normal(vlocation - posActual) * (vsize(vlocation-posActual)-m_DistanciaAlSuelo));
+	vz.Z = CalcularMediaTranslateZ(valorZ);
+	if (vz.Z > vsize(vlocation-posActual))
+	{
+		`log("Bajo tierra");
+		//Lo corregimos, fijando la distancia al suelo
+		vz.Z=vsize(vlocation-posActual)-m_DistanciaAlSuelo;
+	}
+
 	mesh.SetTranslation(-vz);
+	m_TranslateZ = -vz;
+	//DrawDebugSphere(posActual,5,50,200,0,0,true);
 }
 
 
@@ -225,6 +278,15 @@ simulated function PostBeginPlay()
 	}
 }
 
+function Vector GetPosicionSocketCabeza()
+{
+	local vector sLocation;
+	local rotator sRotation;
+
+	self.Mesh.GetSocketWorldLocationAndRotation('Socket_Cabeza',sLocation,sRotation);
+	return sLocation;
+
+}
 
 function EstadoPropulsores(bool bEstado)
 {
@@ -442,6 +504,7 @@ state PawnFalling
 		// flying instead of Falling as flying allows for custom gravity
 		SetPhysics(PHYS_Flying);
 		fTiempoDeSalto=0.0; //tiempo de salto
+		m_permiteMoverSaltando=true; //Si el salto se prolonga no permitimos que 'vuele'
 	}
 
 	event Tick(float DeltaTime)
@@ -458,7 +521,9 @@ state PawnFalling
 			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Location; 
 			FallDirection = Normal(vAlCentro);
 			`log("volviendo pa la tierra neng!");
+			m_permiteMoverSaltando=false;
 		}
+		
 	}
 
 	/** Adds gravity to the velocity based on floor normal pawn was last on */
@@ -676,20 +741,17 @@ defaultproperties
 	
 		//AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
 
-
 		//ogro
 
-		SkeletalMesh=SkeletalMesh'Ogro.Ogre'
-		AnimTreeTemplate=AnimTree'Ogro.Ogro_AnimTree'
-		PhysicsAsset=PhysicsAsset'Ogro.Ogre_Physics_V2'
-		AnimSets(0)=AnimSet'Ogro.Ogro_Anim'
+		//SkeletalMesh=SkeletalMesh'Ogro.Ogre'
+		//AnimTreeTemplate=AnimTree'Ogro.Ogro_AnimTree'
+		//PhysicsAsset=PhysicsAsset'Ogro.Ogre_Physics_V2'
+		//AnimSets(0)=AnimSet'Ogro.Ogro_Anim'
 
 		//giru
-		//SkeletalMesh=SkeletalMesh'Giru.Giru'
-		//PhysicsAsset=PhysicsAsset'Giru.Giru_Physics'
-
-
-		Scale=1.5
+		SkeletalMesh=SkeletalMesh'Giru.Giru'
+		PhysicsAsset=PhysicsAsset'Giru.Giru_Physics'
+		Scale=0.8
 
 		//General Mesh Properties
 		bCacheAnimSequenceNodes=FALSE
@@ -741,5 +803,5 @@ defaultproperties
 	m_BasePlaneta = None
 	m_BasePlanetaGuardado = false
 
-	m_DistanciaAlSuelo=40
+	m_DistanciaAlSuelo = 10
 }
