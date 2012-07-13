@@ -26,6 +26,7 @@ function SetColor(LinearColor Col)
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
     life--;
+	`log("vida minion" @life);
 	if(life == 0)
 	{
 		
@@ -40,13 +41,29 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 
 defaultproperties
 {
+
+
+
 	Begin Object Name=WPawnSkeletalMeshComponent
-		SkeletalMesh=SkeletalMesh'Gelatinos.Walker.GelatinoBipedoEsqueleto'
+		/*SkeletalMesh=SkeletalMesh'Gelatinos.Walker.GelatinoBipedoEsqueleto'
 		Translation=(Z=-70.0)
-		Scale=0.7
+		Scale=0.7*/
+		//demo
+		SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
+		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
+		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
+		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
+		
+		Scale=3
+		Translation=(Z=-1670.0)
+		//demo
 	End Object
 
+
 	ColorMesh=WPawnSkeletalMeshComponent
+
+
+		
 
 	GroundSpeed=100.0
 	m_puntos_al_morir = 100

@@ -67,7 +67,7 @@ simulated function Projectile ProjectileFire()
 		MyProj.Init( Dir );
 	}
 
-	pPlayerController.StopFire();
+	//pPlayerController.StopFire();
 	return MyProj;
 }
 /*simulated event SetPosition(UDKPawn Holder)

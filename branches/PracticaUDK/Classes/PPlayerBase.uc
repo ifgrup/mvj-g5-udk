@@ -72,7 +72,8 @@ event Tick(float DeltaTime)
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
-    
+	/*
+    `log("me tan dando");
 	life--;
 	if(life == 0)
 	{
@@ -82,9 +83,22 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 			PGame(WorldInfo.Game).basedestrozada();
 		}
 	}
-  
+  */
 }
 
+function pupitabase()
+{
+	`log("man dao augthhh");
+	life--;
+	if(life <= 0)
+	{
+		
+		PGame(WorldInfo.Game).basedestrozada();
+		
+	}
+  
+
+}
 
 /** DefaultProperties
  * Propiedades por defecto del objeto físico dentro del juego
@@ -122,5 +136,5 @@ DefaultProperties
 	CantidadColor=0
 	bumped=false
 
-	life=20
+	life=3
 }

@@ -55,7 +55,8 @@ var int Pixel_Y_Mirilla;
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
-	PlaySound(musica);
+	//PlaySound(musica);
+	
 	area=Spawn(class'PHUD_Area',,,,,,true);
 	area.interruptor(false);
 	//Si estamos utilizando Scaleform, crear la pelicula
@@ -513,6 +514,8 @@ function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocatio
 function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector HitNormal)
 {
 	local PMouseInteractionInterface MouseInteractionInterface;
+	local PPlayerBase labase;
+	local PEnemy enemigo;
 	local PPlayerInput pPlayerInput;
 	local Vector2D MousePosition;
 	local Actor HitActor;
@@ -538,16 +541,28 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 	//Hacer Trace para saber sobre que esta el raton
 	//Iteramos sobre todo lo que intersecciona la traza para devolver el objeto mas cercano que sea
 	//del tipo TITMouseInterfaceInteractionInterface
-	foreach TraceActors(class'Actor', HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,distanciatorreta,,TRACEFLAG_Bullet)
+	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,distanciatorreta,,TRACEFLAG_Bullet)
 	{
 		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
 		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
+		labase=PPlayerBase(HitActor);
+		enemigo=PEnemy(HitActor);
 		//MouseInteractionInterface = PTurretCannon(HitActor);
  
 		if(MouseInteractionInterface != none)
 		{
 			return false;
 		}
+		if(labase != none)
+		{
+			return false;
+		}
+		if(enemigo != none)
+		{
+			return false;
+		}
+
+
 	}
 
 	return true;
@@ -613,6 +628,9 @@ function Vector GetMirillaWorldLocation()
 
 	//Hacer una traza para saber la posicion del mouse en el mundo
 	Trace(HitLocation, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin, true,,, TRACEFLAG_Bullet);
+
+	
+
 	return HitLocation;
 }
 
