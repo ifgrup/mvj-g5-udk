@@ -216,11 +216,17 @@ state ArrivedDestination
 {
 	event BeginState(name PreviousStateName)
 	{
+		PGame(WorldInfo.Game).PlayerBase.pupitabase();
+		`log("vida de la base" @PGame(WorldInfo.Game).PlayerBase.life);
 		//DBG WorldInfo.Game.Broadcast(self, Name@" ha llegado a destino");
 		Pawn.Acceleration = vect(0,0,0);
 		Pawn.Velocity = vect(0,0,0);
 		StopLatentExecution();
+		
+		
 	}
+
+	
 }
 
 defaultproperties
