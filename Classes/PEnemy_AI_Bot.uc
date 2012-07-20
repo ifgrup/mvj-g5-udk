@@ -81,6 +81,23 @@ function Wait()
 	SetTimer(1, true, 'BrainTimer');
 }
 
+function Tick(Float Deltatime)
+{
+		local Rotator antes;
+		local PEnemyPawn_Minion thePawn;
+		
+		super.Tick(DeltaTime);
+	
+		if (Pawn != None)
+		{
+			thePawn = PEnemyPawn_Minion(Pawn);
+			thePawn.ActualizaRotacion(DeltaTime);
+			setRotation(thePawn.Rotation);
+		
+		}
+}
+
+
 // Estado de espera... en este tiempo se tendría que generar un nuevo punto de ruta
 state Idle
 {
@@ -103,7 +120,8 @@ Begin:
 		// Esta función permite ponerle un rango para que el movimiento no sea siempre
 		// en línea recta. El Pawn se moverá a cualquier punto dentro de las 100 unidades de radio
 		// que le estamos indicando.
-		MoveToward(theObjective,,10,true,true);
+		MoveToward(theObjective,theObjective,10,true,true);
+
 	}
 }
 

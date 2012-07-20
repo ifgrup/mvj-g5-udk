@@ -47,20 +47,39 @@ simulated function Projectile ProjectileFire()
 	local PPlayerController pPlayerController;
 	local Vector PosInicialDisparo,Dir;
 	local Vector DestinoDisparo;
+	local Vector vDestinoTrace,HitLocation,HitNormal;
 
 	// Spawn projectile
 	pPlayerController=PPlayerController(Instigator.Controller);
 	PosInicialDisparo = PPawn(pPlayerController.Pawn).GetPosicionSocketCabeza();
-	
 	DestinoDisparo = PHud(pPlayerController.myHUD).GetMirillaWorldLocation() ;
-	if (DestinoDisparo == vect(0,0,0))
+	if(DestinoDisparo == vect(0,0,0))
 	{
+		//Ahorramos cálculos, return. No sé en qué condiciones puede pasar esto la verdad...
+
 		return None;
 	}
 	
-	Dir =Normal(DestinoDisparo - PosInicialDisparo);//lo dirigimos al tagetlocatión
-	
+	//Hacemos el Trace para el cálculo desde el bicho, y no desde la mirilla.
+	//Ponemos 100 unidades más por si por el ángulo, nos quedamos cortos
+	vDestinoTrace=Normal(DestinoDisparo-PosInicialDisparo) * (vsize(DestinoDisparo-PosInicialDisparo) + 100);
 
+	//Para el trace, para que no de hit con el propio pawn, empezamos 100 unidades más tarde (habría que usar cylinder radius...)
+	
+	Trace(HitLocation, HitNormal, PosInicialDisparo+vDestinoTrace,PosInicialDisparo+normal(vDestinoTrace)*10, true,,, TRACEFLAG_Bullet);
+	//Si realmente ha cambiado, actualizamos el destino del disparo
+	if (HitLocation != vect(0,0,0) && vsize(HitLocation-DestinoDisparo)>1)
+	{
+		`log("Nuevo destino disparo "@HitLocation @DestinoDisparo);
+		FlushPersistentDebugLines();
+		DrawDebugCylinder(PosInicialDisparo,HitLocation,2,6,0,200,0,true);
+		DrawDebugCylinder(PosInicialDisparo,DestinoDisparo,2,6,200,0,0,true);
+
+		DestinoDisparo=HitLocation;
+	}
+
+	
+	Dir = Normal(DestinoDisparo - PosInicialDisparo);//lo dirigimos al tagetlocatión
 	MyProj = Spawn(GetProjectileClass(), Self,, PosInicialDisparo);
 	if( MyProj != None && !MyProj.bDeleteMe )
 	{

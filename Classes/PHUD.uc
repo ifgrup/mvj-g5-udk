@@ -609,6 +609,8 @@ function Vector GetMirillaWorldLocation()
 	local PPlayerInput pPlayerInput;
 	local Vector2D MousePosition;
 	local Vector MouseWorldOrigin, MouseWorldDirection, HitLocation, HitNormal;
+	local Vector HitLocationNoActor;
+	local Actor HitActor;
 
 	//player owner y canvas validos?
 	if(Canvas == none || PlayerOwner == none)
@@ -626,12 +628,25 @@ function Vector GetMirillaWorldLocation()
 	//Deproyectar el mouse
 	Canvas.DeProject(MousePosition, MouseWorldOrigin, MouseWorldDirection);
 
-	//Hacer una traza para saber la posicion del mouse en el mundo
-	Trace(HitLocation, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin, true,,, TRACEFLAG_Bullet);
-
 	
+	//Hacer una traza para saber la posicion del mouse en el mundo
+	Trace(HitLocationNoActor, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin, true,,, TRACEFLAG_Bullet);
+	//return HitLocationNoActor;
 
-	return HitLocation;
+
+	ForEach TraceActors(class'Actor', HitActor, HitLocation, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin,,, TRACEFLAG_Bullet)
+    {
+    // Type cast to see if the HitActor implements that mouse interaction interface
+		
+		if (HitLocationNoActor !=HitLocation)
+		{
+			`log("__________Traces Diferentes!!!" @HitLocationNoActor @HitLocation);
+		}
+		return HitLocation;
+    
+    }
+	`log("__________SIN Traces DisparoActor______");
+	return HitLocationNoActor;
 }
 
 
