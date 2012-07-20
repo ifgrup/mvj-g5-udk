@@ -13,6 +13,11 @@ var float CameraZOffset;
 var float CameraScale, CurrentCameraScale; /** multiplier to default camera distance */
 var float CameraScaleMin, CameraScaleMax;
 var float m_anguloUpDown;
+var float m_maxLookup; //Valor máximo de PlayerImput.Lookup para que el sin vaya de -Pi/2 a Pi/2
+var float m_min_anguloUD,m_max_anguloUD; //maximos angulos de camara Up Down
+var float m_desp_camara_izda;
+var float m_factor_alejar_camara; //valor por el que se multiplica el sin para alejar la cámara en el up/down
+var float m_despX_camara; //desp inicial en CamDirX a espaldas del robot
 
 function UpdateViewTarget(out TViewTarget OutVT, float DeltaTime)
 {
@@ -75,14 +80,13 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
         local vector  HitLocation, HitNormal,CamStart,tmpCamStart,tmpCamEnd;
         local Rotator rProta;
         local float dist,fs;
-		local float despx,despz;
-		local quat  qpitchZ,qCamZ;
+		local float despx;
+		local quat  qpitchY,qCamY;
 		local vector qX,qY,qZ;
-		local bool bCamaraUPDown;
 		local PPlayerController ppc;
-		local float fGiroCamZ;
 		local Rotator rot4cam;
-
+		local float deltaAnguloUD;
+		local float lookupFiltrado,factor,maxLookup;
 		
 		ppc=PPlayerController(PCOwner);
 
@@ -104,37 +108,67 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
        		//Debemos intentar mantener la distancia de la cámara al jugador.
             //En X debemos desplazar en -CamDirX, y en Z, +camDirZ.
 			//Consideramos mOffsetCamaraUpDown como el ángulo de inclinación de la cámara
-			despX=115;//300*sin(mOffsetCamaraUpDown*degtorad);
-			despZ=100; 
 			//La rotación la debemos modificar en up/down, rotando sobre el eje Y actual del Rotator
 			//para ello, benditos quaternions:
 
 	
 			if (ppc.mUltimoLookup != 0)
 			{
-				m_anguloUpDown -= sin(0.003 * ppc.mUltimoLookup);
-				m_anguloUpDown = fclamp (m_anguloUpDown, -20 ,35);
-				//`log("Angulo " @m_anguloUpDown);
+				//Si el lookup es tal que el Sin cambiaría de signo, o sea, que
+				//0.003*lookup pasara de Pi/2 o -Pi/2,calculamos el factor del lookup respecto
+				//al lookup equivalente de +-Pi/2, hacemos el sin sobre ese, y al resultado, aplicamos
+				//el factor obtenido. 
+				if (abs(ppc.mUltimoLookup) > maxLookup)
+				{
+					factor = abs(ppc.mUltimoLookup) / m_maxLookup;
+					if (ppc.mUltimoLookup > 0)
+					{
+						lookupFiltrado = m_maxLookup;
+					}
+					else
+					{
+						lookupFiltrado = - m_maxLookup;
+					}
+				}
+				else
+				{
+					factor = 1;
+					lookupFiltrado = ppc.mUltimoLookup;
+				}
+				
+				deltaAnguloUD = factor * sin(0.003*lookupFiltrado);
+				m_anguloUpDown = m_anguloUpDown - deltaAnguloUD;
+				m_anguloUpDown = fclamp (m_anguloUpDown, m_min_anguloUD ,m_max_anguloUD);
+				//`log("Angulo "@m_anguloUpDown);
 			}	
-						
-			//`log("En camara, lookup "@ppc.mUltimoLookup @fGiroCamZ);
-			qcamZ=QuatFromRotator(rot4cam);
+
+			//Aplicamos quaternions para rotar la cámara sobre Y con el ángulo calculado
+        	qcamY=QuatFromRotator(rot4cam);
 			GetAxes(rot4cam,qX,qY,qZ);
-			qPitchZ=QuatFromAxisAndAngle(qy,m_anguloUpDown*DegToRad);
-			qcamZ=QuatProduct(qPitchZ,qcamZ);
+			qPitchY=QuatFromAxisAndAngle(qy,m_anguloUpDown*DegToRad);
+			qcamY=QuatProduct(qPitchY,qcamY);
 			//Una vez hecha la rotación para mover la cámara, actualizamos CamDirX y CamDirZ
 			//out_CamRot = RInterpTo(rot4cam,QuatToRotator(qcamZ),fDeltaTime*10,1000,true);
-			out_CamRot = QuatToRotator(qcamZ) ;
+			out_CamRot = QuatToRotator(qcamY) ;
 			GetAxes(out_CamRot,CamDirX,CamDirY,CamDirz);
 
 
 
 
-			//La posición de la cámara la tenemos calculada con sin/cos del ángulo, considerando 300 como distancia a mantener
-			//out_CamLoc = ppc.Pawn.Location -(CamDirX*despX)+(camDirZ*despZ);
-			//out_CamLoc = (ppc.Pawn.Location - vsize(ppawn(ppc.Pawn).m_TranslateZ)*CamDirZ ) -(CamDirX*despX) ;
-			//out_CamLoc = (ppc.Pawn.Location ) -(CamDirX* (despX-vsize(ppawn(ppc.Pawn).m_TranslateZ))) ;
-			out_CamLoc = (ppc.Pawn.Location ) -(CamDirX*despX) + (CamDirY*53); //*abs(m_anguloUpDown)/40);
+			//La posición de la cámara la obtenemos :
+			//- Restando el desplazamiento predefinido en m_despX_camara, por el vector CamDirX. Es decir, nos ponemos detrás del robot
+			//  a distancia m_despX_camara
+			//- Sumando CamDirY * m_desp_camara_izda, es decir, m_desp_camara_izda unidades en el vector CamDirY, es decir, a la izda de la cámara
+			//- Al subir el ángulo, vamos aumentando la distancia de la cámara al Pawn en X, es decir, vamos aumentando m_despX_camara
+			//  el ángulo va de m_min_anguloUD a m_max_anguloUD. 
+			//  Para los negativos, posiblemente no haga nada porrque el control de Trace de cámara con el suelo lo acercará
+			//  Ponderamos de 0,1, y con un sin obtenemos el valor a aplicar, y multiplicamos por un factor.
+			
+			//despX = m_despX_camara + sin(0.2 * ((m_anguloUpDown-m_min_anguloUD) * 5* Pi/2 / (m_max_anguloUD-m_min_anguloUD) ))* m_factor_alejar_camara;
+			despX = m_despX_camara + sin((m_anguloUpDown-m_min_anguloUD) * Pi/2 / (m_max_anguloUD-m_min_anguloUD) ) * m_factor_alejar_camara;
+			//despX = m_despX_camara + (exp((m_anguloUpDown-m_min_anguloUD) / (m_max_anguloUD-m_min_anguloUD) ) )* m_factor_alejar_camara;
+			
+			out_CamLoc = (ppc.Pawn.Location ) -(CamDirX*despX) + (CamDirY*m_desp_camara_izda); //*abs(m_anguloUpDown)/40);
 
 			//Hay que comprobar que no se ponga ningún objeto entre la cámara y el Pawn:
             //Lanzamos un 'rayo' desde la cámara hasta el bicho, y si encontramos algún obstáculo por medio, ponemos la cámara
@@ -230,4 +264,10 @@ DefaultProperties
    CameraScale=9.0
    CameraScaleMin=3.0
    CameraScaleMax=40.0
+   m_maxLookup = 523 //3.1415926535897932/(2*0.003) 
+   m_min_anguloUD = -20
+   m_max_anguloUD = 35  
+   m_desp_camara_izda = 53
+   m_factor_alejar_camara = 120
+   m_despX_camara = 115
 }

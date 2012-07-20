@@ -47,6 +47,7 @@ var vector m_PosInicialCamaraCayendo;
 var float m_minDistanciaCamaraCayendo;
 var bool m_inicioAcercamiento;
 var float m_tiempoCaidaSinMoverCamara;
+var float m_tiempoTonyazo; //tiempo que hace que nos hemos estoñao al caer al planeta
 var bool m_cambioEstadoPropulsores;
 var float m_ultimoATurn; //Para que la camara pueda acceder a este valor
 var rotator m_Rotation_4cam;
@@ -934,12 +935,18 @@ state PlayerRecienCaido
 		`log("Recien estonyao");
 		//Es el pawn quien nos pone en este estado al estoñarse (Pawn en estado PawnRecienCaido)
 		//Y es el pawn quien con su timer nos devuelve a la situación normal luego
-
+		m_tiempoTonyazo = 0;
 	}
 
 	event EndState(Name nextstate)
 	{
 		`log("Fin de estonyamiento");
+	}
+
+	event PlayerTick(float DeltaTime)
+	{
+		super.PlayerTick(DeltaTime);
+		m_tiempoTonyazo += DeltaTime;
 	}
 
 	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
@@ -949,8 +956,9 @@ state PlayerRecienCaido
 		
 		pPosition = PPawn(pawn).Location;
 		alPlaneta = PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition;
-		
-		out_Location = pPosition - Normal (alPlaneta) * m_minDistanciaCamaraCayendo;
+		//`log("Sin tonyazo "@sin(m_tiempoTonyazo*10) @m_tiempoTonyazo);
+
+		out_Location = pPosition - Normal (alPlaneta) * (m_minDistanciaCamaraCayendo+50*sin(m_tiempoTonyazo*25));
 		out_Rotation=PPawn(pawn).Rotation;
 	}
 
