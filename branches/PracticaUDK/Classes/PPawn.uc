@@ -88,8 +88,7 @@ event Tick(float DeltaTime)
 	posActual = self.Location; 
 
 	trace(vlocation,vnormal,posActual - rz*200,posActual,true,vect(1,1,1));
-	FlushPersistentDebugLines();
-	
+	//FlushPersistentDebugLines();
 	//DrawDebugCylinder(self.Location,self.Location-Floor*300,5,5,0,10,10,true);
 	//DrawDebugCylinder(self.Location,self.Location-rz*200,5,15,0,0,255,true);
 	//DrawDebugCylinder(posActual,vlocation,5,15,0,0,255,true);
