@@ -17,13 +17,6 @@ function SetColor(LinearColor Col)
 	
 }
 
-/*
-simulated function ProcessViewRotation( float DeltaTime, out rotator out_ViewRotation, out Rotator out_DeltaRot )
-{
-	local int i;
-	i=9;
-}
-*/
 
 simulated function PostBeginPlay()
 {
@@ -49,6 +42,117 @@ function bool DoJump( bool bUpdating )
 	`log('DoJump de PPawn NO PUEDE SALTAR');
 	return false;
 }
+
+function ActualizaRotacion(float DeltaTime)
+{
+	local rotator ViewRotation;
+	local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
+	local float angulo;
+		
+	MyFloor = self.Floor;
+	if(OldFloor == vect(0,0,1))
+	{
+		OldFloor = MyFloor;
+		OldFloor.X += 0.0001; //para que sean diferentes y entre en el if
+	}
+
+		
+	//Si estoy saltando, nada de transiciones de normales, sigo teniendo como normal la vertical del salto y punto
+	/*****
+	if ( MyFloor != OldFloor )
+	{
+		// smoothly transition between floors
+		//Para colocar al bicho en la perpendicular del suelo
+		RealFloor = MyFloor;
+		MyFloor = Normal(6*DeltaTime * MyFloor + (1 - 6*DeltaTime) * OldFloor);
+ 
+		if ( (RealFloor dot MyFloor) > 0.999 )
+		{
+			MyFloor = RealFloor;
+		}
+		else
+		{
+			// translate view direction
+			CrossDir = Normal(RealFloor Cross OldFloor);
+			FwdDir = CrossDir cross MyFloor; //Hacia delante, forward
+			OldFwdDir = CrossDir cross OldFloor; //El hacia delante que tenía antes
+			ViewX = MyFloor * (OldFloor dot ViewX) + CrossDir * (CrossDir dot ViewX) + FwdDir * (OldFwdDir dot ViewX);
+			ViewX = Normal(ViewX);
+			ViewZ = MyFloor * (OldFloor dot ViewZ) + CrossDir * (CrossDir dot ViewZ) + FwdDir * (OldFwdDir dot ViewZ);
+			ViewZ = Normal(ViewZ);
+			OldFloor = MyFloor;
+			ViewY = Normal(MyFloor cross ViewX);
+			//Pawn.mesh.SetRotation(OrthoRotation(ViewX,ViewY,ViewZ));
+		}
+	}
+    *************/
+
+		
+	/*Ajustamos el Yaw en función del ángulo formado por el vector velocidad, y el ViewX, para que el 
+		* bicho realmente tenga como ViewX su velocidad. Pero no lo asignamos directamente,sino que dejamos los cálculos
+		* para que la rotación se calcule igual que con el pawn, y luego lo giramos rotando por yaw*/
+	//ViewZ = Normal(5*DeltaTime * MyFloor + (1 - 5*DeltaTime) * OldFloor);
+		
+		
+	FloorActual = vinterpto(FloorActual,self.Floor,deltatime,1);
+	ViewZ = FloorActual;
+	DrawDebugCylinder(self.Location,self.Location+Floor*130,4,10,100,100,50,false);
+	DrawDebugCylinder(self.Location,self.Location+FloorActual*130,4,10,100,10,255,false);
+		
+	ViewX = Normal(5*DeltaTime * Normal(self.velocity) + (1 - 5*DeltaTime) * ViewX);
+	ViewY = Normal (ViewZ cross ViewX);
+	ViewRotation = OrthoRotation(ViewX,ViewY,ViewZ);
+		
+	SetRotation(ViewRotation);
+	self.SetViewRotation(ViewRotation);
+	//self.Mesh.SetRotation(ViewRotation);
+	//self.SetViewRotation(ViewRotation);
+		
+	//Dibujamos cilindro para la direccion de su orientacion, y para su movimiento
+	//FlushPersistentDebugLines();
+	DrawDebugCylinder(self.Location,self.Location+ViewX*100,5,5,255,0,0,false);
+	DrawDebugCylinder(self.Location,self.Location+normal(self.Velocity)*100,5,5,0,0,255,false);
+	DrawDebugCylinder(self.Location,self.Location+ViewZ*100,5,5,0,255,0,false);
+
+	GetAxes(self.Rotation,viewx,viewy,viewz);
+	DrawDebugCylinder(self.Location,self.Location+ViewX*125,5,5,255,255,255,false);
+
+
+}
+
+
+function PawnCaidoEncima()
+{
+	//El Pawn nos acaba de caer encima cuando caía de la vista aérea.
+	//Nos chafa, deberíamos hacer un s.partículas de Chofff de sangre o algo
+	self.GotoState('ChafadoPorPawn');
+}
+
+/** -----------------------
+ * ---Estado ChafadoPorPawn---
+ * ------------------------
+*/
+state ChafadoPorPawn
+{
+	event BeginState(Name PrevName)
+	{
+
+		`log('PEnemy en estado Chafado Por Pawn');
+		self.Destroy();
+	}
+
+	event Tick(float DeltaTime)
+	{	
+		super.Tick(DeltaTime);
+	}
+
+	event EndState(Name NextState)
+	{
+		`log('el pawn deja de esar en Falling');
+	}
+}//ChafadoPorPawn
+
+
 
 /** -----------------------
  * ---Estado PawnFalling---

@@ -35,7 +35,6 @@ var bool m_permiteMoverSaltando;
 //Guardamos valores del translateZ para hacer la media y que el translate sea más suave
 var array<float> m_array_translatez;
 
-
 function float CalcularMediaTranslateZ(float valorZ)
 {
 	local int i;
@@ -121,7 +120,8 @@ function ReboteRespectoA(Actor Other, float aceleracion_caida = JumpZ)
 	local Vector newLocation;
 	local Vector retroceso;
 	local float jump_z_temp;
-		
+
+
 	m_VenimosDeBump=true; //Para control del salto
 
 	//Hacemos que la velocidad sea la opuesta al vector formado por PAwn.Location -> Other.Location	retroceso=Normal(self.Location-Other.Location);
@@ -135,7 +135,8 @@ function ReboteRespectoA(Actor Other, float aceleracion_caida = JumpZ)
 	//Si estoy saltando y choco,hago salto en dirección contraria, de forma análoga que si estoy caminando
 	//Por tanto, no hay que hacer distinción, si bumpea por salto o por andar tiene que hacer exactamente lo mismo.
 
-	self.Velocity=retroceso*Fclamp(Vsize(Velocity),100,300); 
+	self.Velocity=retroceso*Fclamp(Vsize(Velocity),100,500); 
+	
 	
     //Guardamos el jumpz anterior para luego restaurarlo.
 	jump_z_temp = self.JumpZ;
@@ -157,6 +158,30 @@ function ReboteRespectoA(Actor Other, float aceleracion_caida = JumpZ)
 	m_VenimosDeBump=false;
 }
 
+
+/*
+ * Intento de hacer que al caer el Pawn rebota a saco. Pero no lo consigo porque enseguida que empieza
+ * se produce el evento Bump normal con su velocidad, así que no sirve de mucho.
+ * Pero hay que implementarlo por si NO se ejecuta el Bump normal luego.
+ */
+function ReboteGrandeBumpCayendo(Actor Other, Vector BumpLocation, Vector BumpNormal,float aceleracion_caida = JumpZ)
+{
+	local float jump_z_temp;
+
+	m_VenimosDeBump=true; //Para control del salto
+
+	
+	self.Velocity = (BumpNormal Cross normal(-self.Velocity)) *500;//rebote a tomar por culo
+	
+	DrawDebugCylinder(self.Location,self.Location+self.Velocity,3,5,100,255,50,true);
+    //Guardamos el jumpz anterior para luego restaurarlo.
+	jump_z_temp = self.JumpZ;
+	self.JumpZ = 2000;
+	self.DoJump(true);
+	self.JumpZ = jump_z_temp; //restauramos jupz
+	
+	m_VenimosDeBump=false;
+}
 
 
 singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
@@ -362,7 +387,15 @@ singular event BaseChange()
 	{
 	     if(PAutoTurret (Base) != None)
 	     {  //Es una torreta. Rebotamos
-			ReboteRespectoA(Base);
+			if (GetStateName() == 'PawnFallingSky')
+			{
+				//self.m_ULtimoFloorAntesSalto = 
+				ReboteRespectoA(Base,500);
+			}
+			else
+			{
+				ReboteRespectoA(Base);
+			}
 	     }
 		 else
 		 {
@@ -542,12 +575,24 @@ state PawnFalling
 	{
 		// switch pawn back to standard state
 		local PPlayerController PC;
+		local Rotator routPawn;
 
 		GotoState('');
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn");
-		`log('el pawn ha caido al suelo despues de saltar');
-		SetBase(Wall, HitNormal);
+
+		if (Wall == m_BasePlaneta)
+		{
+			OrientarPawnPorNormal(HitNormal,routPawn);
+			PC.GotoState('PlayerSpidering'); //Porque si veniamos de rebote al caer del planeta, el PC esta en otro estado
+			
+			`log('el pawn ha caido al suelo despues de saltar');
+			SetBase(Wall, HitNormal);
+		}
+		else
+		{
+			ReboteRespectoA(Wall);
+		}
 
 		if(PPaintCanvas(Wall) != none)
 		{
@@ -584,8 +629,46 @@ state PawnFallingSky
 		// Direct hit wall enabled just for the custom falling
 		bDirectHitWall = true;
 		//No tocamos las físicas, que siga en flying como en PC
+
+
 	}
 
+	singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
+    {
+		//SI mientras cae choca contra algo.
+		//el tratamiento NO SE PORQUE se ejecuta este en lugar del hitwall, supongo que porque una torreta por ejemplo
+		//no la considera como Wall.... Total, hacemos un tratamiento análogo, con otros estados casi copiados.
+		local PPlayerController PC;
+		PC = PPlayerController(Instigator.Controller);
+		
+		if(PAutoTurret(Other)!= None)
+		{  //Es una torreta. Rebotamos
+		   PC.GotoState('PlayerBumpCayendo');
+		   ReboteGrandeBumpCayendo(Other,self.location,HitNormal, 100);
+		}
+		else if (PEnemy(Other)!=None)
+		{
+			//Lo reventamos llamando a su PawnCaidoEncima
+			//Debe asegurarse que se elimina, se chafa, para que al hacer return
+			//no vuelva a ejecutarse este Bump
+			`log("Bump contra un PEnemy "@Other.Name);
+			if(!PEnemy(Other).IsInState('ChafadoPorPawn')) //Estado en el que le pongamos cuando lo chafemos, por si está un rato
+			{
+				PEnemy(Other).PawnCaidoEncima();
+			}
+			return; //No hacemos nada más con él, lo ignoramos, hasta llegar al suelo
+		}
+		else if (Other.Name == 'PShield_0')
+		{
+			`log("Bump contra el escudo, lo ignoramos");
+			return; //lo ignoramos, para que siga cayendo
+		}
+		else
+		{
+			`log("Bump contra NO SE QUÉ!!! CUIDADOOOOOOO!!!");
+			return; //lo ignoramos, para que siga cayendo
+		}
+    }
 	// cuando llegue al suelo:
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
@@ -593,21 +676,36 @@ state PawnFallingSky
 		local PPlayerController PC;
 
 
+		if (Wall.Name == 'PShield_0')
+		{
+			return; //Lo ignoramos, para que siga cayendo
+		}
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn al caer del cielo_________________________________________");
-		`log('el pawn ha caido al suelo despues de bajar de vista aerea');
-		SetBase(Wall, HitNormal);
 		
-		if(PPaintCanvas(Wall) != none)
+		if (Wall == self.m_BasePlaneta)
 		{
-			PPaintCanvas(Wall).ChangeTexture();
+			`log('el pawn ha caido al suelo despues de bajar de vista aerea');
+			SetBase(Wall, HitNormal);
+			
+			if(PPaintCanvas(Wall) != none)
+			{
+				PPaintCanvas(Wall).ChangeTexture();
+			}
+	
+			//Se acaba de estoñar contra el suelo.
+			//Guardamos la normal del piñazo para luego orientar el Pawn más tade
+			m_NormalAlCaerSuelo=HitNormal;
+			GoToState('PawnRecienCaido'); 
 		}
-
-		//Se acaba de estoñar contra el suelo.
-		//Guardamos la normal del piñazo para luego orientar el Pawn más tade
-		m_NormalAlCaerSuelo=HitNormal;
-		GoToState('PawnRecienCaido'); 
-	}
+		else
+		{
+			`log('el pawn ha caido contra algo desde el cielo '@wall.Name);
+			self.m_ULtimoFloorAntesSalto = HitNormal;
+			self.ReboteRespectoA(wall,500);
+			
+		}
+	}//event HitWall
 
 	event EndState(Name NextState)
 	{

@@ -164,6 +164,7 @@ state MoveToDestination
 	{
 		local Pawn pDetectado;
 		DrawDebugInfo();
+		PEnemy(Pawn).ActualizaRotacion(DeltaTime);
 
 		if(VSize(OldDecalLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize))
 		{
