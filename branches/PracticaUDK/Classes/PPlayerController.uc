@@ -53,6 +53,11 @@ var float m_ultimoATurn; //Para que la camara pueda acceder a este valor
 var rotator m_Rotation_4cam;
 var rotator m_Rotation_4pawn;
 
+var Vector m_PosicionCaidaPlaneta,m_NormalCaidaPlaneta; //Posicion y normal de caida al planeta
+var float m_distCentroCaida; //Distancia al centro del planete desde el punto de caída del pawn al planeta
+var Vector m_posicionRealCaidaSuelo,m_PosicionCaidaContraActor,m_NormalCaidaActor;
+var bool  m_bContraSuelo;
+var Actor m_ActorContraElQueCaemos; 
 
 /**
  *Gestión del ratón RR
@@ -576,8 +581,17 @@ state PlayerSpidering
 		`Log("__________________________BEGIN STATE PLAYERCONTROLLER.PLAYERSPIDERING_____________________");
 		if (PreviousStateName!='PlayerRecienCaido' )
 		{
-			OldFloor = vect(0,0,1);
-			GetAxes(Rotation,ViewX,ViewY,ViewZ);
+
+			if(PPawn(Pawn).Floor==vect(0,0,0))
+			{
+				OldFloor = vect(0,0,1);
+			}
+			else
+			{
+				OldFloor=PPawn(Pawn).Floor;
+			}
+
+			GetAxes(PPawn(Pawn).Rotation,ViewX,ViewY,ViewZ);
 		}
 		else
 		{
@@ -808,7 +822,10 @@ state PlayerFallingSky
 	{
 		/*Simplemente, vamos cayendo, hasta que el Pawn nos avise de que estamos en el suelo */
 		local Vector pPosition,vAlCentro;
-        local PPawn elPaun;
+        local PPawn  elPaun;
+		local Actor  ActorTrace;
+		local Vector HitActorTrace,HitActorNormal;
+		local float  dist, min_dist_actual;
 
 		
         `log("PC Falling Sky");
@@ -835,6 +852,54 @@ state PlayerFallingSky
 		elPaun.EstadoPropulsores(false); //Apagamos los propulsores
 		m_cambioEstadoPropulsores=false;
 		//elPaun.OrientarPropulsores(elPaun.Rotation);
+
+		//Calculamos la posición en la que caerá el pawn, contando con actores
+		min_dist_actual = float(MaxInt);
+		foreach	TraceActors(class 'Actor',ActorTrace,HitActorTrace,HitActorNormal,PGame(WorldInfo.Game).GetCentroPlaneta(),elPaun.Location,vect(10,10,10))
+		{
+			//no sé si podemos garantizar que el que escoja es el primero contra el que impactaríamos. Me aseguro cogiendo el que está
+			//a distancia más pequeña del pawn
+			dist = vsize (HitActorTrace - elPaun.Location);
+			`log ("TraceActors me devuelve el actor "@ActorTrace.Name);
+			if(PEnemy(ActorTrace) != None) `log("Lo puedo convertir a pawn");
+			if (dist < min_dist_actual && PEnemy(ActorTrace) == none) //pasamos de los pawns
+			{
+				`log ("Candidato TraceActors"@ActorTrace.Name);
+				m_ActorContraElQueCaemos = ActorTrace;
+				m_PosicionCaidaContraActor = HitActorTrace;
+				m_NormalCaidaActor = HitActorNormal;
+				min_dist_actual = dist;
+
+			}
+		}
+
+		//Calculamos posición de choque contra el planeta y nada más, para lo que hacemos el trace de dentro del planeta pa fuera ;)
+		Trace(m_PosicionCaidaPlaneta,m_NormalCaidaPlaneta,elPaun.Location,PGame(WorldInfo.Game).GetCentroPlaneta(),false,vect(1,1,1));
+
+		if (m_PosicionCaidaPlaneta == vect(0,0,0))
+		{
+			`log("Kagada en el trace coleguita....");
+		}
+
+		DrawDebugSphere(m_PosicionCaidaPlaneta,30,40,0,1,200,true);
+		//Si caigo sobre algo que no es el planeta ni contra un PEnemy, la caida es contra ese algo
+		if(  m_ActorContraElQueCaemos != None && 
+			(m_ActorContraElQueCaemos !=elpaun.m_BasePlaneta && (PEnemy(m_ActorContraElQueCaemos) ==None))   )
+		{
+			
+			`log("Caemos encima de "@m_ActorContraElQueCaemos.Name);
+			m_posicionRealCaidaSuelo = m_PosicionCaidaContraActor;
+			m_bContraSuelo = false;
+		}
+		else //Si el traceactors no ha encontrado nada, o bien el planeta o u PEnemy, pues eso, caemos contra el planeta
+		{
+			`log("Caemos contra el suelo");
+			m_posicionRealCaidaSuelo = m_PosicionCaidaPlaneta ;
+			m_bContraSuelo = true;
+		}
+		`log("Distancia inicial al suelo ____________" @vsize(elPaun.Location-m_posicionRealCaidaSuelo));
+		m_distCentroCaida = vsize (m_posicionRealCaidaSuelo - PGame(WorldInfo.Game).GetCentroPlaneta());
+	
 	}
 
 	event PlayerTick(float DeltaTime)
@@ -853,7 +918,7 @@ state PlayerFallingSky
 			}
 			m_acercandoCamaraCayendo-=800*DeltaTime; //La vamos decrementando
 			m_acercandoCamaraCayendo=FClamp(m_acercandoCamaraCayendo,m_minDistanciaCamaraCayendo,30000);
-			`log("La distancia es "@m_acercandoCamaraCayendo);
+			//`log("La distancia es "@m_acercandoCamaraCayendo);
 
 			//Update de la aceleración
 			m_aceleracionCaidaLibre*=1+DeltaTime/5;
@@ -911,6 +976,9 @@ state PlayerFallingSky
 		local Vector alPlaneta;
 		local Vector step;
 
+		local float distActual;
+		local float distCentroActual;
+
 		super.PlayerMove(aDeltaTime);
 
 		pPosition=PPawn(pawn).Location;
@@ -919,10 +987,53 @@ state PlayerFallingSky
 		//controlamos la velocidad máxima
 	
 		step=Normal(alPlaneta)*aDeltaTime*800*m_aceleracionCaidaLibre;
-		PPawn(pawn).SetLocation(pPosition+step);
+
+		if (m_PosicionCaidaPlaneta != vect(0,0,0))
+		{
+			distActual = vsize(m_posicionRealCaidaSuelo - (pPosition+step));
+			distCentroActual = vsize ((pPosition+step) - PGame(WorldInfo.Game).GetCentroPlaneta());
+			
+			//`log("Distancia al suelo ____" @distActual);
+			//Si la distancia es menor que 10 o si nos hemos pasao (estamos más cerca del centro que el punto de caída)
+			if (distActual < 3 || (distCentroActual < m_distCentroCaida))
+			{
+
+				`log("______________Toñazo por distancia contra "@m_ActorContraElQueCaemos.Name);
+				if(self.m_bContraSuelo)
+				{
+					//Invocamos al Hitwall del Pawn, que pasará el Controller a estado PlayerRecienCaido
+					PPawn(pawn).SetLocation(m_posicionRealCaidaSuelo - normal(step)*5); //un poquito por encima del planeta porsiaca...
+					PPawn(pawn).HitWall(m_NormalCaidaPlaneta,m_ActorContraElQueCaemos,none);
+				}
+				else
+				{
+					if (PPawn(pawn).IsInState('PawnFallingSky'))
+					{
+						PPawn(pawn).SetLocation(m_posicionRealCaidaSuelo - normal(step)*5); //un poquito por encima del actor porsiaca...
+						PPawn(pawn).Bump(m_ActorContraElQueCaemos,none,m_NormalCaidaActor);
+						GoToState('PlayerBumpCayendo'); //EL Pawn también nos llevará, pero así aseguramos que
+						//No ejecutará más este PlayerMove.
+					}
+					else
+					{
+						//Significa que el bump ya lo ha puesto en PlayerFlying, no hacemos nada
+					}
+				}
+			}
+			else
+			{
+				//Lo dejamos que vaya cayendo como hasta ahora
+				PPawn(pawn).SetLocation(pPosition+step);
+			}
+		}
+		else
+		{
+			//El trace inicial cascó, o sea que lo hacemos como hasta ahora confiando que se ejecute el HitWall
+			PPawn(pawn).SetLocation(pPosition+step);
+		}
 
 		ProcessMove(aDeltaTime,PPawn(Pawn).Acceleration,DCLICK_None ,Rotator(vect(0,0,0)));
-		
+	
 	}
 }
 
@@ -960,9 +1071,65 @@ state PlayerRecienCaido
 
 		out_Location = pPosition - Normal (alPlaneta) * (m_minDistanciaCamaraCayendo+50*sin(m_tiempoTonyazo*25));
 		out_Rotation=PPawn(pawn).Rotation;
+		out_Rotation.Roll += rand(3000);
+		out_Rotation.Roll -= rand(3000);
+
 	}
 
 }//state PlayerRecienCaido
+
+/******************************************************************************************************************/
+state PlayerBumpCayendo
+{
+	//Todo vacío, no queremos que haga nada
+	event BeginState(Name prevstate)
+	{
+		`log("PC Bump mientras caía");
+		//Es el pawn quien nos pone en este estado al hacer Bump en PawnFallingSky. Pawn hará un rebote
+		//Así que se irá a PawnFalling
+		//Y es el pawn quien cuando después de rebotar vuelve al suelo, pone al PC en Spidering again
+		m_tiempoTonyazo = 0; //Para control del temblor de la cámara sólo medio segundo
+	}
+
+	event EndState(Name nextstate)
+	{
+		`log("Fin de PlayerBumpCayendo");
+	}
+
+	event PlayerTick(float DeltaTime)
+	{
+		super.PlayerTick(DeltaTime);
+		m_tiempoTonyazo += DeltaTime;
+	}
+
+	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
+	{
+		local Vector alPlaneta;
+		local Vector pPosition;
+		
+		pPosition = PPawn(pawn).Location;
+		alPlaneta = PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition;
+
+		if(m_tiempoTonyazo < 1)
+		{
+			//Temblamos la cámara
+			out_Location = pPosition - Normal (alPlaneta) * (m_minDistanciaCamaraCayendo+50*sin(m_tiempoTonyazo*25));
+			out_Rotation=PPawn(pawn).Rotation;
+			out_Rotation.Roll += rand(3000);
+			out_Rotation.Roll -= rand(3000);
+		}
+		else
+		{
+			//Simplemente nos quedamos a las espaldas del pawn mientras rebota, hasta que llegue al suelo.
+			out_Location = pPosition - Normal (alPlaneta) * m_minDistanciaCamaraCayendo;
+			out_Rotation=PPawn(pawn).Rotation;
+		}
+
+	}
+
+}//state PlayerBumpCayendo
+
+
 
 /**
  * Eventos de Ratón RR
