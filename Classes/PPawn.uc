@@ -21,7 +21,7 @@ var vector m_TranslateZ;
 var bool m_VenimosDeBump;
 var vector m_ULtimoFloorAntesSalto; //Por si en el salto el floor se ha perdido al saltar, chocar, etc
 var int m_DistanciaAlSuelo; //Distancia del robot al suelo
-
+var int m_backupDistanciaAlSuelo; //para guardar el valor de m_DistanciaAlSuelo cuando se modifica
 
 var Actor m_BasePlaneta;
 var bool m_BasePlanetaGuardado;
@@ -34,6 +34,8 @@ var bool m_permiteMoverSaltando;
 
 //Guardamos valores del translateZ para hacer la media y que el translate sea más suave
 var array<float> m_array_translatez;
+
+var float m_tiempoEstado;
 
 function float CalcularMediaTranslateZ(float valorZ)
 {
@@ -69,7 +71,7 @@ event Tick(float DeltaTime)
 	super.Tick(DeltaTime);
 	//if (self.IsInState('PawnFalling') || self.IsInState('PawnFallingSky') || self.IsInState('PawnFlaying'))
 
-	if (!self.IsInState('PPawn'))
+	if (!self.IsInState('PPawn') && !self.IsInState('PawnPreparandoFlaying'))
 	{
 		//No hacemos nada si no está caminando
 		return;
@@ -750,6 +752,7 @@ state PawnRecienCaido
 		PC = PPlayerController(Instigator.Controller);
    
 		OrientarPawnPorNormal(m_NormalAlCaerSuelo,routPawn);
+		DrawDebugCylinder(self.Location,self.location+self.Floor*140,6,10,255,0,0,true);
 		PC.GotoState('PlayerSpidering'); //--> OJO con la ÑAPA en player Controller para coger el floor inicial...
 
 		EstadoPropulsores(true);
@@ -783,6 +786,59 @@ state PawnFlaying
 	}
 
 }//STATE PLAYERFLAYING
+
+
+/******************************************************************************************************************/
+state PawnPreparandoFlaying
+{
+	event BeginState(Name prevstate)
+	{
+		`log("Preparando para saltar");
+		m_tiempoEstado=0;
+		m_backupDistanciaAlSuelo = m_DistanciaAlSuelo; //Porque lo modificamos, para restaurarlo
+	}
+
+	event EndState(Name nextstate)
+	{
+		`log("Fin de PlayerPreparandoFlaying");
+		m_DistanciaAlSuelo = m_backupDistanciaAlSuelo;
+	}
+
+	event Tick(float DeltaTime)
+	{
+		local PPlayerController PC;
+		local vector Parriba;
+		m_tiempoEstado += DeltaTime;
+
+		if(m_tiempoEstado < 2)
+		{
+			//Vamos disminuyendo m_DistanciaAlSuelo para que baje
+			//Tenemos que ir llamando al Tick del estado base para que lo haga
+			//Pero sólo en este if,no hacer sl super.Tick al principio de la función
+			//O el efecto de salto no se notará puesto que el tick lo baja al suelo
+			super.Tick(DeltaTime);
+			
+			m_DistanciaAlSuelo -= int(1+(m_tiempoEstado*1.5));
+			if (m_DistanciaAlSuelo <2) //que no llegue al suelo
+			{
+				m_DistanciaAlSuelo = 2;
+			}
+		}
+		else if (m_tiempoEstado >2 && m_tiempoEstado <2.5)
+		{
+			//Iniciamos el despegue parriba
+			Parriba=self.Floor * 120;
+			self.SetLocation(self.Location+Parriba);
+		}
+		else if (m_tiempoEstado > 2.5)
+		{
+			PC = PPlayerController(Instigator.Controller);
+			PC.GotoState('PlayerFlaying'); //El PC ya pone al Pawn en el estado que toca
+		}
+	}
+
+}//state PawnPreparandoFlaying
+
 
 defaultproperties
 {

@@ -994,16 +994,23 @@ state PlayerFallingSky
 			distCentroActual = vsize ((pPosition+step) - PGame(WorldInfo.Game).GetCentroPlaneta());
 			
 			//`log("Distancia al suelo ____" @distActual);
-			//Si la distancia es menor que 10 o si nos hemos pasao (estamos más cerca del centro que el punto de caída)
-			if (distActual < 3 || (distCentroActual < m_distCentroCaida))
+			//Si nos hemos pasao de 10 (estamos más cerca del centro que el punto de caída)
+			if (distCentroActual < m_distCentroCaida+10)
 			{
 
 				`log("______________Toñazo por distancia contra "@m_ActorContraElQueCaemos.Name);
 				if(self.m_bContraSuelo)
 				{
 					//Invocamos al Hitwall del Pawn, que pasará el Controller a estado PlayerRecienCaido
-					PPawn(pawn).SetLocation(m_posicionRealCaidaSuelo - normal(step)*5); //un poquito por encima del planeta porsiaca...
-					PPawn(pawn).HitWall(m_NormalCaidaPlaneta,m_ActorContraElQueCaemos,none);
+					PPawn(pawn).SetLocation(m_posicionRealCaidaSuelo - normal(step)*100); //un poquito por encima del planeta porsiaca...
+					PPawn(pawn).Velocity = Normal(alPlaneta)*10; //despacito
+					PPawn(pawn).Floor = m_NormalCaidaPlaneta; //despacito
+					PPawn(pawn).m_ULtimoFloorAntesSalto =  m_NormalCaidaPlaneta;
+					PPawn(pawn).m_VenimosDeBump = true; //Si no no deja saltar
+					PPawn(pawn).DoJump(true);
+					
+					//PPawn(pawn).HitWall(m_NormalCaidaPlaneta,PPawn(pawn).m_BasePlaneta,none);
+					GoToState('PlayerRecienCaido'); //EL Pawn también nos llevará, pero así aseguramos que
 				}
 				else
 				{
@@ -1064,16 +1071,28 @@ state PlayerRecienCaido
 	{
 		local Vector alPlaneta;
 		local Vector pPosition;
+		local float tick_random,tick_sin;
 		
 		pPosition = PPawn(pawn).Location;
 		alPlaneta = PGame(WorldInfo.Game).GetCentroPlaneta() - pPosition;
-		//`log("Sin tonyazo "@sin(m_tiempoTonyazo*10) @m_tiempoTonyazo);
 
-		out_Location = pPosition - Normal (alPlaneta) * (m_minDistanciaCamaraCayendo+50*sin(m_tiempoTonyazo*25));
+		if(m_tiempoTonyazo < 1)
+		{
+			tick_random = 1;
+			tick_sin = 50*sin(m_tiempoTonyazo*25);
+		}
+		else
+		{
+			tick_random = 2 - m_tiempoTonyazo; //va decrementando hasta cero
+			tick_sin = 10*sin(m_tiempoTonyazo*25);
+		}
+
+		//Temblamos la cámara
+		out_Location = pPosition - Normal (alPlaneta) * (m_minDistanciaCamaraCayendo+tick_sin);
 		out_Rotation=PPawn(pawn).Rotation;
-		out_Rotation.Roll += rand(3000);
-		out_Rotation.Roll -= rand(3000);
-
+		out_Rotation.Roll += rand(3000*tick_random);
+		out_Rotation.Roll -= rand(3000*tick_random);
+	
 	}
 
 }//state PlayerRecienCaido
@@ -1128,6 +1147,34 @@ state PlayerBumpCayendo
 	}
 
 }//state PlayerBumpCayendo
+
+
+/******************************************************************************************************************/
+state PlayerPreparandoFlaying
+{
+	event BeginState(Name prevstate)
+	{
+		`log("Preparando para saltar");
+		PPawn(pawn).GotoState('PawnPreparandoFlaying');
+
+		//Si aqui guardamos la posicion y rotacion actuales de la camara,
+		//Y sobreescribimos el GetPlayerViewPoint para que siempre devuelva eso
+		//Podríamos hacer el efecto de que la cámara no se mueve, y ver despegar al robot
+	}
+
+	event EndState(Name nextstate)
+	{
+		`log("Fin de PlayerPreparandoFlaying");
+		//Ya estamos volando, actualizamos booleano para control de HUD
+		PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	}
+
+	event PlayerTick(float DeltaTime)
+	{
+		super.PlayerTick(DeltaTime);
+	}
+
+}//state PlayerPreparandoFlaying
 
 
 
@@ -1240,15 +1287,21 @@ exec function vuela()
 {
 	local bool bTierraAire;
 	
-	PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+	//Si estamos en el suelo, pasamos al estado de preparar el salto, pero no actualizamos el booleano
+	//de bEarthNotFlying hasta que realmente estemos en el aire. 
+
+	
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
 	
-	if(bTierraAire)
+	if(!bTierraAire) //Si estoy volando, es que quiero bajar al planeta
+	{
+		PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
 		GotoState('PlayerFallingSky');
+	}
 	else
-		GotoState('PlayerFlaying');
-
-
+	{
+		GotoState('PlayerPreparandoFlaying'); //Para preparar el salto para arriba
+	}
 }
 
 // Called when the left mouse button is pressed
