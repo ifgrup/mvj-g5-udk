@@ -808,7 +808,11 @@ state PawnPreparandoFlaying
 	{
 		local PPlayerController PC;
 		local vector Parriba;
+		local vector vx,vy,vz;
+
 		m_tiempoEstado += DeltaTime;
+		
+		PC = PPlayerController(Instigator.Controller);
 
 		if(m_tiempoEstado < 2)
 		{
@@ -827,12 +831,14 @@ state PawnPreparandoFlaying
 		else if (m_tiempoEstado >2 && m_tiempoEstado <2.5)
 		{
 			//Iniciamos el despegue parriba
-			Parriba=self.Floor * 120;
+			GetAxes(self.Rotation,vX,vY,vZ);
+			Parriba = 50 * vZ ;
 			self.SetLocation(self.Location+Parriba);
+			
 		}
 		else if (m_tiempoEstado > 2.5)
 		{
-			PC = PPlayerController(Instigator.Controller);
+			
 			PC.GotoState('PlayerFlaying'); //El PC ya pone al Pawn en el estado que toca
 		}
 	}

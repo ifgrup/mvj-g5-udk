@@ -59,6 +59,11 @@ var Vector m_posicionRealCaidaSuelo,m_PosicionCaidaContraActor,m_NormalCaidaActo
 var bool  m_bContraSuelo;
 var Actor m_ActorContraElQueCaemos; 
 
+var vector  m_PosInicialAlSaltar;
+var Rotator m_RotInicialAlSaltar;
+var bool m_initPosAlSaltar;
+
+
 /**
  *Gestión del ratón RR
  * 
@@ -1156,7 +1161,7 @@ state PlayerPreparandoFlaying
 	{
 		`log("Preparando para saltar");
 		PPawn(pawn).GotoState('PawnPreparandoFlaying');
-
+		m_initPosAlSaltar = true;
 		//Si aqui guardamos la posicion y rotacion actuales de la camara,
 		//Y sobreescribimos el GetPlayerViewPoint para que siempre devuelva eso
 		//Podríamos hacer el efecto de que la cámara no se mueve, y ver despegar al robot
@@ -1167,12 +1172,32 @@ state PlayerPreparandoFlaying
 		`log("Fin de PlayerPreparandoFlaying");
 		//Ya estamos volando, actualizamos booleano para control de HUD
 		PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
+		
 	}
 
 	event PlayerTick(float DeltaTime)
 	{
 		super.PlayerTick(DeltaTime);
 	}
+
+	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
+	{
+		local Vector alPlaneta;
+		local Vector pPosition;
+
+		if (m_initPosAlSaltar)
+		{
+			super.GetPlayerViewPoint(out_Location,out_Rotation);
+			m_PosInicialAlSaltar = out_Location;
+			m_RotInicialAlSaltar = out_Rotation;
+			m_initPosAlSaltar = false;
+		}
+
+		out_Location = m_PosInicialAlSaltar;
+		out_Rotation = m_RotInicialAlSaltar;
+	}
+
+
 
 }//state PlayerPreparandoFlaying
 
