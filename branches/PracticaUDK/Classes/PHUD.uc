@@ -786,6 +786,27 @@ pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
 }
 
 
+//cambio de mirilla
+
+exec function mirillatierrapos(float x, float y)
+{
+	local ASDisplayInfo DI;
+	Pixel_X_Mirilla = Pixel_X_Mirilla+x;
+	Pixel_Y_Mirilla = Pixel_Y_Mirilla+y;
+	DI=pGFx.pmiratierraMC.GetDisplayInfo();
+	`log("ksdjksdj"@DI.X);
+	`log("ksdjksdj"@DI.y);
+	DI.X=Pixel_X_Mirilla;
+	DI.Y=Pixel_Y_Mirilla;
+	pGFx.pmiratierraMC.SetDisplayInfo(DI);
+	`log("ksdjksdj"@DI.X);
+	`log("ksdjksdj"@DI.y);
+
+
+}
+
+
+
 defaultproperties
 {
 	CursorColor=(R=255,G=255,B=255,A=255)
