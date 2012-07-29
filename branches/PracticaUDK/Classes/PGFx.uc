@@ -54,23 +54,46 @@ function Init(optional LocalPlayer LocalPlayer)
 	Advance(0);
 
 	//Guardar la referencia de varios objetos para acceder a ellos en el futuro
-	
-tdcMC = GetVariableObject("_root.tdc");
+	//Hud antiguo
+/*
+	tdcMC = GetVariableObject("_root.tdc");
+	tdiceMC= GetVariableObject("_root.tdice");
+	ctdiceMC= GetVariableObject("_root.ctdice");
+	ctdcMC= GetVariableObject("_root.ctdc");
+	creditoMC= GetVariableObject("_root.credito");
+	//capturamos de la pelicula flash los objetos y los asignamos a nuestras variables
+	pelicula=GetVariableObject("_root");
+	raton= GetVariableObject("_root._clip");
+	bcursor= GetVariableObject("_root.bcursor");
+	cice= GetVariableObject("_root.cice");
+	cct= GetVariableObject("_root.cct");
+	pmiratierraMC=GetVariableObject("_root.pmiratierra");
+*/
+	//Hud nuevo
 
- tdiceMC= GetVariableObject("_root.tdice");
- ctdiceMC= GetVariableObject("_root.ctdice");
- ctdcMC= GetVariableObject("_root.ctdc");
- creditoMC= GetVariableObject("_root.credito");
- //capturamos de la pelicula flash los objetos y los asignamos a nuestras variables
- pelicula=GetVariableObject("_root");
- raton= GetVariableObject("_root._clip");
- bcursor= GetVariableObject("_root.bcursor");
- cice= GetVariableObject("_root.cice");
- cct= GetVariableObject("_root.cct");
- pmiratierraMC=GetVariableObject("_root.pmiratierra");
 
-bTowerActive=true;
-TurretReload();
+	tdcMC = GetVariableObject("_root.nhud.tdc");
+	tdiceMC= GetVariableObject("_root.nhud.tdice");
+	ctdiceMC= GetVariableObject("_root.nhud.tdice.ctdice");
+	ctdcMC= GetVariableObject("_root.nhud.tdc.ctdc");
+	creditoMC= GetVariableObject("_root.nhud.credito");
+	//capturamos de la pelicula flash los objetos y los asignamos a nuestras variables
+	pelicula=GetVariableObject("_root");
+	raton= GetVariableObject("_root._clip");
+	bcursor= GetVariableObject("_root.bcursor");
+	cice= GetVariableObject("_root.nhud.cice");
+	cct= GetVariableObject("_root.nhud.cct");
+	pmiratierraMC=GetVariableObject("_root.pmiratierra");
+
+	//Hud nuevo
+
+
+
+
+
+
+	bTowerActive=true;
+	TurretReload();
 //RR
 
 
@@ -181,11 +204,16 @@ event UpdateMousePosition(float x, float y)
 	}
 }
 
+
+
 DefaultProperties
 {
 	bDisplayWithHudOff=false
 	TimingMode=TM_Game
-	MovieInfo=SwfMovie'PGameMenuFlash.PHUD'
+	//antiguo
+	//MovieInfo=SwfMovie'PGameMenuFlash.PHUD'
+	//nuevo
+	MovieInfo=SwfMovie'PGameMenuFlash.nhud'
 	bPauseGameWhileActive=false
 	TTowerActive=2;
 }
