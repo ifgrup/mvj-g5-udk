@@ -51,6 +51,7 @@ var Vector distanciatorreta;
 
 var int Pixel_X_Mirilla;
 var int Pixel_Y_Mirilla;
+var int m_min_offset_mirilla_y, m_max_offset_mirilla_y; //OFFSET de la mirilla al subir/bajar cámara
 
 simulated event PostBeginPlay()
 {
@@ -611,6 +612,7 @@ function Vector GetMirillaWorldLocation()
 	local Vector MouseWorldOrigin, MouseWorldDirection, HitLocation, HitNormal;
 	local Vector HitLocationNoActor;
 	local Actor HitActor;
+	local ASDisplayInfo DI;
 
 	//player owner y canvas validos?
 	if(Canvas == none || PlayerOwner == none)
@@ -622,9 +624,11 @@ function Vector GetMirillaWorldLocation()
 		return vect(0, 0, 0);
 
 	//Pasar la posicion del mouse de intPoint a Vector2D
+	
+	DI=pGFx.pmiratierraMC.GetDisplayInfo();
 
-	MousePosition.X = Pixel_X_Mirilla;
-	MousePosition.Y = Pixel_Y_Mirilla;
+	MousePosition.X = DI.x;
+	MousePosition.Y = DI.y;
 	//Deproyectar el mouse
 	Canvas.DeProject(MousePosition, MouseWorldOrigin, MouseWorldDirection);
 
@@ -787,22 +791,16 @@ pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
 
 
 //cambio de mirilla
-
+//Aplica offset en pixels x,y a la posición de la mirilla
 exec function mirillatierrapos(float x, float y)
 {
 	local ASDisplayInfo DI;
-	Pixel_X_Mirilla = Pixel_X_Mirilla+x;
-	Pixel_Y_Mirilla = Pixel_Y_Mirilla+y;
 	DI=pGFx.pmiratierraMC.GetDisplayInfo();
-	`log("ksdjksdj"@DI.X);
-	`log("ksdjksdj"@DI.y);
-	DI.X=Pixel_X_Mirilla;
-	DI.Y=Pixel_Y_Mirilla;
+	DI.X=Pixel_X_Mirilla+x;
+	DI.Y=Pixel_Y_Mirilla+y;
+
 	pGFx.pmiratierraMC.SetDisplayInfo(DI);
-	`log("ksdjksdj"@DI.X);
-	`log("ksdjksdj"@DI.y);
-
-
+	//`log("Nueva Posicion mirilla "@DI.X @DI.Y);
 }
 
 
@@ -818,5 +816,7 @@ defaultproperties
 	distanciatorreta=(X=350,Y=350,Z=350)
 	Pixel_X_Mirilla = 642
 	Pixel_Y_Mirilla = 362
+	m_min_offset_mirilla_y = 55
+	m_max_offset_mirilla_y = -90
 }
 
