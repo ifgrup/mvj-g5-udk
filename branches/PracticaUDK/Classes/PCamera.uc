@@ -213,8 +213,27 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
 			}
         }//if Pawn!= None
 
+		ActualizaMirilla();
  }//CamaraAndando
 
+ function ActualizaMirilla() 
+ {
+	local PPlayerController pc;
+	local PHud elhud;
+	local float ratio;
+	local float deltamirilla;
+
+	pc = PPlayerController(PCOwner);
+	elhud = PHud(pc.myHUD);
+
+	ratio = (m_anguloUpDown-m_min_anguloUD)/(m_max_anguloUD - m_min_anguloUD);
+
+	deltamirilla = elhud.m_min_offset_mirilla_y + ratio * (elhud.m_max_offset_mirilla_y - elhud.m_min_offset_mirilla_y);
+
+	elhud.mirillatierrapos(0,deltamirilla);
+	//`log("A HUD con  angulo " @m_anguloUpDown @deltamirilla);
+		
+ }
 
 /***************
  function LoQueHabiaAntes()
