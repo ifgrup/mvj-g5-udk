@@ -27,7 +27,7 @@ var Actor m_BasePlaneta;
 var bool m_BasePlanetaGuardado;
 
 //Los sistemas de partículas del robot, para poder encenderlos y apagarlos todos juntos:
-var array<ParticleSystemComponent>	m_ParticulasPropulsoresRobot;
+var array<EmitterSpawnable>	m_ParticulasPropulsoresRobot;
 var vector m_NormalAlCaerSuelo;
 var bool m_RecienEstrellado;
 var bool m_permiteMoverSaltando;
@@ -36,6 +36,9 @@ var bool m_permiteMoverSaltando;
 var array<float> m_array_translatez;
 
 var float m_tiempoEstado;
+
+//Indices del vector de partículas de m_ParticulasPropulsoresRobot
+var int m_idx_brazo_ido,m_idx_brazo_dcho,m_idx_antebrazo_ido,m_idx_antebrazo_dcho,m_idx_base;
 
 function float CalcularMediaTranslateZ(float valorZ)
 {
@@ -228,8 +231,8 @@ event RanInto (Actor Other)
 
 simulated function PostBeginPlay()
 {
-	local ParticleSystemComponent PSC;
-
+	//local ParticleSystemComponent PSC;
+    local EmitterSpawnable PSC;
 	super.PostBeginPlay();
 	//CollisionComponent = Mesh;
     // Turning collision on for skelmeshcomp and off for cylinder
@@ -239,67 +242,83 @@ simulated function PostBeginPlay()
 
 	if (self.Mesh.GetSocketByName('Socket_Cabeza') != none)
 	{
-		PSC = new () class'ParticleSystemComponent';
+		PSC = Spawn(class'EmitterSpawnable',Self);
 		if (PSC != none)
 		{
 			PSC.SetTemplate(ParticleSystem'CTF_Flag_IronGuard.Effects.P_CTF_Flag_IronGuard_Idle_Blue');
-			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Cabeza');
-			m_ParticulasPropulsoresRobot.AddItem(PSC);
+			self.Mesh.AttachComponentToSocket(PSC.ParticleSystemComponent, 'Socket_Cabeza');
 		}
 	}
 
 	if (self.Mesh.GetSocketByName('Socket_Brazo_Derecho') != None)
 	{
-		PSC = new () class'ParticleSystemComponent';
+		PSC = Spawn(class'EmitterSpawnable',Self);
 		if (PSC != None)
 		{
-			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
-			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Brazo_Derecho');
+			PSC.SetTemplate(ParticleSystem'Giru.Materials.particulas_propulsor');
+			self.Mesh.AttachComponentToSocket(PSC.ParticleSystemComponent, 'Socket_Brazo_Derecho');
 			m_ParticulasPropulsoresRobot.AddItem(PSC);
+			m_idx_brazo_dcho = m_ParticulasPropulsoresRobot.Length -1;
+			PSC.SetFloatParameter('ParamAlpha',0.3);			
 		}
 	}
 
 	if (self.Mesh.GetSocketByName('Socket_Antebrazo_Derecho') != none)
 	{
-		PSC = new () class'ParticleSystemComponent';
+		PSC = Spawn(class'EmitterSpawnable',Self);
+
 		if (PSC != none)
 		{
-			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
-			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Antebrazo_Derecho');
+			PSC.SetTemplate(ParticleSystem'Giru.Materials.particulas_propulsor');
+			self.Mesh.AttachComponentToSocket(PSC.ParticleSystemComponent, 'Socket_Antebrazo_Derecho');
 			m_ParticulasPropulsoresRobot.AddItem(PSC);
+			m_idx_antebrazo_dcho = m_ParticulasPropulsoresRobot.Length -1;
 		}
 	}
 
 	if (self.Mesh.GetSocketByName('Socket_Brazo_Izquierdo') != None)
 	{
-		PSC = new () class'ParticleSystemComponent';
+		PSC = Spawn(class'EmitterSpawnable',Self);
+
 		if (PSC != None)
 		{
-			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
-			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Brazo_Izquierdo');
+			PSC.SetTemplate(ParticleSystem'Giru.Materials.particulas_propulsor');
+			self.Mesh.AttachComponentToSocket(PSC.ParticleSystemComponent, 'Socket_Brazo_Izquierdo');
 			m_ParticulasPropulsoresRobot.AddItem(PSC);
+			m_idx_brazo_ido = m_ParticulasPropulsoresRobot.Length -1;
+			PSC.SetFloatParameter('ParamAlpha',0.3);			
 		}
 	}
 
 	if (self.Mesh.GetSocketByName('Socket_Antebrazo_Izquierdo') != none)
 	{
-		PSC = new () class'ParticleSystemComponent';
+		PSC = Spawn(class'EmitterSpawnable',Self);
 		if (PSC != none)
 		{
-			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
-			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Antebrazo_Izquierdo');
+			PSC.SetTemplate(ParticleSystem'Giru.Materials.particulas_propulsor');
+			self.Mesh.AttachComponentToSocket(PSC.ParticleSystemComponent, 'Socket_Antebrazo_Izquierdo');
 			m_ParticulasPropulsoresRobot.AddItem(PSC);
+
+			m_idx_antebrazo_ido = m_ParticulasPropulsoresRobot.Length -1;
+			PSC.SetFloatParameter('ParamAlpha',0.3);			
 		}
 	}
 
 	if (self.Mesh.GetSocketByName('Socket_Base') != none)
 	{
-		PSC = new () class'ParticleSystemComponent';
+		PSC = Spawn(class'EmitterSpawnable',Self);
+
 		if (PSC != none)
 		{
-			PSC.SetTemplate(ParticleSystem'DunDefVFX.FX.Tower_FX.magicMissleProjectile_vFX');
-			self.Mesh.AttachComponentToSocket(PSC, 'Socket_Base');
+			PSC.SetTemplate(ParticleSystem'Giru.Materials.particulas_propulsor');
+			self.Mesh.AttachComponentToSocket(PSC.ParticleSystemComponent, 'Socket_Base');
 			m_ParticulasPropulsoresRobot.AddItem(PSC);
+			m_idx_base = m_ParticulasPropulsoresRobot.Length -1;
+			PSC.SetFloatParameter('ParamAlpha',0.1);			
+			`log("" @PSC.ParticleSystemComponent.InstanceParameters[0].Name);
+			`log("" @PSC.ParticleSystemComponent.InstanceParameters[0].Scalar);
+			`log("" @PSC.ParticleSystemComponent.InstanceParameters[0].ParamType);
+
 		}
 	}
 }
@@ -322,28 +341,71 @@ function EstadoPropulsores(bool bEstado)
 	{
 		if(bEstado)
 		{
-			m_ParticulasPropulsoresRobot[i].ActivateSystem();
+			m_ParticulasPropulsoresRobot[i].ParticleSystemComponent.ActivateSystem();
 		}
 		else
 		{
-			m_ParticulasPropulsoresRobot[i].DeactivateSystem();
+			m_ParticulasPropulsoresRobot[i].ParticleSystemComponent.DeactivateSystem();
 		}
 	}
 }
 
-function OrientarPropulsores(Rotator pRotator)
+function OrientarPropulsores(float player_aTurn, float player_astrafe)
 {
 	local int i;
 	local Rotator r;
+	local vector v1,v2;
+	local vector crossdir;
+	local float escalar1,escalar2;
+	//En las posiciones 0 y 2 están los propulsores de los 'brazos'
+	`log("escaalar " @player_aTurn @player_astrafe);
+	
+	r=m_ParticulasPropulsoresRobot[0].ParticleSystemComponent.Rotation;
 
-	for (i=0;i<m_ParticulasPropulsoresRobot.Length;i++)
+	if (player_astrafe <0 || player_aTurn <0)
+    {
+		//Girando a la izquierda
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',2);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.2);
+
+		r.yaw =-15*DegToUnrRot;
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetRotation(r);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetRotation(r);
+
+
+    }
+	else if (player_astrafe >0 || player_aTurn >0)
 	{
-		//m_ParticulasPropulsoresRobot[i].SetRotation(pRotator);
-		r=m_ParticulasPropulsoresRobot[i].Rotation;
-		r.Pitch+=32000;
-		m_ParticulasPropulsoresRobot[i].SetRotation(r);
+		//Girando a la derecha
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.2);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',2);
+
+		r.yaw = 15*DegToUnrRot;
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetRotation(r);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetRotation(r);
+
+
+	}
+	else if (player_astrafe ==0 && player_aTurn == 0)
+	{
+		//es cero
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.3);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.3);
+		r.yaw = 0;
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetRotation(r);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetRotation(r);
+
 	}
 
+	return;
+}
+
+function PotenciaPropulsorBase(float pot)
+{
+	//Ponemos la potencia del proyector base.
+	//La usamos para el salto, para que en el momento del salto pase a máxima potencia
+	//Y luego vaya bajando. Se hace en el tick del estado Falling.
+	m_ParticulasPropulsoresRobot[m_idx_base].ParticleSystemComponent.SetFloatParameter('ParamAlpha',pot);
 }
 
 
@@ -539,6 +601,7 @@ state PawnFalling
 		SetPhysics(PHYS_Flying);
 		fTiempoDeSalto=0.0; //tiempo de salto
 		m_permiteMoverSaltando=true; //Si el salto se prolonga no permitimos que 'vuele'
+		PotenciaPropulsorBase(1.0); //El máximo
 	}
 
 	event Tick(float DeltaTime)
@@ -556,7 +619,9 @@ state PawnFalling
 			FallDirection = Normal(vAlCentro);
 			`log("volviendo pa la tierra neng!");
 			m_permiteMoverSaltando=false;
+			PotenciaPropulsorBase(0); //parecerá prácticamente apagado
 		}
+		PotenciaPropulsorBase(fclamp(1-(fTiempoDeSalto),0.1,0.8)); //Va perdiendo potencia
 		
 	}
 
@@ -600,6 +665,7 @@ state PawnFalling
 		{
 			PPaintCanvas(Wall).ChangeTexture();
 		}
+		PotenciaPropulsorBase(0.1); //El valor base
 	}
    
 	event EndState(Name NextState)

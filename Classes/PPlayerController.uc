@@ -50,6 +50,7 @@ var float m_tiempoCaidaSinMoverCamara;
 var float m_tiempoTonyazo; //tiempo que hace que nos hemos estoñao al caer al planeta
 var bool m_cambioEstadoPropulsores;
 var float m_ultimoATurn; //Para que la camara pueda acceder a este valor
+var float m_ultimoAStrafe; //Para guardarlo y poder pasarlo a OrientarPropulsores
 var rotator m_Rotation_4cam;
 var rotator m_Rotation_4pawn;
 
@@ -420,6 +421,7 @@ state PlayerSpidering
 					);
 				}
 			}
+			PPAwn(Pawn).OrientarPropulsores(m_ultimoATurn,m_ultimoAStrafe);
 		}
     }
 
@@ -529,7 +531,8 @@ state PlayerSpidering
         // Update acceleration.
 
         NewAccel = PlayerInput.aForward*Normal(ViewX - OldFloor * (OldFloor Dot ViewX)) + PlayerInput.aStrafe*ViewY;
- 
+        m_ultimoAStrafe = PlayerInput.aStrafe;
+
 		//Comprobamos si al aplicar el movimiento, chocaría contra un objeto, y en tal caso, para no 'spidearlo', pues
 		//no llamamos a ProcessMove, o ponemos el vector NewAccel a (0,0,0) para que no se mueva
        
