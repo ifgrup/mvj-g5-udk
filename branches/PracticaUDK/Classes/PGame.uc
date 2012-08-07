@@ -292,26 +292,31 @@ function SetCredito(int credito)
 }
 
 
-function EnemyKilled()
+function EnemyKilled(PEnemy enemigoMuerto)
 {
-    EnemiesLeft--;
-    if(EnemiesLeft <= 0)
-    {
-        ClearTimer('ActivateSpawners');
-        bSpawnBoss = true;
-        ActivateSpawners();
-    }
-}
-
-function ScoutKilled()
-{
-
-	EScoutLeft--;
-	if(EScoutLeft <= 0)
+	if (PEnemyPawn_Minion(enemigoMuerto) != None)
 	{
-		MapaFinalizado();
+		EnemiesLeft--;
+		if(EnemiesLeft <= 0)
+		{
+	        ClearTimer('ActivateSpawners');
+			bSpawnBoss = true;
+			ActivateSpawners();
+		}
 	}
+	else if (PEnemyPawn_Scout(enemigoMuerto) != None)
+	{
+		EScoutLeft--;
+		if(EScoutLeft <= 0)
+		{
+			MapaFinalizado();
+		}
+	}
+
+	//Y ahora, control de puntos:
+	SetCredito(creditos + enemigoMuerto.m_puntos_al_morir);
 }
+
 
 
 

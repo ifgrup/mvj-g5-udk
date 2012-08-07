@@ -50,15 +50,17 @@ auto state Idle_Inicial
 		}//if >1 segundo
 	}//Tick
 
-	function RecibirDanyo(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("RecibirDanyo en estado IdleInicial");
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
+	}
+	
+	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
 	}
 
-	event EndState(name NextStateName)
-	{
-		`log("Penemy_AI_Bot saliendo de idle");
-	}
+
 }/* --------------- FIN ESTADO IDLE_INICIAL --------------*/
 //____________________________________________________________________________________________________________________________________
 
@@ -109,10 +111,16 @@ state GoToNextPath
 		}   
 	}//Tick
 
-	function RecibirDanyo(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("RecibirDanyo en estado GoToNextPath");
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH"@self.Name);
 	}
+	
+	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH"@self.Name);
+	}
+
 
 
 Begin:
@@ -137,9 +145,14 @@ Begin:
 state TowerAttack
 {
 
-	function RecibirDanyo(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("RecibirDanyo en estado TowerAttack");
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
+	}
+	
+	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
 	}
 
 }/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
