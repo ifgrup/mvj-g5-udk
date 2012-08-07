@@ -4,8 +4,6 @@ var MaterialInstanceConstant mat;
 var SkeletalMeshComponent ColorMesh;
 var LinearColor Col1, Col2;
 
-var vector ViewX,ViewY,ViewxZ;
-
 
 simulated function PostBeginPlay()
 {
@@ -28,6 +26,24 @@ function SetColor(LinearColor Col)
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
+	PEnemy_AI_Bot(Owner).RecibirDanyo(iDamageAmount, EventInstigator, HitLocation, Momentum, DamageType, HitInfo, DamageCauser);
+
+	if(PMisiles(DamageCauser) != None && PPlayerController(EventInstigator) != None)
+	{
+		`log("Minion: el puto Giru me ha disparado");
+		//PEnemy_AI_Bot(Owner).DisparadoPorGiru(HitLocation, Momentum,DamageCauser);
+		return;
+	}
+
+    if(PMisiles(DamageCauser) != None && PMisiles(DamageCauser).disparador == 'PTurretCannon')
+	{
+		`log("Recibido disparo de TurretCannon");
+		//PEnemy_AI_Bot(Owner).DisparadoPorGiru(HitLocation, Momentum,DamageCauser);
+		return;
+	}
+
+
+
     life--;
 	`log("vida minion" @life);
 	if(life == 0)

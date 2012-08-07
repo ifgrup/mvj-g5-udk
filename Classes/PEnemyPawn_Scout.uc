@@ -23,6 +23,17 @@ function SetColor(LinearColor Col)
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
+	local float dst;
+
+	PEnemy_AI_Bot(Owner).RecibirDanyo(iDamageAmount, EventInstigator, HitLocation, Momentum, DamageType, HitInfo, DamageCauser);
+
+	if(PMisiles(DamageCauser) != None)
+	{
+		dst = vsize (self.Location - PEnemy_AI_Bot(Owner).theBase.Location);
+		`log("Scout: el puto Giru me ha disparado a dist de base ="@dst);
+	}
+
+   
 	life--;
 	if(life == 0)
 	{

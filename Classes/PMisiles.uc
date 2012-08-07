@@ -1,5 +1,5 @@
 class PMisiles extends UTProj_LinkPowerPlasma;
-
+var name disparador; //Quién dispara el projectile. Para control de TakeDamage ñaposillo...
 DefaultProperties
 {
 	Damage=1
