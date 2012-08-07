@@ -252,13 +252,20 @@ function AddPathNode(int id, PPathNode pNodo, optional LinearColor col)
 function PPathNode GetNextPath(int id, out int NodeIndex)
 {
 	local int indice;
+	local int NodeIndexTmp;
+	NodeIndexTmp = NodeIndex +1;
 
 	indice = Nodos.Find('id', id);
-	NodeIndex++;
-	if(NodeIndex >= Nodos[indice].Nodos.Length)
+	//NodeIndex++;
+	if(NodeIndexTmp >= Nodos[indice].Nodos.Length)
+	{
 		return none;
+	}
 	else
+	{
+		NodeIndex ++;
 		return Nodos[indice].Nodos[NodeIndex];
+	}
 }
 
 function ActivateSpawners()

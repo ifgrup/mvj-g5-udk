@@ -12,6 +12,7 @@ function DisparoTorreta()
 	TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
 	
 	Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
+	PMisiles(Proj).disparador = 'PTurretCannon';
 	Proj.Init(Normal(FireLocation-IniFireLocation));
 }
 

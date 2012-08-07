@@ -352,13 +352,9 @@ function EstadoPropulsores(bool bEstado)
 
 function OrientarPropulsores(float player_aTurn, float player_astrafe)
 {
-	local int i;
 	local Rotator r;
-	local vector v1,v2;
-	local vector crossdir;
-	local float escalar1,escalar2;
 	//En las posiciones 0 y 2 están los propulsores de los 'brazos'
-	`log("escaalar " @player_aTurn @player_astrafe);
+	//`log("escaalar " @player_aTurn @player_astrafe);
 	
 	r=m_ParticulasPropulsoresRobot[0].ParticleSystemComponent.Rotation;
 
