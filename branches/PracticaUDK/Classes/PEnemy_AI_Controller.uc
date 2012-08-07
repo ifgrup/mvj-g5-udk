@@ -41,15 +41,26 @@ function SetID(int i)
 }
 
 /**
- * Función genérica de RecibirDanyo, llamada desde los pawns en su TakeDamage.
- * Lo hacemos así para no tener que duplicar estados en los Pawns. Cada Pawn, en su takeDamage, llama a esta función
- * directamente con los mismos parámetros, y la gestión del daño la hace el controller, sobreescribiendo esta función en cada uno
- * de sus estados
+ * Funciones genérica de RecibirDanyo, llamada desde los pawns en su TakeDamage, para cada tìpo de daño.
+ * El control de vida y muerte, creo que se debería hacer en el pawn. 
+ * Desde el pawn, SIEMPRE Se llama a su owner, o sea, a estas funciones, para ejecutar la gestión del daño, pero
+ * para cambiar de estado y tal. O sea, que el tema de restar vida y tal, creo que se puede hacer en pawn.
+ * 
+ * PEnemy recibe el TakeDamage, decodifica el tipo de daño, ejecuta la funcion de PEnemy o redefinida en las hijas que
+ * controla el daño, y luego llama a la función de gestión de controller.
+ * Y aquí hacemos lo mismo, una función genérica, y cada hijo de PEnemy_AI_Controller, que redefina su tratamiento
+ * para cada estado.
  */
-function RecibirDanyo(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("RecibirDanyo Global");
+	`log("PEnemy_AI_Controller, recibido danyo Giru Global, DEBES SOBREESCRIBIRME!!!");
 }
+
+function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
+{
+	`log("PEnemy_AI_Controller, recibido danyo TurretCannon Global, DEBES SOBREESCRIBIRME!!!");
+}
+
 
 
 DefaultProperties
