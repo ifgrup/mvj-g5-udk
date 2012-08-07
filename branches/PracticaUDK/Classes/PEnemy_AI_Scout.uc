@@ -1,13 +1,11 @@
-class PEnemy_AI_Scout extends AIController;
+class PEnemy_AI_Scout extends PEnemy_AI_Controller;
 
 var Actor thePlayer;
 var Actor theObjective;
-var int id;
 var vector OldLocation;
 var vector OldDecalLocation;
-var vector CurrentDestination;
-var int RandomTicksCounter;
-var int RandomTicksMax;
+
+
 var int OffX, OffY;
 var int OffsetX, OffsetY;
 var int Step;
@@ -15,17 +13,18 @@ var array<PWorldPathNode> ListaNodosRecorridos;
 var DecalMaterial Decal;
 var MaterialInstanceConstant Mat;
 var LinearColor ColorDecal;
-var bool HasPath;
+
 var int id_Path;
 var float DestinationOffset;
-var bool ArrivedCurrentDestination;
-var Actor Destination;
+
+var Actor m_Destination; //Siguiente nodo destino al que nos dirijimos
+var vector m_CurrentDestination; //Posición de m_Destination
+var float distanciaBase_antes;
 
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
 	theObjective = PGame(WorldInfo.Game).PlayerBase;
-	//RandomTicksMax = Rand(10) + 1;
 	
 	ColorDecal = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 
@@ -36,7 +35,10 @@ simulated event PostBeginPlay()
 	Mat.SetScalarParameterValue('G', ColorDecal.G);
 	Mat.SetScalarParameterValue('B', ColorDecal.B);*/
 
-	SetTimer(1, false, 'BrainTimer');
+	/*Nos asignamos uno de los caminos posibles*/
+	id_Path = PGame(WorldInfo.Game).ObtenerIdNodosMundo();
+
+	//SetTimer(1, false, 'BrainTimer');
 }
 
 function SetColor(LinearColor Col)
@@ -45,95 +47,20 @@ function SetColor(LinearColor Col)
 	Mat.SetVectorParameterValue('Color', ColorDecal);
 }
 
-function SetID(int i)
-{
-	id = i;
-}
 
 function DrawDebugInfo()
 {
-	DrawDebugLine(Pawn.Location, CurrentDestination, 0, 255, 0, false);
-	DrawDebugSphere(CurrentDestination, 20, 20, 0, 255, 0, false);
+	DrawDebugLine(Pawn.Location, m_CurrentDestination, 0, 255, 0, false);
+	DrawDebugSphere(m_CurrentDestination, 20, 20, 0, 255, 0, false);
 }
 
-function BrainTimer()
-{
-	local PPathNode nodo;
-	local array<PWorldPathNode> pWNodos;
-	local PPlayerBase pBase;
-	local float fTimer;
-	local int i;
-	local int j;
-	local float distancia, tmp;
-
-	ClearTimer('BrainTimer');
-	//FlushPersistentDebugLines();
-
-	// si no tengo un destino
-	if(HasPath == false)
-	{
-		ArrivedCurrentDestination = false;
-		// busco el más cercano
-		id_Path = PGame(WorldInfo.Game).ObtenerIdNodosMundo();
-		pWNodos = PGame(WorldInfo.Game).ObtenerNodosMundo(id_Path);
-		j = 0;
-		distancia = VSize(pWNodos[0].Location - self.Location);
-		for(i = 0; i < pWNodos.Length; ++i)
-		{
-			tmp = VSize(pWNodos[i].Location - self.Location);
-			if(distancia > tmp)
-			{
-				distancia = tmp;
-				j = i;
-			}
-		}
-
-		// me lo asigno
-		PGame(WorldInfo.Game).Broadcast(self, "El nodo mas cercano es el"@pWNodos[j].Name);
-		DrawDebugSphere(pWNodos[j].Location, 500, 10, 0, 255, 0, false);
-		HasPath = true;
-		CurrentDestination = pWNodos[j].Location;
-		Destination = pWNodos[j];
-		PGame(WorldInfo.Game).DeleteWorldPathNode(id_Path, j);
-	}
-
-	if(VSize(OldLocation - Pawn.Location) > (Step/4))
-	{
-		nodo = spawn(class'PPathNode',,,Pawn.Location);
-		nodo.id = id;
-		PGame(WorldInfo.Game).AddPathNode(id, nodo, ColorDecal);
-		
-		OldLocation = Pawn.Location;
-	}
-
-	RandomTicksCounter++;
-
-	if(FastTrace(theObjective.Location, self.Location,,true))
-	{
-		CurrentDestination = theObjective.Location;
-		fTimer = 0.5;
-	}
-	else
-	{
-		fTimer = 1;
-	}
-
-	DrawDebugInfo();
-
-	SetTimer(fTimer, false, 'BrainTimer');
-
-	GotoState('MoveToDestination');
-
-}
-
-function Vector NextPath()
+function  NextPath()
 {
 	local array<PWorldPathNode> pWNodos;
 	local int i;
 	local int j;
 	local float distancia, tmp;
 
-	ArrivedCurrentDestination = false;
 	// busco el más cercano
 	pWNodos = PGame(WorldInfo.Game).ObtenerNodosMundo(id_Path);
 	
@@ -153,19 +80,80 @@ function Vector NextPath()
 	// me lo asigno
 	PGame(WorldInfo.Game).Broadcast(self, "Voy hacia el nodo "@pWNodos[j].Name);
 	DrawDebugSphere(pWNodos[j].Location, 500, 10, 0, 255, 0, true);
-	Destination = pWNodos[j];
+	m_Destination = pWNodos[j];
+	m_CurrentDestination = m_Destination.Location;
+	//Y lo elimino para que no podamos volver a asignarnos el mismo nodo ;)
 	PGame(WorldInfo.Game).DeleteWorldPathNode(id_Path, j);
-	return pWNodos[j].Location;
 }
 
+/* --------------- ESTADO IDLE_INICIAL --------------
+ * --- Empieza en este estado, y cuando el Pawn recién creado llega al suelo, pasamos al estado inicial
+ */
+auto state Idle_Inicial
+{
+	event BeginState(Name PrevName)
+	{
+		`log("Penemy_AI_Scout creado, estoy en Idle");
+		m_tiempo_tick = 0;
+	}
+
+	event Tick(float Deltatime)
+	{
+		//Debemos permanecer en este estado mientras el pawn esté cayendo,
+		//y no tengamos nodo del path a seguir.
+		//Lo comprobamos cada segundo
+		super.Tick(Deltatime);
+		if (m_tiempo_tick >= 1.0)
+		{
+			m_tiempo_tick -= 1.0; //para el siguiente 'timer'
+			if (!Penemy(Pawn).IsInState('Cayendo'))
+			{
+				//ya ha llegado al suelo
+				NextPath(); //Busca el nodo más cercano, lo guarda en m_Destination,
+							//y lo borra de la lista de nodos para no volver a dirigirse a él
+			
+				//Y nos vamos al estado que nos dirije a ese nodo m_Destination
+				GotoState('MoveToDestination');
+				
+			}
+		}//if >1 segundo
+	}//Tick
+
+	function RecibirDanyo(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+	{
+		`log("SCOUT::RecibirDanyo en estado IdleInicial");
+	}
+
+	event EndState(name NextStateName)
+	{
+		`log("Penemy_AI_Scout saliendo de idle");
+	}
+}/* --------------- FIN ESTADO IDLE_INICIAL --------------*/
+//____________________________________________________________________________________________________________________________________
+
+
+/* --------------- ESTADO MOVETODESTINATION --------------
+ * --- El scout va avanzando hasta al siguiente nodo, y si se acerca lo suficiente a la base, hacia la base directo
+ */
 state MoveToDestination
 {
 	event Tick(float DeltaTime)
 	{
 		local Pawn pDetectado;
-		DrawDebugInfo();
-		PEnemy(Pawn).ActualizaRotacion(DeltaTime);
+		local PPathNode nodo;
+		local float distanciaBase;
 
+
+		DrawDebugInfo();
+		super.Tick(DeltaTime);
+
+		if (pawn.Velocity == vect(0,0,0) && m_Destination == theObjective)
+		{
+			//`log("S'ha parao no sé por què");
+			DrawDebugSphere(pawn.Location,200,20,200,0,0,false);
+		}
+
+		//Cada fDecalSize distancia, dejamos un decal
 		if(VSize(OldDecalLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize))
 		{
 			OldDecalLocation = Pawn.Location;
@@ -181,6 +169,10 @@ state MoveToDestination
 			);
 		}
 		
+		/*******************************************************
+		 * ***************************************************** 
+		 * P E N D I E N T E   C O N F I R M A R   L U I S 
+		 * ********************************************************
 		foreach Pawn.OverlappingActors(class'Pawn', pDetectado, 200,,true)
 		{
 			// Me aseguro que no me estoy detectando a mi mismo
@@ -191,52 +183,97 @@ state MoveToDestination
 				GotoState('MoveToDestination');
 			}
 		}
-	}
+		**************************************************************
+		* ************************************************************/
+
+		//Vamos guardando los puntos por donde vamos pasando con AddPathNode
+		if(VSize(OldLocation - Pawn.Location) > (Step/4))
+		{
+			nodo = spawn(class'PPathNode',,,Pawn.Location);
+			nodo.id = id;
+			PGame(WorldInfo.Game).AddPathNode(id, nodo, ColorDecal);
+			
+			OldLocation = Pawn.Location;
+		}
+
+		//Control de llegada a nodo y/o Base
+		if (m_tiempo_tick >= 1.0)
+		{
+			m_tiempo_tick -= 1.0; //reset del tiempo para el siguiente 'timer'
+			
+			//Hemos llegado a la base?
+			distanciaBase = VSize(theObjective.Location - Pawn.Location);
+			`log("Distancia Base "@self.Name @distanciaBase);
+			if (distanciaBase == distanciaBase_antes)
+			{
+				`log("Ta kieto!!");
+			}
+			distanciaBase_antes = distanciaBase;
+			if(distanciaBase < Step)
+			{
+				Pawn.Velocity = vect(0,0,0);
+				GotoState('ArrivedDestination');
+			}
+			//Si estamos cerca de la base, no vamos al siguiente nodo, sino directamente contra la base
+			else if(VSize(theObjective.Location - Pawn.Location) < Step * 4)
+			{
+				//Si no está yendo ya hacia el objetivo...
+				if (m_Destination != theObjective)
+				{
+					m_Destination = theObjective;
+					`log("Voy directo para la base, velocidad "@Pawn.Velocity);
+					m_CurrentDestination = m_Destination.Location;
+					GoToState ('MoveToDestination');
+				}
+			}
+			//Si no, controlamos si estamos cerca del siguiente nodo,y si es así, 
+			//vamos hacia el siguiente
+			else if(VSize(m_CurrentDestination - Pawn.Location) < DestinationOffset)
+			{
+				NextPath();
+				GoToState ('MoveToDestination');
+			}
+		}//m_tiempo_tick >= 1.0
+	}//Tick
 
 Begin:
-
-	if(VSize(theObjective.Location - Pawn.Location) < Step)
+	m_tiempo_tick = 1.0; //Para que en el primer tick ya evalúe, y así cuando encontramos un nuevo destino,no hace parada, sino que
+						 //directamente parece que sepa a dónde va
+	if (m_Destination != None)
 	{
-		ClearTimer('BrainTimer');
-		Pawn.Velocity = vect(0,0,0);
-		GotoState('ArrivedDestination');
+		if (m_Destination != theObjective)
+		{
+			MoveToward(m_Destination,,DestinationOffset/2, false, true);
+		}
+		else //No sabemos por qué, el UDK aquí si poníamos MoveToward no movía al bicho....
+		{
+			MoveTo(m_Destination.Location,m_Destination,100,true);
+		}
 	}
-	else if(VSize(theObjective.Location - Pawn.Location) < Step * 4)
-	{
-		Destination = theObjective;
-	}
-	else if(VSize(CurrentDestination - Pawn.Location) < DestinationOffset)
-	{
-		CurrentDestination = NextPath();
-	}
+}/* --------------- FIN ESTADO MOVETODESTINATION --------------*/
+//____________________________________________________________________________________________________________________________________
 
-	MoveToward(Destination,,DestinationOffset/2, false, true);
-}
-
+/* --------------- ESTADO ArrivedDestination --------------
+ * --- El scout ha llegado a la BASE, y puede empezar el ataque
+ */
 state ArrivedDestination
 {
 	event BeginState(name PreviousStateName)
 	{
 		PGame(WorldInfo.Game).PlayerBase.pupitabase();
-		`log("vida de la base" @PGame(WorldInfo.Game).PlayerBase.life);
+		`log("SCOUT LLEGADO A BASE!!!   vida de la base" @PGame(WorldInfo.Game).PlayerBase.life);
 		//DBG WorldInfo.Game.Broadcast(self, Name@" ha llegado a destino");
 		Pawn.Acceleration = vect(0,0,0);
 		Pawn.Velocity = vect(0,0,0);
 		StopLatentExecution();
-		
-		
 	}
+}/* --------------- FIN ESTADO ArrivedDestination --------------*/
+//____________________________________________________________________________________________________________________________________
 
-	
-}
 
 defaultproperties
 {
 	Step=1000
-	RandomTicksCounter=0
-	RandomTicksMax=2
-	HasPath=false
 	id_Path=0
-	ArrivedCurrentDestination=false
 	DestinationOffset=200;
 }
