@@ -119,10 +119,6 @@ auto state Idle_Inicial
 		}//if >1 segundo
 	}//Tick
 
-	function RecibirDanyo(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
-	{
-		`log("SCOUT::RecibirDanyo en estado IdleInicial");
-	}
 
 	event EndState(name NextStateName)
 	{
@@ -203,10 +199,10 @@ state MoveToDestination
 			
 			//Hemos llegado a la base?
 			distanciaBase = VSize(theObjective.Location - Pawn.Location);
-			`log("Distancia Base "@self.Name @distanciaBase);
+			//`log("Distancia Base "@self.Name @distanciaBase);
 			if (distanciaBase == distanciaBase_antes)
 			{
-				`log("Ta kieto!!");
+				//`log("Ta kieto!!");
 			}
 			distanciaBase_antes = distanciaBase;
 			if(distanciaBase < Step)
@@ -221,7 +217,7 @@ state MoveToDestination
 				if (m_Destination != theObjective)
 				{
 					m_Destination = theObjective;
-					`log("Voy directo para la base, velocidad "@Pawn.Velocity);
+					//`log("Voy directo para la base, velocidad "@Pawn.Velocity);
 					m_CurrentDestination = m_Destination.Location;
 					GoToState ('MoveToDestination');
 				}
@@ -235,6 +231,17 @@ state MoveToDestination
 			}
 		}//m_tiempo_tick >= 1.0
 	}//Tick
+
+	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_SCOUT ControlTakeDisparoGiru en MoveToDestination"@self.Name);
+	}
+	
+	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en MoveToDestination"@self.Name);
+	}
+
 
 Begin:
 	m_tiempo_tick = 1.0; //Para que en el primer tick ya evalúe, y así cuando encontramos un nuevo destino,no hace parada, sino que

@@ -120,13 +120,110 @@ function ActualizaRotacion(float DeltaTime)
 
 }
 
-
 function PawnCaidoEncima()
 {
 	//El Pawn nos acaba de caer encima cuando caía de la vista aérea.
 	//Nos chafa, deberíamos hacer un s.partículas de Chofff de sangre o algo
 	self.GotoState('ChafadoPorPawn');
 }
+
+/*Take Damage genérico de TODOS los PEnemy.
+ * Simplemente decodifica el tipo de daño, y llama a la función correspondiente según el daño.
+ * Cada Pawn hijo deberá escribir su propio tratamiento para cada tipo de daño
+ */
+event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+{
+
+	//PEnemy_AI_Bot(Owner).RecibirDanyo(iDamageAmount, EventInstigator, HitLocation, Momentum, DamageType, HitInfo, DamageCauser);
+	if (self.Owner == None)
+	{
+		`log("___________OWNER NULO_____________ MAL ROLLO!!");
+		return;
+	}
+	//Ha sido por disparo de Giru?
+	if(PMisiles(DamageCauser) != None && PPlayerController(EventInstigator) != None)
+	{
+		`log("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
+		RecibidoDisparoGiru(HitLocation, Momentum,DamageCauser);
+		PEnemy_AI_Controller(Owner).ControlTakeDisparoGiru(HitLocation, Momentum,DamageCauser);
+		return;
+	}
+
+	//Ha sido por disparo de TurretCannon?
+    if(PMisiles(DamageCauser) != None && PMisiles(DamageCauser).disparador == 'PTurretCannon')
+	{
+		`log("Recibido disparo de TurretCannon(Global TakeDamage PEnemy) "@self.Name);
+		RecibidoDisparoTurretCannon(HitLocation,Momentum,DamageCauser);
+		PEnemy_AI_Controller(Owner).ControlTakeDisparoTurretCannon(HitLocation, Momentum,DamageCauser);
+		return;
+	}
+
+	//Ha sido por disparo de TurretIce?
+	
+	//Ha sido por la trampa tal?
+
+	//Ha sido por la trampa cual?
+
+	//Tratamiento default
+	`log("Recibido TakeDamage no sé por quién "@self.Name);
+    RecibidoDanyoSinIdentificar(HitLocation,Momentum,DamageCauser);	
+} //TakeDamage
+
+function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//Tratamiento default de recepción de disparo de Giru. Si no se redefine en las PEnemy hijas, será 
+	//este. Si se quiere un tratamiento específico, se redefine el hijo.
+	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoGiru + lo que deba hacer
+
+    life--;
+	`log("Vida PEnemy" @life);
+	if(life == 0)
+	{
+		
+		Destroy();
+		if(PGame(WorldInfo.Game) != none)
+		{
+		    PGame(WorldInfo.Game).EnemyKilled(self);
+		}
+	}
+}
+
+
+function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//Tratamiento default de recepción de disparo de Giru. Si no se redefine en las PEnemy hijas, será 
+	//este. Si se quiere un tratamiento específico, se redefine el hijo.
+	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoGiru + lo que deba hacer
+
+    life-=3; //Cada disparo de torreta es un toñazo 3 veces más grande que el del Giru, por ejemplo
+	`log("Vida PEnemy" @life);
+	if(life == 0)
+	{
+		
+		Destroy();
+		if(PGame(WorldInfo.Game) != none)
+		{
+		    PGame(WorldInfo.Game).EnemyKilled(self);
+		}
+	}
+}
+
+function RecibidoDanyoSinIdentificar(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//Creo que no se debería ejecutar nunca, siempre deberíamos saber por qué motivos recibe daño.
+	//Pero en desarrollo debería seguir así para poder ir depurando los distintos tipos de daño recibidos
+	local int i;
+	for (i=0;i<10;i++)
+	{
+		`log("__________________________!!!____________________");
+	}
+
+	`log("__________TAKE DAMAGE SIN IDENTIFICAR!! TRATALO!!!" @life);
+
+}
+
+
+
 
 /** -----------------------
  * ---Estado ChafadoPorPawn---

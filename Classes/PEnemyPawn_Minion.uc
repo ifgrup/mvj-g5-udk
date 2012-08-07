@@ -24,41 +24,15 @@ function SetColor(LinearColor Col)
 	mat.SetVectorParameterValue('ColorBase', Col1);
 }
 
-event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
 {
-	PEnemy_AI_Bot(Owner).RecibirDanyo(iDamageAmount, EventInstigator, HitLocation, Momentum, DamageType, HitInfo, DamageCauser);
-
-	if(PMisiles(DamageCauser) != None && PPlayerController(EventInstigator) != None)
-	{
-		`log("Minion: el puto Giru me ha disparado");
-		//PEnemy_AI_Bot(Owner).DisparadoPorGiru(HitLocation, Momentum,DamageCauser);
-		return;
-	}
-
-    if(PMisiles(DamageCauser) != None && PMisiles(DamageCauser).disparador == 'PTurretCannon')
-	{
-		`log("Recibido disparo de TurretCannon");
-		//PEnemy_AI_Bot(Owner).DisparadoPorGiru(HitLocation, Momentum,DamageCauser);
-		return;
-	}
-
-
-
-    life--;
-	`log("vida minion" @life);
-	if(life == 0)
-	{
-		
-		Destroy();
-		if(PGame(WorldInfo.Game) != none)
-		{
-		    PGame(WorldInfo.Game).EnemyKilled();
-			PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos + m_puntos_al_morir);
-		}
-	}
+	`log("Soy un Minion, y Giru me acaba de disparar el muy cabrón" @self.Name);
 }
 
-
+function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	`log("Soy un Minion, y una torreta cannon me acaba de disparar la muy guarra" @self.Name);
+}
 
 
 

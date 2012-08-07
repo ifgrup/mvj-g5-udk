@@ -21,32 +21,7 @@ function SetColor(LinearColor Col)
 	mat.SetVectorParameterValue('ColorBase', Col1);
 }
 
-event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
-{
-	local float dst;
 
-	PEnemy_AI_Bot(Owner).RecibirDanyo(iDamageAmount, EventInstigator, HitLocation, Momentum, DamageType, HitInfo, DamageCauser);
-
-	if(PMisiles(DamageCauser) != None)
-	{
-		dst = vsize (self.Location - PEnemy_AI_Bot(Owner).theBase.Location);
-		`log("Scout: el puto Giru me ha disparado a dist de base ="@dst);
-	}
-
-   
-	life--;
-	if(life == 0)
-	{
-		
-		Destroy();
-		if(PGame(WorldInfo.Game) != none)
-		{
-		    PGame(WorldInfo.Game).ScoutKilled();
-			PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos+ m_puntos_al_morir);
-		}
-	}
-  
-}
 
 defaultproperties
 {
