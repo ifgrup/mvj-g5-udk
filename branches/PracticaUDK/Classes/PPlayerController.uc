@@ -51,6 +51,7 @@ var float m_tiempoTonyazo; //tiempo que hace que nos hemos estoñao al caer al pl
 var bool m_cambioEstadoPropulsores;
 var float m_ultimoATurn; //Para que la camara pueda acceder a este valor
 var float m_ultimoAStrafe; //Para guardarlo y poder pasarlo a OrientarPropulsores
+var float m_ultimoAForward;//Para guardarlo y poder pasarlo a OrientarPropulsores
 var rotator m_Rotation_4cam;
 var rotator m_Rotation_4pawn;
 
@@ -88,7 +89,6 @@ var array<AnimSet> transformedAnimSet;
 var AnimNodeSequence transformedAnimSeq;
 var PhysicsAsset transformedPhysicsAsset;
 
-
 exec function derp()
 {
 	self.Pawn.GroundSpeed+=500;
@@ -100,11 +100,6 @@ exec function derp()
 	self.Pawn.Mesh.SetAnimTreeTemplate(transformedAnimTree);
 	self.Pawn.Mesh.SetTranslation(vect(0,0,80));
 }
-
-
-
-
-
 
 
 
@@ -198,6 +193,15 @@ state PlayerSpidering
 		local int signo;
 		//ClientMessage("UPdate Estado spider" $ DeltaTime);
  
+		
+		/*
+		 * PRUEBA ÑORDA PARA COMPROBAR CUÁL ES LA ROTACION DESEADA
+		lRotation=Pawn.Rotation;
+		lRotation.yaw+=DeltaTime*3*DegToUnrRot;
+		Pawn.SetRotation(lRotation);
+		return;
+		*/
+
 		//Mientras salta, Pawn.Base vale None
 		//Si tiene que saltar, saltará en la vertical que YA tiene al estar caminando sobre el planeta
 		//por lo que no hay que cambiar ninguna rotación
@@ -421,7 +425,7 @@ state PlayerSpidering
 					);
 				}
 			}
-			PPAwn(Pawn).OrientarPropulsores(m_ultimoATurn,m_ultimoAStrafe);
+			PPAwn(Pawn).OrientarPropulsores(m_ultimoATurn,m_ultimoAStrafe,m_ultimoAForward);
 		}
     }
 
@@ -532,6 +536,7 @@ state PlayerSpidering
 
         NewAccel = PlayerInput.aForward*Normal(ViewX - OldFloor * (OldFloor Dot ViewX)) + PlayerInput.aStrafe*ViewY;
         m_ultimoAStrafe = PlayerInput.aStrafe;
+		m_ultimoAForward = PlayerInput.aForward;
 
 		//Comprobamos si al aplicar el movimiento, chocaría contra un objeto, y en tal caso, para no 'spidearlo', pues
 		//no llamamos a ProcessMove, o ponemos el vector NewAccel a (0,0,0) para que no se mueva
@@ -659,6 +664,9 @@ state PlayerFlaying
 		/*Debemos poner al Pawn en el cielo, hacerlo invisible, y poner las físicas en vuelo*/
 		local Vector pPosition,vAlCentro;
 		local vector Centro2Pawn; //del centro del planeta, a donde está el pawn
+		local rotator rotPawn;
+		local vector rX,rY,rZ;
+		local Quat paraRoll;
 
 		//Colocamos al Pawn volando, prolongando su Z actual:
         `log("PC Flaying 2");
@@ -668,13 +676,39 @@ state PlayerFlaying
 		pPosition=PGame(WorldInfo.Game).GetCentroPlaneta()+Centro2Pawn*m_DistanciaAlCentro;
 		PPawn(Pawn).SetLocation(pPosition);
 		vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Pawn.Location; //vector de dirección del prota.
-		PPawn(Pawn).SetRotation(Rotator(vAlCentro));
-		SetRotation(Rotator(vAlCentro));
+		
+		//Creamos un rotator que sea el del cielo al centro, pero manteniendo el roll del pawn cuando andaba
+		//Obtenemos también así el QUAT inicial sobre el que iremos aplicando la rotación muhahahaha
+		rotPawn=Rotator(vAlCentro);
+		rotpawn.Roll = pawn.Rotation.yaw;
+
+		/************
+		 *INTENTO DE ORIENTARLO CON EL YAW DEL PAWN USANDO QUATERNIONS.
+		GetAxes(rotPawn,rX,rY,rZ);
+
+		m_CurrentQuadFlaying=QuatFromRotator(rotPawn);
+		paraRoll = QuatFromAxisAndAngle(rx,ppawn(pawn).Rotation. yaw*UnrRotToRad*1);
+		
+		m_CurrentQuadFlaying = QuatProduct(paraRoll,m_CurrentQuadFlaying);
+		rotPawn = QuatToRotator(m_CurrentQuadFlaying);
+
+		m_DesiredQuadFlaying= m_CurrentQuadFlaying;
+		
+		/*m_CurrentQuadFlaying = QuatFromRotator(rotPawn);
+		m_DesiredQuadFlaying= m_CurrentQuadFlaying;
+		*/
+        ************************************/
+
+		m_CurrentQuadFlaying = QuatFromRotator(rotPawn);
+		m_DesiredQuadFlaying= m_CurrentQuadFlaying;
+		
+        
+		PPawn(Pawn).SetRotation(rotPawn);
+		SetRotation(rotPawn);
+
 		PPawn(Pawn).GotoState('PawnFlaying');
 		SetPhysics(PHYS_None); 
-		//QUAT inicial sobre el que iremos aplicando la rotación muhahahaha
-		m_CurrentQuadFlaying=QuatFromRotator(Rotator(vAlCentro));
-		m_DesiredQuadFlaying= m_CurrentQuadFlaying;
+
 		//DrawDebugCone(m_CentroPlaneta,pPosition-m_CentroPlaneta,m_DistanciaAlCentro,0.01,0.01,200,MakeColor(255,0,0,1),true);
 		
 		m_DistanciaAlCentro_desiredZoom=m_DistanciaAlCentro;
@@ -907,6 +941,9 @@ state PlayerFallingSky
 		}
 		`log("Distancia inicial al suelo ____________" @vsize(elPaun.Location-m_posicionRealCaidaSuelo));
 		m_distCentroCaida = vsize (m_posicionRealCaidaSuelo - PGame(WorldInfo.Game).GetCentroPlaneta());
+
+		//Le guardamos al Pawn su roll antes de caer al suelo, para que la orientación al caer sea la misma
+		PPawn(Pawn).m_roll_antes_caer_cielo = Pawn.Rotation.roll;
 	
 	}
 
@@ -1018,6 +1055,7 @@ state PlayerFallingSky
 					PPawn(pawn).DoJump(true);
 					
 					//PPawn(pawn).HitWall(m_NormalCaidaPlaneta,PPawn(pawn).m_BasePlaneta,none);
+					
 					GoToState('PlayerRecienCaido'); //EL Pawn también nos llevará, pero así aseguramos que
 				}
 				else

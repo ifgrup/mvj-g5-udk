@@ -197,12 +197,14 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
                       (HitLocation.Z<ppc.Pawn.Location.Z+ppc.Pawn.CylinderComponent.CollisionHeight) &&
                       (HitLocation.Z>ppc.Pawn.Location.Z-ppc.Pawn.CylinderComponent.CollisionHeight))
                 {
-                    //Estamos dentro del bicho. Ocultamos su mesh
+                    //Estamos dentro del bicho. Ocultamos su mesh y apagamos los propulsores
                     PPawn(ppc.Pawn).Mesh.SetHidden(True);
+					PPawn(ppc.Pawn).EstadoPropulsores(false);
                 }
                 else
                 {
                     PPawn(ppc.Pawn).Mesh.SetHidden(False);
+					PPawn(ppc.Pawn).EstadoPropulsores(true);
                 }
             }//Trace para ver si hay obstáculos
 			else
