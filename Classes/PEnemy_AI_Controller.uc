@@ -61,7 +61,18 @@ function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Act
 	`log("PEnemy_AI_Controller, recibido danyo TurretCannon Global, DEBES SOBREESCRIBIRME!!!");
 }
 
+function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser)
+{
+	`log("PEnemy_AI_Controller, recibido danyo TurretIce Global, DEBES SOBREESCRIBIRME!!!");
+}
 
+
+function Control_BaseChangedPenemy(Actor PEnemyOtro)
+{
+	`log("PEnemy_AI_Controller::Control_BaseChangedPenemy, DEBES SOBREESCRIBIRME!!!");
+	//self.Pawn.DoJump(true);
+	
+}
 
 DefaultProperties
 {

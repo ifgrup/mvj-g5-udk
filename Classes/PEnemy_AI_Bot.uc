@@ -5,7 +5,8 @@ var int NodeIndex;
 var bool bParado;
 var int Step;   //Distancia mínima para considerar que no ha llegado a la base
 var bool bPrimeraVez;
-
+var PEmiter m_pEmiter; //Para poder mostrar las partículas de congelación
+var int m_disparos_giru_congelado;//Disparos de giru recibidos mientras estoy congelado
 /**
  * Inicializamos el objetivo principal 
  */
@@ -107,6 +108,11 @@ state GoToNextPath
 					GoToState('Idle_Inicial');
 				}
 			}
+			else
+			{
+				//Igualmente hay que decirle que siga para alante hacia donde iba:
+				GotoState('GoToNextPath');
+			}
 
 		}   
 	}//Tick
@@ -118,9 +124,16 @@ state GoToNextPath
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH"@self.Name);
+		`log("PEnemy_AI_BOT, ControlTakeDisparoTurretCannon en GOTONEXTPATH"@self.Name);
 	}
 
+	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, ControlTakeDisparoTurretIce en GOTONEXTPATH"@self.Name);
+		//Hay que congelar al bicho, que se quede quieto, salga el sistema de partículas del hielo
+		//y que cuando acabe de estar congelado, vuelva a este estado.
+		self.PushState('Congelado');
+	}
 
 
 Begin:
@@ -134,9 +147,110 @@ Begin:
 		// que le estamos indicando.
 		//`log("Begin de GoToNextNode");
 		MoveToward(theObjective,theObjective,10,true,true);
+		
 	}
 }/* ---------------FIN ESTADO IDLE_INICIAL --------------*/
 //____________________________________________________________________________________________________________________________________
+
+
+
+
+/* --------------- ESTADO CONGELADO --------------
+ * --- Nos acaba de disparar la torreta hielo
+ * --  Estaremos congelados un tiempo, durante el cual, si recibimos más de 7 disparos de Giru, o bien 3 de una torreta
+ * --  Nos romperemos en mil pedazos
+*/
+state Congelado
+{
+	event Tick (float DeltaTime)
+	{
+		super.Tick(DeltaTime);
+		
+		//m_pEmiter se destuirá sólo de momento...cuando lo haga
+		if (m_pEmiter == None) //Alguna vez ha pasado, supongo que el tick entra antes que el begin asigne el emiter..
+			return;
+
+		if(m_tiempo_tick >= m_pEmiter.m_tiempoHielo)
+		{
+			if (PEnemy(Pawn).life > 0)
+			{
+				//Si sigue vivo, que siga caminando o lo que estuviera haciendo en el estado anterior
+				self.PopState();
+			}
+		}
+	}
+	
+	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, Ya estoy congelado, pa qué sufrir más?..."@self.Name);
+		//Si ya está congelado, no vuelve a congelarse, simplemente lo ignoramos
+		return;
+	}
+
+	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en Congelado"@self.Name);
+		m_disparos_giru_congelado++;
+		if (m_disparos_giru_congelado > 5)
+		{
+			GoToState('DeadAnyicos');
+		}
+	}
+
+Begin:
+
+	m_tiempo_tick = 0;
+	m_disparos_giru_congelado = 0;
+	//Paramos su movimiento
+	StopLatentExecution();
+	Velocity = vect(0,0,0);
+	Acceleration = vect(0,0,0);
+	pawn.Velocity = vect(0,0,0);
+	pawn.Acceleration = vect(0,0,0);
+
+	//pawn.bCollideActors = false; //Para que el sistema de partículas
+	DrawDebugSphere(pawn.Location,80.0,20,255,255,255,true);
+	//No modificamos sus variables de destino ni nada, así al volver al estado de GoToNextPath si es del que viene, seguirá
+	//moviéndose hacia donde iba
+
+    //Lanzo los sistemas de partículas de congelación
+	m_pEmiter=Spawn(class'PEmiter',self,,pawn.Location,pawn.Rotation,,true);
+	m_pEmiter.m_tiempoHielo += rand(2) - rand(2); //Random +- 2 segundos para que no todos sean iguales
+	m_pEmiter.SpawnEmitter();
+}/* ---------------FIN ESTADO CONGELADO --------------*/
+//____________________________________________________________________________________________________________________________________
+
+/* --------------- ESTADO DEAD_ANYICOS --------------
+ * --- Estábamos congelados, y el puto Giru nos ha disparado 400 veces, así que rebentamos en cachitos de hielo
+ */
+
+state DeadAnyicos
+{
+	ignores TakeDamage,SeePlayer,Bump,Touch,BaseChange;
+
+	//Todas las funciones sobreescribibles las dejamos vacías just in case
+	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser){}
+	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser){}
+	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser){}
+	
+
+	event BeginState(name PreviousStateName)
+	{
+		//Sistema de partículas de cachos de hielo a saco.
+		`log("Soy un PEnemy_AI_Bot, y el puto Giru de los huevos me ha destruído");
+		self.Destroy();
+		self.Pawn.Destroy();
+	}
+
+
+}/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
+//__________________
+
+
+
+
+
+
 
 /* --------------- ESTADO TOWER_ATTACK --------------
  * --- Estado en el que nos estamos cerca de la torre Base, y atacamos a lo borrico.
