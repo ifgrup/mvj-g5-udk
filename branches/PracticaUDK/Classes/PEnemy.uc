@@ -96,27 +96,27 @@ function ActualizaRotacion(float DeltaTime)
 		
 	FloorActual = vinterpto(FloorActual,self.Floor,deltatime,1);
 	ViewZ = FloorActual;
+	/*
 	DrawDebugCylinder(self.Location,self.Location+Floor*130,4,10,100,100,50,false);
 	DrawDebugCylinder(self.Location,self.Location+FloorActual*130,4,10,100,10,255,false);
-		
+	*/
+
 	ViewX = Normal(5*DeltaTime * Normal(self.velocity) + (1 - 5*DeltaTime) * ViewX);
 	ViewY = Normal (ViewZ cross ViewX);
 	ViewRotation = OrthoRotation(ViewX,ViewY,ViewZ);
 		
 	SetRotation(ViewRotation);
 	self.SetViewRotation(ViewRotation);
-	//self.Mesh.SetRotation(ViewRotation);
-	//self.SetViewRotation(ViewRotation);
 		
 	//Dibujamos cilindro para la direccion de su orientacion, y para su movimiento
 	//FlushPersistentDebugLines();
+	/*
 	DrawDebugCylinder(self.Location,self.Location+ViewX*100,5,5,255,0,0,false);
 	DrawDebugCylinder(self.Location,self.Location+normal(self.Velocity)*100,5,5,0,0,255,false);
 	DrawDebugCylinder(self.Location,self.Location+ViewZ*100,5,5,0,255,0,false);
+    */
 
-	GetAxes(self.Rotation,viewx,viewy,viewz);
-	DrawDebugCylinder(self.Location,self.Location+ViewX*125,5,5,255,255,255,false);
-
+	//GetAxes(self.Rotation,viewx,viewy,viewz);
 
 }
 
@@ -157,8 +157,14 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 		PEnemy_AI_Controller(Owner).ControlTakeDisparoTurretCannon(HitLocation, Momentum,DamageCauser);
 		return;
 	}
-
 	//Ha sido por disparo de TurretIce?
+	if(PTurretIce(DamageCauser) != None)
+	{
+		`log("Recibida congelación de TurretIce (Global TakeDamage PEnemy) "@self.Name);
+		RecibidoDisparoTurretIce(HitLocation,Momentum,DamageCauser);
+		PEnemy_AI_Controller(Owner).ControlTakeDisparoTurretIce(HitLocation, Momentum,DamageCauser);
+		return;
+	}
 	
 	//Ha sido por la trampa tal?
 
@@ -191,9 +197,9 @@ function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCau
 
 function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser)
 {
-	//Tratamiento default de recepción de disparo de Giru. Si no se redefine en las PEnemy hijas, será 
+	//Tratamiento default de recepción de disparo de TurretIce. Si no se redefine en las PEnemy hijas, será 
 	//este. Si se quiere un tratamiento específico, se redefine el hijo.
-	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoGiru + lo que deba hacer
+	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoTurretCannon + lo que deba hacer
 
     life-=3; //Cada disparo de torreta es un toñazo 3 veces más grande que el del Giru, por ejemplo
 	`log("Vida PEnemy" @life);
@@ -207,6 +213,18 @@ function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor D
 		}
 	}
 }
+
+function RecibidoDisparoTurretIce(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//Tratamiento default de recepción de disparo de TurretIce. Si no se redefine en las PEnemy hijas, será 
+	//este. Si se quiere un tratamiento específico, se redefine el hijo.
+	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoTurretIce + lo que deba hacer
+
+    //No afecta a la vida, simplemente lo para (por ejemplo)..
+	//Así que no hay que hacer nada más de momento
+}
+
+
 
 function RecibidoDanyoSinIdentificar(vector HitLocation, vector Momentum,Actor DamageCauser)
 {
@@ -409,6 +427,44 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	super.Bump( Other, OtherComp, HitNormal );
 }
 
+/** BaseChange
+ Si un enemigo se sube encima de otro, le hacemos saltar fuera de él.
+ Si no se sobrescribiera este evento, el comportamiento normal acaba llamando
+ a TakeDamage y no nos interesa
+*/
+singular event BaseChange()
+{
+
+	if( Base == None)
+	{
+		if ( GetStateName() != 'PawnFalling' && GetStateName() != 'Cayendo' ) 
+	    {
+			`log('Base Changed to None en estado '@GetStateName() @self.Name);
+			return;
+	    }
+		else
+		{
+		   return;
+		}
+	}
+
+	if (Base.Name=='StaticMeshActor_1')
+	{
+		return;
+	}
+
+	if(PEnemy(Base) != None)
+	{
+		`log("PEnemy encima de otro "@self.Name @self.GetStateName());
+		PEnemy_AI_Controller(Owner).Control_BaseChangedPenemy(Base);
+		//DrawDebugCylinder(self.Location,self.Location+floor*3000,6,15,200,0,200,true);
+		return;
+
+	}
+
+	return;
+	
+}//BaseChange
 
 
 
@@ -455,5 +511,5 @@ defaultproperties
 	bCanClimbLadders=true
 	MaxStepHeight=45
 	WalkableFloorZ=0
-	life=40;
+	life=40
 }

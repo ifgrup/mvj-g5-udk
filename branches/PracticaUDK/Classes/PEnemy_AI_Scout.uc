@@ -210,25 +210,26 @@ state MoveToDestination
 				Pawn.Velocity = vect(0,0,0);
 				GotoState('ArrivedDestination');
 			}
-			//Si estamos cerca de la base, no vamos al siguiente nodo, sino directamente contra la base
-			else if(VSize(theObjective.Location - Pawn.Location) < Step * 4)
+			else
 			{
-				//Si no está yendo ya hacia el objetivo...
-				if (m_Destination != theObjective)
+				//Si estamos cerca de la base, no vamos al siguiente nodo, sino directamente contra la base
+				if(VSize(theObjective.Location - Pawn.Location) < Step * 4)
 				{
 					m_Destination = theObjective;
 					//`log("Voy directo para la base, velocidad "@Pawn.Velocity);
 					m_CurrentDestination = m_Destination.Location;
-					GoToState ('MoveToDestination');
 				}
-			}
-			//Si no, controlamos si estamos cerca del siguiente nodo,y si es así, 
-			//vamos hacia el siguiente
-			else if(VSize(m_CurrentDestination - Pawn.Location) < DestinationOffset)
-			{
-				NextPath();
+				//Si no, controlamos si estamos cerca del siguiente nodo,y si es así, 
+				//vamos hacia el siguiente
+				else if(VSize(m_CurrentDestination - Pawn.Location) < DestinationOffset)
+				{
+					NextPath();
+				}
+
+				//Igualmente hay que decirle que se siga moviendo hacia donde iba
 				GoToState ('MoveToDestination');
 			}
+
 		}//m_tiempo_tick >= 1.0
 	}//Tick
 
@@ -244,18 +245,17 @@ state MoveToDestination
 
 
 Begin:
-	m_tiempo_tick = 1.0; //Para que en el primer tick ya evalúe, y así cuando encontramos un nuevo destino,no hace parada, sino que
+	//m_tiempo_tick = 1.0; //Para que en el primer tick ya evalúe, y así cuando encontramos un nuevo destino,no hace parada, sino que
 						 //directamente parece que sepa a dónde va
 	if (m_Destination != None)
 	{
-		if (m_Destination != theObjective)
-		{
-			MoveToward(m_Destination,,DestinationOffset/2, false, true);
-		}
+		MoveToward(m_Destination,,DestinationOffset/2, false, true);
+		/*
 		else //No sabemos por qué, el UDK aquí si poníamos MoveToward no movía al bicho....
 		{
 			MoveTo(m_Destination.Location,m_Destination,100,true);
 		}
+		*/
 	}
 }/* --------------- FIN ESTADO MOVETODESTINATION --------------*/
 //____________________________________________________________________________________________________________________________________

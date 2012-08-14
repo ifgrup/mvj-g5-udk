@@ -40,6 +40,9 @@ var float m_tiempoEstado;
 //Indices del vector de partículas de m_ParticulasPropulsoresRobot
 var int m_idx_brazo_ido,m_idx_brazo_dcho,m_idx_antebrazo_ido,m_idx_antebrazo_dcho,m_idx_base;
 
+var int m_roll_antes_caer_cielo; //Roll que teníamos antes de caer del cielo para mantener la orientación
+var bool m_bEstoyCayendoDelCielo; //Para saber si debemos utilizar m_roll_antes_caer_cielo o no
+
 function float CalcularMediaTranslateZ(float valorZ)
 {
 	local int i;
@@ -350,37 +353,29 @@ function EstadoPropulsores(bool bEstado)
 	}
 }
 
-function OrientarPropulsores(float player_aTurn, float player_astrafe)
+function OrientarPropulsores(float player_aTurn, float player_astrafe,float player_aforward)
 {
 	local Rotator r;
-	//En las posiciones 0 y 2 están los propulsores de los 'brazos'
-	//`log("escaalar " @player_aTurn @player_astrafe);
+	//`log("escaalar " @player_aTurn @player_astrafe @player_aforward);
 	
-	r=m_ParticulasPropulsoresRobot[0].ParticleSystemComponent.Rotation;
+	//Los dos brazos tendrán la misma rotación, así que usamos una de cualquiera de los dos para los cálculos
+	r=m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.Rotation;
 
 	if (player_astrafe <0 || player_aTurn <0)
     {
 		//Girando a la izquierda
-		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',2);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',1);
 		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.2);
 
 		r.yaw =-15*DegToUnrRot;
-		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetRotation(r);
-		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetRotation(r);
-
-
     }
 	else if (player_astrafe >0 || player_aTurn >0)
 	{
 		//Girando a la derecha
 		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.2);
-		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',2);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',1);
 
 		r.yaw = 15*DegToUnrRot;
-		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetRotation(r);
-		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetRotation(r);
-
-
 	}
 	else if (player_astrafe ==0 && player_aTurn == 0)
 	{
@@ -388,12 +383,37 @@ function OrientarPropulsores(float player_aTurn, float player_astrafe)
 		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.3);
 		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.3);
 		r.yaw = 0;
-		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetRotation(r);
-		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetRotation(r);
-
 	}
 
-	return;
+	//___Y AHORA PARA EL MOVIMIENTO HACIA DELANTE Y HACIA ATRAS _________
+	if (player_aforward >0)
+	{
+		r.pitch = -25*DegToUnrRot;
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',1);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',1);
+
+	}
+	else if  (player_aforward <0)
+	{
+		r.pitch = 25*DegToUnrRot;
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',1);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',1);
+
+	}
+	else if  (player_aforward == 0)
+	{
+		r.pitch = 0;
+		m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.3);
+		m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetFloatParameter('ParamAlpha',0.3);
+
+	}
+    
+	//Y asignamos la nueva rotación a los 2 brazos
+	m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.SetRotation(r);
+	m_ParticulasPropulsoresRobot[m_idx_brazo_dcho].ParticleSystemComponent.SetRotation(r);
+
+
+
 }
 
 function PotenciaPropulsorBase(float pot)
@@ -563,6 +583,17 @@ function OrientarPawnPorNormal ( Vector normalsuelo, out Rotator pawnRotation)
 	quatRZ=QuatProduct(quatRZ,quatNormal);
 	rPawn=QuatToRotator(quatRZ);
 
+	//Intentamos mantener la orientación de roll de cuando estábamos arriba :
+	if (m_bEstoyCayendoDelCielo)
+	{
+		m_bEstoyCayendoDelCielo = false;
+		quatNormal=QuatFromRotator(rPawn);
+		GetAxes(rPawn,rX,rY,rZ);
+		quatRZ=QuatFromAxisAndAngle(rZ,m_roll_antes_caer_cielo*UnrRotToRad);
+		quatRZ=QuatProduct(quatRZ,quatNormal);
+		rPawn=QuatToRotator(quatRZ);
+	}
+
     SetRotation(rPawn);
 	self.Floor=normalsuelo;
 	pawnRotation=rPawn;
@@ -693,7 +724,7 @@ state PawnFallingSky
 		// Direct hit wall enabled just for the custom falling
 		bDirectHitWall = true;
 		//No tocamos las físicas, que siga en flying como en PC
-
+		m_bEstoyCayendoDelCielo = true; //Para que sepa que venimos de caer del cielo
 
 	}
 

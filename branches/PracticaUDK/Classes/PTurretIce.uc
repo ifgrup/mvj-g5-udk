@@ -1,15 +1,152 @@
 class PTurretIce extends PAutoTurret
 	placeable;
 
+
+struct DisparoHielo
+{
+	var float Tiempo;
+	var float tiempo_anterior_hurt;
+	var float Radio;
+	var EmitterSpawnable ParticulasNieblaHielo;
+	var bool borrar; //maracado como borrado pero no eliminado hasta haber tratado todos justincase
+};
+
+var array<DisparoHielo> m_array_disparos_hielo;
+
 //Funcion definida en PAutoTurret, redefinida en cada hija
 function DisparoTorreta()
-{
-	local PEmiter pem;
-		
-	`Log("DIsparo Ice");
-	pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
-	pem.SpawnEmitter();
+{   
+		//Emitimos un sistema de partículas que va desde la torreta hacia fuera, en círculo, y todo aquello que toca,
+		//lo convierte en hielo.
+		//local PEmiter pem;
+		`Log("DIsparo Ice");
+		GeneraNuevaOndaHielo();
+		//pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
+		//pem.SpawnEmitter();
 }
+
+
+function GeneraNuevaOndaHielo()
+{
+	local EmitterSpawnable PSC;
+	local DisparoHielo disparo;
+
+	//disparo = new DisparoHielo;
+
+	PSC = Spawn(class'EmitterSpawnable',Self);
+	if (PSC != None)
+	{
+		PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.PruebaEsferaHielo');
+		disparo.ParticulasNieblaHielo = PSC;
+		disparo.Tiempo = 0;
+		disparo.Radio = 50; //Inicialmente, para que no parezca que sale de dentro de la torreta?
+		m_array_disparos_hielo.AddItem(disparo);
+	}
+
+}
+
+
+function HacerDanyoRadial (float DamageRadius)
+{
+	//Porque HurtRadius utiliza en el foreach de VisibleCollidingActors 'Actor', y eso
+	//hace que pille el escudo de la torreta y nada más..
+
+	local PEnemyPawn_Minion	Victim;
+	local TraceHitInfo HitInfo;
+
+	// Prevent HurtRadius() from being reentrant.
+	if ( bHurtEntry )
+		return ;
+
+	
+	bHurtEntry = true;
+	foreach CollidingActors(class'PEnemyPawn_Minion', Victim, DamageRadius, FireLocation)//,,,,, HitInfo )
+	{
+		//Victim.TakeRadiusDamage(InstigatedByController, BaseDamage, DamageRadius, DamageType, Momentum, HurtOrigin, bDoFullDamage, self);
+		Victim.TakeRadiusDamage(None, 1.0, DamageRadius, none, 0.0, FireLocation, false, self);
+	}
+	bHurtEntry = false;
+}
+
+//En TurretAuto, la Cannon vamos, cuando pasas a estado NuevoTarget, tiene que rotar hasta que apunta correctamente
+//En nuestro caso, al ser radial, no tiene que apuntar, o sea que en cuanto tiene target, puede disparar.
+//Así que sobreescribmos el estado NuevoTarget, para que directamente pase a disparar
+state NuevoTarget
+{
+	event BeginState(Name PreviousStateName)
+	{
+		`log("Turret Ice, enemeigo seleccionado, pues a congelar");
+		GoToState('Disparando');
+	}
+}
+
+state Disparando
+{
+	event BeginState(name PreviousStateName)
+	{
+		super.BeginState(PreviousStateName);
+		m_tiempoDesdeAntDisparo = m_TimeoutEntreDisparo -0.2; //Para que nada más empezar dispare
+
+	}
+
+	function Tick(float DeltaTime)
+	{
+		//Vamos incrementando el radio del sistema de partículas, y vamos ejecutando el TakeDamage Radial para
+		//congelar aquello que esté afectado por el radio.
+		//También vamos haciendo el efecto de sinus para el movimiento de la partícula
+		local int i;
+		local float tiempo_i;
+		local float radio_i;
+		local vector radio_v;
+
+		super.Tick(DeltaTime);
+
+		for (i=0;i<m_array_disparos_hielo.Length;i++)
+		{
+			m_array_disparos_hielo[i].Tiempo += DeltaTime;
+			if (m_array_disparos_hielo[i].Tiempo > 6)
+			{
+				//Si ha pasado el tiempo, la eliminamos. Primero marcamos como borrable, y luego borramos
+				m_array_disparos_hielo[i].borrar = true;
+			}
+			else
+			{
+				//Incrementamos radio, aplicamos damage, y movemos la partícula sinusoidalmente (toma palabrita ;) 
+				tiempo_i = m_array_disparos_hielo[i].Tiempo;
+				radio_i = 350 + tiempo_i * 70; 
+				radio_v.X = radio_i/15;
+				radio_v.y = radio_i/15;
+				radio_v.z = 15;//radio_i/15;
+				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetVectorParameter('Radio',radio_v); 
+				
+				DrawDebugSphere(self.Location,radio_i,80,255,255,255,false);
+
+				//Sólo recalculamos damage cada medio segundo, no vale la pena cargar a cada tick
+				if ((tiempo_i - m_array_disparos_hielo[i].tiempo_anterior_hurt)>0.5)
+				{
+					//self.HurtRadius(1.0,radio_i,none,0,FireLocation);
+					HacerDanyoRadial(radio_i);
+					m_array_disparos_hielo[i].tiempo_anterior_hurt = tiempo_i;
+
+				}
+				//Sin para mover las partículas
+				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('ParamAltura',sin(tiempo_i)); //Al principio abajo del todo
+			}
+		}
+		for (i=0;i<m_array_disparos_hielo.Length;i++)
+		{
+			if(m_array_disparos_hielo[i].borrar)
+			{
+				m_array_disparos_hielo[i].ParticulasNieblaHielo.Destroy();
+				m_array_disparos_hielo.Remove(i,1);
+			}
+		}
+	}//Tick
+
+
+
+}//StateDisparando
+
 
 defaultproperties
 {
@@ -114,5 +251,6 @@ defaultproperties
 	ProjClass=class'PGame.PMisiles'
 	TurretHealth=500
 	RoundsPerSec=50
-	m_TimeoutEntreDisparo=3 //Disparo de hielo cada 3 segundos
+	m_TimeoutEntreDisparo=10 //Disparo de hielo cada 3 segundos
+
 }
