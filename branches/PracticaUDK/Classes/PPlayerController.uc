@@ -65,6 +65,8 @@ var vector  m_PosInicialAlSaltar;
 var Rotator m_RotInicialAlSaltar;
 var bool m_initPosAlSaltar;
 
+var vector	m_donde_victor,m_floor_victor;
+var PTurretIce m_torreta_victor;
 
 /**
  *Gestión del ratón RR
@@ -160,7 +162,7 @@ state PlayerWalking
 	event BeginState(Name PreviousStateName)
 	{
 		ClientMessage("Vamos al estado Spidering");
-		`Log("******************************Inicio de PlayerControler en PlayerWalking********************");
+		//_DEBUG_ ("******************************Inicio de PlayerControler en PlayerWalking********************");
 		GotoState('PlayerSpidering');
 	}
 	
@@ -272,7 +274,7 @@ state PlayerSpidering
 				signo=PlayerInput.aTurn/abs(PlayerInput.aTurn);
 				faTurn_discreto=int(PlayerInput.aTurn/300) + 1*signo ; //nivel de discretización
 				faTurn_discreto=faTurn_discreto*300; 
-				//`log("aTurn "@PlayerInput.aTurn  @faTurn_discreto);
+				////_DEBUG_ ("aTurn "@PlayerInput.aTurn  @faTurn_discreto);
 				ViewX_4pawn = Normal(ViewX + 10 * ViewY * Sin(0.00002*faTurn_discreto));
 				GetAxes(Pawn.Rotation,lastX,lastY,lastZ);
 				ViewX_4pawn=VInterpTo(lastx,ViewX_4pawn,DeltaTime*1.1,30);
@@ -352,7 +354,7 @@ state PlayerSpidering
 	
     function bool NotifyLanded(vector HitNormal, Actor FloorActor)
 	{
-		`log("He caido sobre algo, NO despues de saltar.Es inicio de juego.");
+		//_DEBUG_ ("He caido sobre algo, NO despues de saltar.Es inicio de juego.");
 		if (PPawn(pawn)!=None)
 		{
 			Pawn.SetPhysics(PHYS_None);
@@ -476,7 +478,7 @@ state PlayerSpidering
 				
 				 if (aTrace1.Name!=name("StaticMeshActor_0") && aTrace1.Name!=name("StaticMeshActor_1"))
 				 {
-					`log("Nombre impacto trace "@aTrace1.Name);
+					//_DEBUG_ ("Nombre impacto trace "@aTrace1.Name);
 					bAlgoDelante=1;
 					return;
 				 }
@@ -486,7 +488,7 @@ state PlayerSpidering
 				
 				 if (aTrace2.Name!=name("StaticMeshActor_0") && aTrace2.Name!=name("StaticMeshActor_1") )
 				 {
-					`log("Nombre impacto trace2 "@aTrace2.Name);
+					//_DEBUG_ ("Nombre impacto trace2 "@aTrace2.Name);
 					bAlgoDelante=1;
 					return;
 				 }
@@ -498,7 +500,7 @@ state PlayerSpidering
 				
 				 if (aTrace3.Name!=name("StaticMeshActor_0") && aTrace3.Name!=name("StaticMeshActor_1") )
 				 {
-					`log("Nombre impacto trace3 "@aTrace3.Name);
+					//_DEBUG_ ("Nombre impacto trace3 "@aTrace3.Name);
 					bAlgoDelante=1;
 					return;
 				 }
@@ -544,7 +546,7 @@ state PlayerSpidering
         CheckDelantePawn(NewAccel,bAlgoDelante);
 		if (bAlgoDelante!=0)
 		{
-			`log("tiene algo delante. No seguimos el movimiento");
+			//_DEBUG_ ("tiene algo delante. No seguimos el movimiento");
 			NewAccel=vect(0,0,0);
 		}
        
@@ -591,7 +593,7 @@ state PlayerSpidering
 	 * */
 	event BeginState(Name PreviousStateName)
 	{
-		`Log("__________________________BEGIN STATE PLAYERCONTROLLER.PLAYERSPIDERING_____________________");
+		//_DEBUG_ ("__________________________BEGIN STATE PLAYERCONTROLLER.PLAYERSPIDERING_____________________");
 		if (PreviousStateName!='PlayerRecienCaido' )
 		{
 
@@ -617,7 +619,7 @@ state PlayerSpidering
 			//al tick siguiente y se pondrá bien en principio...
 			if(PPawn(Pawn).Floor==vect(0,0,0))
 			{
-				`log("KAGADA");
+				//_DEBUG_ ("KAGADA");
 				GoToState('PlayerSpidering');
 				return;
 			}
@@ -669,7 +671,7 @@ state PlayerFlaying
 		local Quat paraRoll;
 
 		//Colocamos al Pawn volando, prolongando su Z actual:
-        `log("PC Flaying 2");
+        //_DEBUG_ ("PC Flaying 2");
 
 		pPosition=PPawn(Pawn).Location;
 		Centro2Pawn=Normal(pPosition-PGame(WorldInfo.Game).GetCentroPlaneta());
@@ -717,7 +719,7 @@ state PlayerFlaying
 	event EndState(Name NextState)
 	{
 		//No hacemos nada en principio.Para volver a bajar al planeta, vamos al estado PlayerFallingSky
-		`Log("PlayerController estaba en PlayerFlaying, yendo al estado "@NextState);
+		//_DEBUG_ ("PlayerController estaba en PlayerFlaying, yendo al estado "@NextState);
 	
 	}
 
@@ -839,12 +841,12 @@ state PlayerFlaying
         if (m_DistanciaAlCentro < m_DistanciaAlCentro_desiredZoom)
         {
 			m_DistanciaAlCentro+=decel;
-			//`log("Alejando "@decel);
+			////_DEBUG_ ("Alejando "@decel);
         }
 		else
 		{	
 			m_DistanciaAlCentro-=decel;
-			//`log("Acercando "@decel);
+			////_DEBUG_ ("Acercando "@decel);
 		}
 
 	}
@@ -870,7 +872,7 @@ state PlayerFallingSky
 		local float  dist, min_dist_actual;
 
 		
-        `log("PC Falling Sky");
+        //_DEBUG_ ("PC Falling Sky");
 		elPaun=PPawn(pawn);
 
 		
@@ -902,11 +904,11 @@ state PlayerFallingSky
 			//no sé si podemos garantizar que el que escoja es el primero contra el que impactaríamos. Me aseguro cogiendo el que está
 			//a distancia más pequeña del pawn
 			dist = vsize (HitActorTrace - elPaun.Location);
-			`log ("TraceActors me devuelve el actor "@ActorTrace.Name);
-			if(PEnemy(ActorTrace) != None) `log("Lo puedo convertir a pawn");
+			//_DEBUG_  ("TraceActors me devuelve el actor "@ActorTrace.Name);
+			//_DEBUG_if(PEnemy(ActorTrace) != None) `log("Lo puedo convertir a pawn");
 			if (dist < min_dist_actual && PEnemy(ActorTrace) == none) //pasamos de los pawns
 			{
-				`log ("Candidato TraceActors"@ActorTrace.Name);
+				//_DEBUG_  ("Candidato TraceActors"@ActorTrace.Name);
 				m_ActorContraElQueCaemos = ActorTrace;
 				m_PosicionCaidaContraActor = HitActorTrace;
 				m_NormalCaidaActor = HitActorNormal;
@@ -920,26 +922,26 @@ state PlayerFallingSky
 
 		if (m_PosicionCaidaPlaneta == vect(0,0,0))
 		{
-			`log("Kagada en el trace coleguita....");
+			//_DEBUG_ ("Kagada en el trace coleguita....");
 		}
 
-		DrawDebugSphere(m_PosicionCaidaPlaneta,30,40,0,1,200,true);
+		//_DEBUG_DrawDebugSphere(m_PosicionCaidaPlaneta,30,40,0,1,200,true);
 		//Si caigo sobre algo que no es el planeta ni contra un PEnemy, la caida es contra ese algo
 		if(  m_ActorContraElQueCaemos != None && 
 			(m_ActorContraElQueCaemos !=elpaun.m_BasePlaneta && (PEnemy(m_ActorContraElQueCaemos) ==None))   )
 		{
 			
-			`log("Caemos encima de "@m_ActorContraElQueCaemos.Name);
+			//_DEBUG_ ("Caemos encima de "@m_ActorContraElQueCaemos.Name);
 			m_posicionRealCaidaSuelo = m_PosicionCaidaContraActor;
 			m_bContraSuelo = false;
 		}
 		else //Si el traceactors no ha encontrado nada, o bien el planeta o u PEnemy, pues eso, caemos contra el planeta
 		{
-			`log("Caemos contra el suelo");
+			//_DEBUG_ ("Caemos contra el suelo");
 			m_posicionRealCaidaSuelo = m_PosicionCaidaPlaneta ;
 			m_bContraSuelo = true;
 		}
-		`log("Distancia inicial al suelo ____________" @vsize(elPaun.Location-m_posicionRealCaidaSuelo));
+		//_DEBUG_ ("Distancia inicial al suelo ____________" @vsize(elPaun.Location-m_posicionRealCaidaSuelo));
 		m_distCentroCaida = vsize (m_posicionRealCaidaSuelo - PGame(WorldInfo.Game).GetCentroPlaneta());
 
 		//Le guardamos al Pawn su roll antes de caer al suelo, para que la orientación al caer sea la misma
@@ -963,7 +965,7 @@ state PlayerFallingSky
 			}
 			m_acercandoCamaraCayendo-=800*DeltaTime; //La vamos decrementando
 			m_acercandoCamaraCayendo=FClamp(m_acercandoCamaraCayendo,m_minDistanciaCamaraCayendo,30000);
-			//`log("La distancia es "@m_acercandoCamaraCayendo);
+			////_DEBUG_ ("La distancia es "@m_acercandoCamaraCayendo);
 
 			//Update de la aceleración
 			m_aceleracionCaidaLibre*=1+DeltaTime/5;
@@ -980,7 +982,7 @@ state PlayerFallingSky
 
 	event EndState(Name NextState)
 	{
-		`Log("PlayerController yendo al estado "@NextState);
+		//_DEBUG_ ("PlayerController yendo al estado "@NextState);
 	}		
 
 	function UpdateRotation(float DeltaTime)
@@ -1038,12 +1040,12 @@ state PlayerFallingSky
 			distActual = vsize(m_posicionRealCaidaSuelo - (pPosition+step));
 			distCentroActual = vsize ((pPosition+step) - PGame(WorldInfo.Game).GetCentroPlaneta());
 			
-			//`log("Distancia al suelo ____" @distActual);
+			////_DEBUG_ ("Distancia al suelo ____" @distActual);
 			//Si nos hemos pasao de 10 (estamos más cerca del centro que el punto de caída)
 			if (distCentroActual < m_distCentroCaida+10)
 			{
 
-				`log("______________Toñazo por distancia contra "@m_ActorContraElQueCaemos.Name);
+				//_DEBUG_ ("______________Toñazo por distancia contra "@m_ActorContraElQueCaemos.Name);
 				if(self.m_bContraSuelo)
 				{
 					//Invocamos al Hitwall del Pawn, que pasará el Controller a estado PlayerRecienCaido
@@ -1096,7 +1098,7 @@ state PlayerRecienCaido
 	//Todo vacío, no queremos que haga nada
 	event BeginState(Name prevstate)
 	{
-		`log("Recien estonyao");
+		//_DEBUG_ ("Recien estonyao");
 		//Es el pawn quien nos pone en este estado al estoñarse (Pawn en estado PawnRecienCaido)
 		//Y es el pawn quien con su timer nos devuelve a la situación normal luego
 		m_tiempoTonyazo = 0;
@@ -1104,7 +1106,7 @@ state PlayerRecienCaido
 
 	event EndState(Name nextstate)
 	{
-		`log("Fin de estonyamiento");
+		//_DEBUG_ ("Fin de estonyamiento");
 	}
 
 	event PlayerTick(float DeltaTime)
@@ -1149,7 +1151,7 @@ state PlayerBumpCayendo
 	//Todo vacío, no queremos que haga nada
 	event BeginState(Name prevstate)
 	{
-		`log("PC Bump mientras caía");
+		//_DEBUG_ ("PC Bump mientras caía");
 		//Es el pawn quien nos pone en este estado al hacer Bump en PawnFallingSky. Pawn hará un rebote
 		//Así que se irá a PawnFalling
 		//Y es el pawn quien cuando después de rebotar vuelve al suelo, pone al PC en Spidering again
@@ -1158,7 +1160,7 @@ state PlayerBumpCayendo
 
 	event EndState(Name nextstate)
 	{
-		`log("Fin de PlayerBumpCayendo");
+		//_DEBUG_ ("Fin de PlayerBumpCayendo");
 	}
 
 	event PlayerTick(float DeltaTime)
@@ -1200,7 +1202,7 @@ state PlayerPreparandoFlaying
 {
 	event BeginState(Name prevstate)
 	{
-		`log("Preparando para saltar");
+		//_DEBUG_ ("Preparando para saltar");
 		PPawn(pawn).GotoState('PawnPreparandoFlaying');
 		m_initPosAlSaltar = true;
 		//Si aqui guardamos la posicion y rotacion actuales de la camara,
@@ -1210,7 +1212,7 @@ state PlayerPreparandoFlaying
 
 	event EndState(Name nextstate)
 	{
-		`log("Fin de PlayerPreparandoFlaying");
+		//_DEBUG_ ("Fin de PlayerPreparandoFlaying");
 		//Ya estamos volando, actualizamos booleano para control de HUD
 		PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
 		
@@ -1429,6 +1431,50 @@ exec function MiddleMouseScrollDown()
   HandleMouseInput(ScrollWheelDown, IE_Pressed);
 }
 
+exec function ice()
+{
+	
+	m_donde_victor = pawn.Location;
+	m_floor_victor = pawn.Floor;
+	settimer(2,false,'pontorretahielo');
+}
+
+function pontorretahielo ()
+{
+	local pturretice ti;
+	local rotator r;
+	local Vector2D p1,p2;
+	local vector wp1,wp2,wp;
+	local vector newfloor;
+/*
+	local PHUD pHUD;
+	pHUD = PHUD(myHUD);
+	p1.X=100;p1.Y=100;
+	p2.X=p1.x;p2.y=p1.y-10;
+	pHUD.Canvas.DeProject(p1,wp1,wp);
+	pHUD.Canvas.DeProject(p2,wp2,wp);
+	newfloor = wp2-wp1;
+*/
+	if (m_torreta_victor == None)
+	{
+		r=Rotator(-m_floor_victor); //hacia el suelo
+		r.Pitch+=65535/4; //90 grados parriba
+		ti=spawn(class'PTurretIce', ,,m_donde_victor,r);
+		ti.m_TiempoEnConstruccion = 0.1;
+		ti.setNormalSuelo(m_floor_victor);
+		m_torreta_victor = ti;
+	}
+	m_torreta_victor.SetCollision(false,false,true);
+	m_torreta_victor.SetCollisionType(COLLIDE_NoCollision);
+	m_torreta_victor.DisparoTorreta();
+	m_torreta_victor.GotoState('Disparando');
+}
+
+exec function icer(int radio)
+{
+	m_torreta_victor.m_radioinicial = radio;
+	ice();
+}
 defaultproperties
 {
 	

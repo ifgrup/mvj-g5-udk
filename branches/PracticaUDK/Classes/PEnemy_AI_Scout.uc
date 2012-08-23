@@ -20,6 +20,9 @@ var float DestinationOffset;
 var Actor m_Destination; //Siguiente nodo destino al que nos dirijimos
 var vector m_CurrentDestination; //Posición de m_Destination
 var float distanciaBase_antes;
+var bool m_bBreakpoint;
+var float oldDistNodo;
+var int m_segundosQuieto;
 
 simulated event PostBeginPlay()
 {
@@ -50,8 +53,8 @@ function SetColor(LinearColor Col)
 
 function DrawDebugInfo()
 {
-	DrawDebugLine(Pawn.Location, m_CurrentDestination, 0, 255, 0, false);
-	DrawDebugSphere(m_CurrentDestination, 20, 20, 0, 255, 0, false);
+	//_DEBUG_DrawDebugLine(Pawn.Location, m_CurrentDestination, 0, 255, 0, false);
+	//_DEBUG_DrawDebugSphere(m_CurrentDestination, 20, 20, 0, 255, 0, false);
 }
 
 function  NextPath()
@@ -79,11 +82,12 @@ function  NextPath()
 
 	// me lo asigno
 	PGame(WorldInfo.Game).Broadcast(self, "Voy hacia el nodo "@pWNodos[j].Name);
-	DrawDebugSphere(pWNodos[j].Location, 500, 10, 0, 255, 0, true);
+	//DrawDebugSphere(pWNodos[j].Location, 500, 10, 0, 255, 0, true);
 	m_Destination = pWNodos[j];
 	m_CurrentDestination = m_Destination.Location;
 	//Y lo elimino para que no podamos volver a asignarnos el mismo nodo ;)
 	PGame(WorldInfo.Game).DeleteWorldPathNode(id_Path, j);
+	//`log("______Nextnode "@m_Destination.Location);
 }
 
 /* --------------- ESTADO IDLE_INICIAL --------------
@@ -93,7 +97,7 @@ auto state Idle_Inicial
 {
 	event BeginState(Name PrevName)
 	{
-		`log("Penemy_AI_Scout creado, estoy en Idle");
+		//_DEBUG_ ("Penemy_AI_Scout creado, estoy en Idle");
 		m_tiempo_tick = 0;
 	}
 
@@ -122,7 +126,7 @@ auto state Idle_Inicial
 
 	event EndState(name NextStateName)
 	{
-		`log("Penemy_AI_Scout saliendo de idle");
+		//_DEBUG_ ("Penemy_AI_Scout saliendo de idle");
 	}
 }/* --------------- FIN ESTADO IDLE_INICIAL --------------*/
 //____________________________________________________________________________________________________________________________________
@@ -138,7 +142,7 @@ state MoveToDestination
 		local Pawn pDetectado;
 		local PPathNode nodo;
 		local float distanciaBase;
-
+		local float distNodo;
 
 		DrawDebugInfo();
 		super.Tick(DeltaTime);
@@ -146,7 +150,7 @@ state MoveToDestination
 		if (pawn.Velocity == vect(0,0,0) && m_Destination == theObjective)
 		{
 			//`log("S'ha parao no sé por què");
-			DrawDebugSphere(pawn.Location,200,20,200,0,0,false);
+			//_DEBUG_DrawDebugSphere(pawn.Location,200,20,200,0,0,false);
 		}
 
 		//Cada fDecalSize distancia, dejamos un decal
@@ -187,14 +191,21 @@ state MoveToDestination
 		{
 			nodo = spawn(class'PPathNode',,,Pawn.Location);
 			nodo.id = id;
+			nodo.m_direccion_nodo = self.pawn.Velocity;
+			nodo.m_floor_nodo = self.pawn.floor;
 			PGame(WorldInfo.Game).AddPathNode(id, nodo, ColorDecal);
 			
 			OldLocation = Pawn.Location;
 		}
 
+
 		//Control de llegada a nodo y/o Base
 		if (m_tiempo_tick >= 1.0)
 		{
+			if (m_bBreakpoint)
+			{
+				`log("Parate colega!");
+			}
 			m_tiempo_tick -= 1.0; //reset del tiempo para el siguiente 'timer'
 			
 			//Hemos llegado a la base?
@@ -221,9 +232,32 @@ state MoveToDestination
 				}
 				//Si no, controlamos si estamos cerca del siguiente nodo,y si es así, 
 				//vamos hacia el siguiente
-				else if(VSize(m_CurrentDestination - Pawn.Location) < DestinationOffset)
+				else 
 				{
-					NextPath();
+					distNodo = VSize(m_CurrentDestination - Pawn.Location);
+					if (distNodo < DestinationOffset)
+					{
+						distNodo = 0;
+						NextPath();
+						//_DEBUG_ ("nextpath "@self.Name);
+					}
+					else
+					{
+						//Control de que se queda quieto:
+						if (abs(distNodo - oldDistNodo)<0.1)
+						{
+							m_segundosQuieto +=1;
+							if (m_segundosQuieto == 3)
+							{
+								//DrawDebugSphere(pawn.Location,300,80,0,0,200,true);
+								m_segundosQuieto = 0;
+								//_DEBUG_ ("__________LA DISTANCIA ERA "@distNodo);
+								NextPath();
+
+							}
+						}
+						oldDistNodo = distNodo;
+					}
 				}
 
 				//Igualmente hay que decirle que se siga moviendo hacia donde iba
@@ -233,9 +267,13 @@ state MoveToDestination
 		}//m_tiempo_tick >= 1.0
 	}//Tick
 
+
+	
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		`log("PEnemy_AI_SCOUT ControlTakeDisparoGiru en MoveToDestination"@self.Name);
+		m_bBreakpoint = true;
+
 	}
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
@@ -249,6 +287,7 @@ Begin:
 						 //directamente parece que sepa a dónde va
 	if (m_Destination != None)
 	{
+		StopLatentExecution();
 		MoveToward(m_Destination,,DestinationOffset/2, false, true);
 		/*
 		else //No sabemos por qué, el UDK aquí si poníamos MoveToward no movía al bicho....

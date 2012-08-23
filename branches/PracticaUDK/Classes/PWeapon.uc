@@ -70,10 +70,10 @@ simulated function Projectile ProjectileFire()
 	//Si realmente ha cambiado, actualizamos el destino del disparo
 	if (HitLocation != vect(0,0,0) && vsize(HitLocation-DestinoDisparo)>1)
 	{
-		`log("Nuevo destino disparo "@HitLocation @DestinoDisparo);
+		//_DEBUG_ ("Nuevo destino disparo "@HitLocation @DestinoDisparo);
 		FlushPersistentDebugLines();
-		DrawDebugCylinder(PosInicialDisparo,HitLocation,2,6,0,200,0,true);
-		DrawDebugCylinder(PosInicialDisparo,DestinoDisparo,2,6,200,0,0,true);
+		//_DEBUG_DrawDebugCylinder(PosInicialDisparo,HitLocation,2,6,0,200,0,true);
+		//_DEBUG_DrawDebugCylinder(PosInicialDisparo,DestinoDisparo,2,6,200,0,0,true);
 
 		DestinoDisparo=HitLocation;
 	}

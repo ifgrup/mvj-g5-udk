@@ -4,6 +4,9 @@ var PPlayerBase theBase;    //Base objetivo de juego
 var float m_tiempo_tick;    //Para control de tiempo. Actualizada en el tick global
 var int id;                 //Id del spawner que lo creó. Para identificar el scout y sus minions
 
+var bool m_b_breakpoint; //Se pone a true al disparar con Giru, usado para poner un if y un breakpoint dentro, para
+					     //poder debugar un bicho en concreto
+
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
@@ -53,7 +56,9 @@ function SetID(int i)
  */
 function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("PEnemy_AI_Controller, recibido danyo Giru Global, DEBES SOBREESCRIBIRME!!!");
+	`log("PEnemy_AI_Controller, recibido danyo Giru Global, DEBES SOBREESCRIBIRME!!!" @self.GetStateName());
+	m_b_breakpoint = true; //Para poder poner un breakpoint en un if (m_b_breakpoint), y sólo se parará si
+						   //has disparado a ese PEnemy
 }
 
 function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
@@ -69,8 +74,7 @@ function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor 
 
 function Control_BaseChangedPenemy(Actor PEnemyOtro)
 {
-	`log("PEnemy_AI_Controller::Control_BaseChangedPenemy, DEBES SOBREESCRIBIRME!!!");
-	//self.Pawn.DoJump(true);
+	//`log("PEnemy_AI_Controller::Control_BaseChangedPenemy, DEBES SOBREESCRIBIRME!!!");
 	
 }
 

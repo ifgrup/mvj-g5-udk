@@ -39,11 +39,19 @@ function SpawnEnemy()
 {
 	local PEnemy EN;
 	local Penemy_AI_Bot AIB;
+	local vector posspawn;
+	local int i;
 
     if(EnemyScout == none)
     {
         EnemyScout = spawn(class'PEnemyPawn_Scout',,,Location);
-		EnemyScout.SetColor(Col2);
+		if (EnemyScout == none)
+		{
+			//_DEBUG_ ("No se ha podido crear el scout");
+			return;
+		}
+        EnemyScout.SetColor(Col2);
+
 		AI = spawn(class'PEnemy_AI_Scout',,,Location);
 		AI.SetColor(Col2);
 		AI.SetID(Group);
@@ -53,23 +61,39 @@ function SpawnEnemy()
 	{
 		if(CanSpawnEnemy())
 		{
-			EN = spawn(class'PEnemyPawn_Minion',,, Location);
-			if (EN!=None) //Proteccion Víctor
+			for (i=0;i<3;i++)
 			{
-				EN.SetColor(Col2);
-				AIB = spawn(class'PEnemy_AI_Bot',,, Location);
-				AIB.SetID(Group);
-				Enemy.AddItem(EN);
-				AIBot.AddItem(AIB);
-				AIB.Possess(EN, false);
+				posspawn= generarPosicionSpawn(Location);
+				EN = spawn(class'PEnemyPawn_Minion',,, posspawn);
+				if (EN!=None) //Proteccion Víctor
+				{
+					EN.SetColor(Col2);
+					AIB = spawn(class'PEnemy_AI_Bot',,, posspawn);
+					AIB.SetID(Group);
+					Enemy.AddItem(EN);
+					AIBot.AddItem(AIB);
+					AIB.Possess(EN, false);
+				}
 			}
 		}
 	}
 }
 
+function vector generarPosicionSpawn(vector poshuevo)
+{
+	local vector valcentro;
+	local vector parriba;
+	local vector vrandom;
+
+	valcentro=PGame(Worldinfo.Game).GetCentroPlaneta()-poshuevo;
+	parriba = poshuevo-  200*normal(valcentro);
+	vrandom = vrand()* 200;
+	return parriba + vrandom;
+}
+
 function bool CanSpawnEnemy()
 {
-    return Enemy.Length != MaxEnemies;
+    return Enemy.Length <= MaxEnemies;
 }
 
 defaultproperties
@@ -90,5 +114,5 @@ defaultproperties
 	ColorMesh=BaseMesh
 	Components.Add(BaseMesh)
 
-	MaxEnemies=5;
+	MaxEnemies=12;
 }
