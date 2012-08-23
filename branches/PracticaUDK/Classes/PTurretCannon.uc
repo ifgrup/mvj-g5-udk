@@ -6,7 +6,7 @@ class PTurretCannon extends PAutoTurret
 function DisparoTorreta()
 {
 	local Projectile Proj;
-	`Log("DIsparo Torreta");
+	//_DEBUG_ ("DIsparo Torreta");
 	
 	TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
 	TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);

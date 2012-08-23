@@ -368,7 +368,7 @@ auto state EnConstruccion
 {
 	event BeginState(Name PreviousStateName)
 	{
-		`log("En Construccion");
+		//_DEBUG_ ("En Construccion");
 		InicioConstruccion(); //Funcion Virtual a sobreescribir
 		m_TiempoRotacionActual=0; //Utilizo esta variable por no crear otra sólo para eso.
 		//VIVA EL C++ Y LAS VARIABLES STATIC!!!! CUANTO LO ECHO DE MENOSSSS!!! :D
@@ -379,10 +379,14 @@ auto state EnConstruccion
 		m_TiempoRotacionActual+=delta;
 		if (m_TiempoRotacionActual > m_TiempoEnConstruccion)
 		{
-			`log("Dejo de estar En Construccion");
+			//_DEBUG_ ("Dejo de estar En Construccion");
 			FinConstruccion();//Funcion Virtual a sobreescribir
 			GotoState('Idle');
 		}
+	}
+	event EndState(Name PreviousStateName)
+	{
+		FinConstruccion();//Funcion Virtual a sobreescribir
 	}
 }
 
@@ -393,7 +397,7 @@ state Idle
 	{
 		m_tiempoDesdeAntDisparo=0;
 		m_TiempoDesdeInicioRotacion=0;
-		`log("Idle");
+		//_DEBUG_ ("Idle");
 	}
 
 	event TakeDamage(int Damage, Controller InstigatedBy, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
@@ -452,7 +456,7 @@ state Idle
 		else
 		{
 			//Ha seleccionado un nuevo enemigo. Vamos a buscarlo, y cancelamos la rotación actual
-			`log("Nuevo Target seleccionado");
+			//_DEBUG_ ("Nuevo Target seleccionado");
 			m_TiempoRotacionActual=0;//Para parar la rotacion actual
 			GoToState('NuevoTarget');
 		}
@@ -473,7 +477,7 @@ state Disparando
 		m_tiempoDesdeAntDisparo=0;
 		m_TiempoDesdeInicioRotacion=0;
 		//Si hemos llegado aquí es porque ya ha apuntado y está en la dirección correcta, no hay que rotar
-		`log("Estado Disparando");
+		//_DEBUG_ ("Estado Disparando");
 	
 	}
 
@@ -494,7 +498,7 @@ state Disparando
 			if (Vsize(enemigoActual.Location-FireLocation)>(RangoDisparo+200) )//|| enemigoActual.life==0)
 			{
 				enemigoActual=None;
-				`log("Estabamos disparando pero está fuera de rango. Volvemos a Idle");
+				//_DEBUG_ ("Estabamos disparando pero está fuera de rango. Volvemos a Idle");
 				GoToState('Idle');
 
 			}
@@ -533,7 +537,7 @@ state NuevoTarget
 {
 	event BeginState(Name PreviousStateName)
 	{
-		`Log("NuevoTarget");
+		//_DEBUG_ ("NuevoTarget");
 		m_tiempoApuntando=0xFFFF; //Para que nada más empezar a tickear reapunte. Si no, el primer medio segundo se lo saltaría
 	}
 
@@ -551,7 +555,7 @@ state NuevoTarget
 
         if (enemigoActual == None)
         {
-			`log("Nada que hacer aqui, no hay target");
+			//_DEBUG_ ("Nada que hacer aqui, no hay target");
 			GoToState('Idle');
 			return;
         }
@@ -562,7 +566,7 @@ state NuevoTarget
 		if (dist > (RangoDisparo+100) )//|| enemigoActual.life==0)
 		{
 				enemigoActual=None;
-				`log("Sale de rango mientras apuntamos, volvemos a Idle");
+				//_DEBUG_ ("Sale de rango mientras apuntamos, volvemos a Idle");
 				GoToState('Idle');
 				return;
 		}
@@ -574,7 +578,7 @@ state NuevoTarget
 		if (dotprot>0 && dotprot > 0.95)
 		{
 			//Está casi apuntado, que empiece a disparar
-			`log("A DISPARAR!!");
+			//_DEBUG_ ("A DISPARAR!!");
 			GoToState('Disparando');
 		}
 		else
@@ -590,9 +594,9 @@ state NuevoTarget
 
 
 				dotprot=dirActual dot dirEnemigo;
-			    `log("Sin apuntar, reintentamos");
+			    //_DEBUG_ ("Sin apuntar, reintentamos");
 				m_tiempoNecesarioApuntar=1.3-dotprot;
-				`log("DOT PROT REINTENTO ES: "@dotprot);
+				//_DEBUG_ ("DOT PROT REINTENTO ES: "@dotprot);
 				RotaParaApuntarA(enemigoActual.Location,m_tiempoNecesarioApuntar);
 				m_tiempoApuntando=0;
 

@@ -61,7 +61,7 @@ function float CalcularMediaTranslateZ(float valorZ)
 	{
 		z+=m_array_translatez[i]/m_array_translatez.Length;
 	}
-	//`log("Filtro vale "@z @m_array_translatez.Length @valorZ);
+	////_DEBUG_ ("Filtro vale "@z @m_array_translatez.Length @valorZ);
 	return z;
 }
 
@@ -87,7 +87,7 @@ event Tick(float DeltaTime)
 	if (m_ULtimoFloorAntesSalto!=self.Floor)
 	{
 		self.m_ULtimoFloorAntesSalto=self.Floor;
-		//`log("FT "@self.m_ULtimoFloorAntesSalto);
+		////_DEBUG_ ("FT "@self.m_ULtimoFloorAntesSalto);
 	};
 
 	//Calculamos la distancia del bicho al suelo
@@ -100,7 +100,7 @@ event Tick(float DeltaTime)
 	//DrawDebugCylinder(self.Location,self.Location-rz*200,5,15,0,0,255,true);
 	//DrawDebugCylinder(posActual,vlocation,5,15,0,0,255,true);
 	if (vlocation == vect(0,0,0))
-		`log("Trace nulo");
+		//_DEBUG_ ("Trace nulo");
 	
 	//DrawDebugSphere(posActual,5,50,200,0,0,true);
 	//DrawDebugSphere(vlocation,5,50,200,200,0,true);
@@ -112,7 +112,7 @@ event Tick(float DeltaTime)
 	vz.Z = CalcularMediaTranslateZ(valorZ);
 	if (vz.Z > vsize(vlocation-posActual))
 	{
-		`log("Bajo tierra");
+		//_DEBUG_ ("Bajo tierra");
 		//Lo corregimos, fijando la distancia al suelo
 		vz.Z=vsize(vlocation-posActual)-m_DistanciaAlSuelo;
 	}
@@ -181,7 +181,7 @@ function ReboteGrandeBumpCayendo(Actor Other, Vector BumpLocation, Vector BumpNo
 	
 	self.Velocity = (BumpNormal Cross normal(-self.Velocity)) *500;//rebote a tomar por culo
 	
-	DrawDebugCylinder(self.Location,self.Location+self.Velocity,3,5,100,255,50,true);
+	//_DEBUG_DrawDebugCylinder(self.Location,self.Location+self.Velocity,3,5,100,255,50,true);
     //Guardamos el jumpz anterior para luego restaurarlo.
 	jump_z_temp = self.JumpZ;
 	self.JumpZ = 2000;
@@ -196,12 +196,12 @@ singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
 {
 	if(PAutoTurret(Other)!= None)
 	{  //Es una torreta. Rebotamos
-		`log("Bump contra Torreta"@Other.Name);
+		//_DEBUG_ ("Bump contra Torreta"@Other.Name);
 		ReboteRespectoA(Other);
 	}
 	else
 	{
-		`log("Bump contra Noseque"@Other.Name);
+		//_DEBUG_ ("Bump contra Noseque"@Other.Name);
 		ReboteRespectoA(Other,200);
 	}
 	
@@ -210,23 +210,23 @@ singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
 
 event Touch(Actor Other,PrimitiveComponent OtherComp, Vector HitLocation, Vector HitNormal)
 {
-	`log("TOUUUUUUCH!!");
+	//_DEBUG_ ("TOUUUUUUCH!!");
 }
 event bool EncroachingOn(Actor Other)
 {
-	`log("ENCROACHING OOOOOOOOON!!");
+	//_DEBUG_ ("ENCROACHING OOOOOOOOON!!");
 	
 	return true; //to cancel the move
 }
 
 event EncroachedBy(Actor Other)
 {
-	`log("ENCROACHED BYYY!!");
+	//_DEBUG_ ("ENCROACHED BYYY!!");
 }
 
 event RanInto (Actor Other)
 {
-	`log("RANITOOOOO!!");
+	//_DEBUG_ ("RANITOOOOO!!");
 
 
 }
@@ -318,9 +318,9 @@ simulated function PostBeginPlay()
 			m_ParticulasPropulsoresRobot.AddItem(PSC);
 			m_idx_base = m_ParticulasPropulsoresRobot.Length -1;
 			PSC.SetFloatParameter('ParamAlpha',0.1);			
-			`log("" @PSC.ParticleSystemComponent.InstanceParameters[0].Name);
-			`log("" @PSC.ParticleSystemComponent.InstanceParameters[0].Scalar);
-			`log("" @PSC.ParticleSystemComponent.InstanceParameters[0].ParamType);
+			//_DEBUG_ ("" @PSC.ParticleSystemComponent.InstanceParameters[0].Name);
+			//_DEBUG_ ("" @PSC.ParticleSystemComponent.InstanceParameters[0].Scalar);
+			//_DEBUG_ ("" @PSC.ParticleSystemComponent.InstanceParameters[0].ParamType);
 
 		}
 	}
@@ -356,7 +356,7 @@ function EstadoPropulsores(bool bEstado)
 function OrientarPropulsores(float player_aTurn, float player_astrafe,float player_aforward)
 {
 	local Rotator r;
-	//`log("escaalar " @player_aTurn @player_astrafe @player_aforward);
+	////_DEBUG_ ("escaalar " @player_aTurn @player_astrafe @player_aforward);
 	
 	//Los dos brazos tendrán la misma rotación, así que usamos una de cualquiera de los dos para los cálculos
 	r=m_ParticulasPropulsoresRobot[m_idx_brazo_ido].ParticleSystemComponent.Rotation;
@@ -436,7 +436,7 @@ function AddDefaultInventory()
 
 exec function qbase()
 {
-	`log("La Base actual es "@self.Base);
+	//_DEBUG_ ("La Base actual es "@self.Base);
 }
 /** BaseChange
  * Función que se llamará una única vez por Pawn cada vez que cambie el
@@ -448,8 +448,14 @@ singular event BaseChange()
 {
 	local vector direc;
 
-	if (Base!=None) `log('Base Changed '@self.Base.Name);
-	else `log('Base Changed to None');
+	if (Base!=None) 
+	{
+		//_DEBUG_ ('Base Changed '@self.Base.Name);
+	}
+	else
+	{
+		//_DEBUG_ ('Base Changed to None');
+	}
     
 	if(PPaintCanvas(self.Base) != none)
 	{
@@ -533,27 +539,27 @@ function bool DoJump( bool bUpdating )
 		tmpFloor=Floor;
 		if (Floor == vect(0,0,1) || Floor== vect(0,0,0))
 		{
-			`log ("No lo entiendo...");
+			//_DEBUG_  ("No lo entiendo...");
 			tmpFloor=m_ULtimoFloorAntesSalto;
 		}
 
 		Velocity += JumpZ * tmpFloor;
 		FallDirection = -tmpFloor;
 		// Y vamos al estado PawnFalling
-		`log('SALTO NORMAL  ' @tmpFloor);
+		//_DEBUG_ ('SALTO NORMAL  ' @tmpFloor);
 		GotoState('PawnFalling');
-		//`log('DoJump de PPawn');
+		////_DEBUG_ ('DoJump de PPawn');
 		return true;
 	}
- 	`log('DoJump de PPawn NO PUEDE SALTAR');
+ 	//_DEBUG_ ('DoJump de PPawn NO PUEDE SALTAR');
 	//Si no puede saltar porque ya está saltando, no salta.
 	//Pero si está saltando y la petición de salto viene desde el evento Bump, significa que durante el recorrido
 	//del salto, ha encontrado una colisión, y se ha solicitado que salte hacia atrás.
 	//En ese caso, sí que lo permitimos
 	if(m_VenimosDeBump)
 	{
-		`log('SALTO por BUMP ' @m_ULtimoFloorAntesSalto);
-		DrawDebugCylinder(self.Location,self.Location+m_ULtimoFloorAntesSalto*100,4,10,0,255,255,true);
+		//_DEBUG_ ('SALTO por BUMP ' @m_ULtimoFloorAntesSalto);
+		//_DEBUG_DrawDebugCylinder(self.Location,self.Location+m_ULtimoFloorAntesSalto*100,4,10,0,255,255,true);
 		Velocity += JumpZ * m_ULtimoFloorAntesSalto;
 		FallDirection = -m_ULtimoFloorAntesSalto;
 		GotoState('PawnFalling');
@@ -616,7 +622,7 @@ state PawnFalling
 	event BeginState(Name PrevName)
 	{
 
-		`log('pawn en estado Falling');
+		//_DEBUG_ ('pawn en estado Falling');
 		//DBG WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
 		//VMH: Lo inicializo en DoJump 
 		//FallDirection = -Floor;
@@ -644,7 +650,7 @@ state PawnFalling
 		{
 			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Location; 
 			FallDirection = Normal(vAlCentro);
-			`log("volviendo pa la tierra neng!");
+			//_DEBUG_ ("volviendo pa la tierra neng!");
 			m_permiteMoverSaltando=false;
 			PotenciaPropulsorBase(0); //parecerá prácticamente apagado
 		}
@@ -661,7 +667,7 @@ state PawnFalling
 
 		// Add force to velocity
 		Velocity += Gravity;
-		//`log('Gravity on Pawn en estado Falling');
+		////_DEBUG_ ('Gravity on Pawn en estado Falling');
 	}
 
 	// called when the pawn lands or hits another surface
@@ -680,7 +686,7 @@ state PawnFalling
 			OrientarPawnPorNormal(HitNormal,routPawn);
 			PC.GotoState('PlayerSpidering'); //Porque si veniamos de rebote al caer del planeta, el PC esta en otro estado
 			
-			`log('el pawn ha caido al suelo despues de saltar');
+			//_DEBUG_ ('el pawn ha caido al suelo despues de saltar');
 			SetBase(Wall, HitNormal);
 		}
 		else
@@ -702,7 +708,7 @@ state PawnFalling
 		SetPhysics(PHYS_None); 
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
 		
-		`log('el pawn deja de esar en Falling y va a '@NextState);
+		////_DEBUG_ ('el pawn deja de esar en Falling y va a '@NextState);
 	}
 }
 
@@ -720,7 +726,7 @@ state PawnFallingSky
 
 	event BeginState(Name PrevName)
 	{
-		`log('pawn cayendo del cielo');
+		//_DEBUG_ ('pawn cayendo del cielo');
 		// Direct hit wall enabled just for the custom falling
 		bDirectHitWall = true;
 		//No tocamos las físicas, que siga en flying como en PC
@@ -746,7 +752,7 @@ state PawnFallingSky
 			//Lo reventamos llamando a su PawnCaidoEncima
 			//Debe asegurarse que se elimina, se chafa, para que al hacer return
 			//no vuelva a ejecutarse este Bump
-			`log("Bump contra un PEnemy "@Other.Name);
+			//_DEBUG_ ("Bump contra un PEnemy "@Other.Name);
 			if(!PEnemy(Other).IsInState('ChafadoPorPawn')) //Estado en el que le pongamos cuando lo chafemos, por si está un rato
 			{
 				PEnemy(Other).PawnCaidoEncima();
@@ -755,12 +761,12 @@ state PawnFallingSky
 		}
 		else if (Other.Name == 'PShield_0')
 		{
-			`log("Bump contra el escudo, lo ignoramos");
+			//_DEBUG_ ("Bump contra el escudo, lo ignoramos");
 			return; //lo ignoramos, para que siga cayendo
 		}
 		else
 		{
-			`log("Bump contra NO SE QUÉ!!! CUIDADOOOOOOO!!!");
+			//_DEBUG_ ("Bump contra NO SE QUÉ!!! CUIDADOOOOOOO!!!");
 			return; //lo ignoramos, para que siga cayendo
 		}
     }
@@ -780,7 +786,7 @@ state PawnFallingSky
 		
 		if (Wall == self.m_BasePlaneta)
 		{
-			`log('el pawn ha caido al suelo despues de bajar de vista aerea');
+			//_DEBUG_ ('el pawn ha caido al suelo despues de bajar de vista aerea');
 			SetBase(Wall, HitNormal);
 			
 			if(PPaintCanvas(Wall) != none)
@@ -795,7 +801,7 @@ state PawnFallingSky
 		}
 		else
 		{
-			`log('el pawn ha caido contra algo desde el cielo '@wall.Name);
+			//_DEBUG_ ('el pawn ha caido contra algo desde el cielo '@wall.Name);
 			self.m_ULtimoFloorAntesSalto = HitNormal;
 			self.ReboteRespectoA(wall,500);
 			
@@ -808,7 +814,7 @@ state PawnFallingSky
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_None);
 		SetPhysics(PHYS_Spider); // "Glue" back to surface. Si no, se iría cayendo
-		`log('el pawn deja de esar en FallingSky y va a '@NextState);
+		////_DEBUG_ ('el pawn deja de esar en FallingSky y va a '@NextState);
 	}
 }
 
@@ -845,7 +851,7 @@ state PawnRecienCaido
 		PC = PPlayerController(Instigator.Controller);
    
 		OrientarPawnPorNormal(m_NormalAlCaerSuelo,routPawn);
-		DrawDebugCylinder(self.Location,self.location+self.Floor*140,6,10,255,0,0,true);
+		//_DEBUG_DrawDebugCylinder(self.Location,self.location+self.Floor*140,6,10,255,0,0,true);
 		PC.GotoState('PlayerSpidering'); //--> OJO con la ÑAPA en player Controller para coger el floor inicial...
 
 		EstadoPropulsores(true);
@@ -863,7 +869,7 @@ state PawnFlaying
 
 	event BeginState(Name PreviousState)
 	{
-		`log("Pawn en PawnFlaying, previous was: "@PreviousState);
+		//_DEBUG_ ("Pawn en PawnFlaying, previous was: "@PreviousState);
 		//Invisible, y a volar!
 		Mesh.SetOwnerNoSee(true);
 		SetPhysics(PHYS_Flying);
@@ -872,7 +878,7 @@ state PawnFlaying
 	
 	event EndState(Name NextState)
 	{
-		`log("Pawn END state: "@NextState);
+		//_DEBUG_ ("Pawn END state: "@NextState);
 		//la ponemos visible de nuevo
 		Mesh.SetOwnerNoSee(false);
 		
@@ -886,14 +892,14 @@ state PawnPreparandoFlaying
 {
 	event BeginState(Name prevstate)
 	{
-		`log("Preparando para saltar");
+		//_DEBUG_ ("Preparando para saltar");
 		m_tiempoEstado=0;
 		m_backupDistanciaAlSuelo = m_DistanciaAlSuelo; //Porque lo modificamos, para restaurarlo
 	}
 
 	event EndState(Name nextstate)
 	{
-		`log("Fin de PlayerPreparandoFlaying");
+		//_DEBUG_ ("Fin de PlayerPreparandoFlaying");
 		m_DistanciaAlSuelo = m_backupDistanciaAlSuelo;
 	}
 

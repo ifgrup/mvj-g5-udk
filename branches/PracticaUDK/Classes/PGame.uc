@@ -31,12 +31,13 @@ struct GrupoNodosMundo
 	var array<PWorldPathNode> Nodos;
 };
 
-var array<GrupoNodos> Nodos;
+var array<GrupoNodos> GroupNodos;
 var array<Spawner> EnemySpawners;
 var array<GrupoNodosMundo> NodosMundo;
 
 var bool bSpawnBoss;
 var Vector  m_CentroPlaneta;
+var float m_max_radiorandom;
 
 simulated function PostBeginPlay()
 {
@@ -59,7 +60,7 @@ simulated function PostBeginPlay()
 		}
     }
 
-	`log("Hay"@EnemySpawners.Length);
+	//_DEBUG_ ("Hay"@EnemySpawners.Length);
 
 	CreatePathNodes();
 
@@ -153,18 +154,18 @@ function CreatePathNodes()
 	local int i;
 	foreach DynamicActors(class'PPathNode', PN)
 	{
-		i = Nodos.Find('id', PN.id);
+		i = GroupNodos.Find('id', PN.id);
 		if(i == -1)
 		{
 			GP.Nodos.AddItem(PN);
 			GP.id = PN.id;
 			GP.Col = MakeLinearColor(Frand(), FRand(), FRand(), 1.0);
 
-			Nodos.AddItem(GP);
+			GroupNodos.AddItem(GP);
 		}
 		else
 		{
-			Nodos[i].Nodos.AddItem(PN);
+			GroupNodos[i].Nodos.AddItem(PN);
 		}
 	}
 }
@@ -191,7 +192,7 @@ event Tick(float DeltaTime)
 				v1 = NodosMundo[i].Nodos[j+1].Location;
 	
 			v0 = NodosMundo[i].Nodos[j].Location;
-			DrawDebugLine(v0, v1, 255, 0, 0, false);
+			//_DEBUG_DrawDebugLine(v0, v1, 255, 0, 0, false);
 			//DrawDebugSphere(v0, 200, 10, 255, 0, 0, false);
 		}
 	}
@@ -199,7 +200,7 @@ event Tick(float DeltaTime)
 
 function DrawWorldNodes()
 {
-	local int i, j;
+	local int i;
 
 	for(i = 0; i < NodosMundo.Length; i++)
 	{
@@ -213,9 +214,9 @@ function DrawNodes()
 	local GrupoNodos GP;
 	local vector v1, v2;
 
-	for(j = 0; j < Nodos.Length; j++)
+	for(j = 0; j < GroupNodos.Length; j++)
 	{
-		GP = Nodos[j];
+		GP = GroupNodos[j];
 		for(i = 0; i < GP.Nodos.Length; i++)
 		{
 			v1 = GP.Nodos[i].Location;
@@ -235,37 +236,84 @@ function AddPathNode(int id, PPathNode pNodo, optional LinearColor col)
 	local int indice;
 	local GrupoNodos GP;
 
-	indice = Nodos.Find('id', id);
+	indice = GroupNodos.Find('id', id);
 	if(indice == -1)
 	{
 		GP.Nodos.AddItem(pNodo);
 		GP.id = pNodo.id;
 		GP.Col = col;
 
-		Nodos.AddItem(GP);
+		GroupNodos.AddItem(GP);
 		Broadcast(none, "Creando nuevo grupo de nodos...");
 	}
 	else
-		Nodos[indice].Nodos.AddItem(pNodo);
+		GroupNodos[indice].Nodos.AddItem(pNodo);
 }
 
 function PPathNode GetNextPath(int id, out int NodeIndex)
 {
 	local int indice;
 	local int NodeIndexTmp;
+	local GrupoNodos GN;
+	local int len;
+
 	NodeIndexTmp = NodeIndex +1;
 
-	indice = Nodos.Find('id', id);
-	//NodeIndex++;
-	if(NodeIndexTmp >= Nodos[indice].Nodos.Length)
+	indice = GroupNodos.Find('id', id);
+	GN = GroupNodos[indice];
+	len = GN.Nodos.Length;
+
+	if(NodeIndexTmp >= len)
 	{
 		return none;
 	}
 	else
 	{
 		NodeIndex ++;
-		return Nodos[indice].Nodos[NodeIndex];
+		/*
+		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
+		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
+		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
+		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
+		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
+		*/
+		return AplicarRandomNodoMinion(GroupNodos[indice].Nodos[NodeIndex]);
 	}
+}
+
+function PPathNode AplicarRandomNodoMinion(PPathNode nodo)
+{
+	local PPathnode p;
+	local vector f ;
+	local vector v,r ;
+	local Quat ernion,ernion2;
+
+
+	//Creamos una copia de nodo en p
+	p = spawn(class'PPathNode',,,nodo.Location);
+	p.id = nodo.id;
+	p.m_floor_nodo = nodo.m_floor_nodo;
+	p.m_direccion_nodo = nodo.m_direccion_nodo;
+
+	f = p.m_floor_nodo;
+	v = p.m_direccion_nodo;
+	
+	ernion =  QuatFromAxisAndAngle(f,rand(360)*DegToRad);
+	ernion2 = QuatFromRotator(Rotator(v));
+	ernion =  QuatProduct(ernion,ernion2);
+	v = vector(QuatToRotator(ernion));
+
+	r = normal(v)*rand(m_max_radiorandom);
+    p.SetLocation(p.Location + r );//+ p.m_floor_nodo * 30);
+
+	/*
+	DrawDebugSphere(nodo.Location,30,7,255,0,0,true);
+	DrawDebugSphere(p.Location,20,7,0,0,255,true);
+	DrawDebugCylinder(nodo.Location,p.Location,4,5,200,0,0,true);
+    */
+	
+    return p;
+
 }
 
 function ActivateSpawners()
@@ -357,6 +405,34 @@ function Vector GetCentroPlaneta()
 	return m_CentroPlaneta;
 }
 
+function GetVectorEnemigos(int idSpawner, out array<PEnemy> enemigos, out PEnemy_AI_Scout scout)
+{
+	 local Spawner ES;
+	 local int index;
+     local PEnemy_AI_Scout  elscout;
+
+	 index= EnemySpawners.Find('id', idSpawner);
+
+	 if(index == -1)
+	 {
+		`log("KAGADA");
+	 }
+	 else
+	 {
+		ES = EnemySpawners[index];
+		enemigos = ES.SpawnPoint.Enemy;
+		//Obtener el scout
+		foreach DynamicActors(class 'PEnemy_AI_Scout', elscout)
+		{
+			if (elscout.id == idSpawner)
+			{
+				scout = elscout;
+				break;
+			}
+		}
+	 }
+}
+
 defaultproperties
 {
 	PlayerControllerClass=class'PGame.PPlayerController'
@@ -372,4 +448,5 @@ defaultproperties
 	//m_CentroPlaneta=(X=528,Y=144,Z=8752)
 	m_CentroPlaneta=(X=0.000000,Y=0.000000,Z=0.000000)
 	NodosCreados=false
+	m_max_radiorandom = 400;
 }
