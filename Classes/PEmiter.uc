@@ -37,7 +37,7 @@ function Tick(Float Delta)
 	m_tiempotranscurrido+=Delta;
 	if (m_tiempotranscurrido>m_tiempoHielo)
 	{
-		`Log("Destruimos el emiter"@MyEmitter);
+		//_DEBUG_ ("Destruimos el emiter"@MyEmitter);
 		MyEmitter.ShutDown();
 		//MyEmitter.Destroy(true);
 		m_tiempotranscurrido=0;

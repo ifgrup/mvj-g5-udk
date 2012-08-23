@@ -12,6 +12,7 @@ struct DisparoHielo
 };
 
 var array<DisparoHielo> m_array_disparos_hielo;
+var float m_radioinicial;
 
 //Funcion definida en PAutoTurret, redefinida en cada hija
 function DisparoTorreta()
@@ -19,7 +20,7 @@ function DisparoTorreta()
 		//Emitimos un sistema de partículas que va desde la torreta hacia fuera, en círculo, y todo aquello que toca,
 		//lo convierte en hielo.
 		//local PEmiter pem;
-		`Log("DIsparo Ice");
+		//_DEBUG_ ("DIsparo Ice");
 		GeneraNuevaOndaHielo();
 		//pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
 		//pem.SpawnEmitter();
@@ -36,10 +37,13 @@ function GeneraNuevaOndaHielo()
 	PSC = Spawn(class'EmitterSpawnable',Self);
 	if (PSC != None)
 	{
-		PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.PruebaEsferaHielo');
+		//PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.PruebaEsferaHielo');
+		PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.ToroideAzul');
+				
 		disparo.ParticulasNieblaHielo = PSC;
 		disparo.Tiempo = 0;
 		disparo.Radio = 50; //Inicialmente, para que no parezca que sale de dentro de la torreta?
+		disparo.borrar = false;
 		m_array_disparos_hielo.AddItem(disparo);
 	}
 
@@ -52,7 +56,6 @@ function HacerDanyoRadial (float DamageRadius)
 	//hace que pille el escudo de la torreta y nada más..
 
 	local PEnemyPawn_Minion	Victim;
-	local TraceHitInfo HitInfo;
 
 	// Prevent HurtRadius() from being reentrant.
 	if ( bHurtEntry )
@@ -75,7 +78,16 @@ state NuevoTarget
 {
 	event BeginState(Name PreviousStateName)
 	{
-		`log("Turret Ice, enemeigo seleccionado, pues a congelar");
+		//_DEBUG_ ("Turret Ice, enemeigo seleccionado, pues a congelar");
+		GoToState('Disparando');
+	}
+}
+
+state Idle //ÑAPAAAAAAAAAAAA TEMPORALLLLLLLLL
+{
+	event BeginState(Name PreviousStateName)
+	{
+		
 		GoToState('Disparando');
 	}
 }
@@ -98,6 +110,10 @@ state Disparando
 		local float tiempo_i;
 		local float radio_i;
 		local vector radio_v;
+		local rotator r;
+		local quat qat,qy;
+		local vector rx,ry,rz;
+		local float parasin;
 
 		super.Tick(DeltaTime);
 
@@ -113,13 +129,29 @@ state Disparando
 			{
 				//Incrementamos radio, aplicamos damage, y movemos la partícula sinusoidalmente (toma palabrita ;) 
 				tiempo_i = m_array_disparos_hielo[i].Tiempo;
-				radio_i = 350 + tiempo_i * 70; 
-				radio_v.X = radio_i/15;
-				radio_v.y = radio_i/15;
-				radio_v.z = 15;//radio_i/15;
-				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetVectorParameter('Radio',radio_v); 
+				radio_i = m_radioinicial + tiempo_i * 70; 
+				radio_v.X = radio_i;
+				radio_v.y = radio_i;
+				radio_v.z = 500;
+				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('RadioToroide',radio_i); 
 				
-				DrawDebugSphere(self.Location,radio_i,80,255,255,255,false);
+				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetVectorParameter('RadioToroide',radio_v); 
+				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('RadioCilindro',radio_i); 
+				parasin = 300 + sin (tiempo_i) *50;
+				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('AlturaCilindro',parasin); 
+				
+				
+				//hay que orientar en la perpendicular
+				r=rotator(-m_NormalSuelo);
+				qat = QuatFromRotator(r);
+				GetAxes(r,rx,ry,rz);
+				qy  = QuatFromAxisAndAngle(ry,-90*DegToRad);
+				qat = QuatProduct(qy,qat);
+				r= QuatToRotator(qat);
+				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetRotation(r);
+
+
+				DrawDebugSphere(self.Location,radio_i,5,255,255,255,false);
 
 				//Sólo recalculamos damage cada medio segundo, no vale la pena cargar a cada tick
 				if ((tiempo_i - m_array_disparos_hielo[i].tiempo_anterior_hurt)>0.5)
@@ -252,5 +284,6 @@ defaultproperties
 	TurretHealth=500
 	RoundsPerSec=50
 	m_TimeoutEntreDisparo=10 //Disparo de hielo cada 3 segundos
+	m_radioinicial = 300;
 
 }

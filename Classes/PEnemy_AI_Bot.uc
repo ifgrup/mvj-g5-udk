@@ -7,14 +7,76 @@ var int Step;   //Distancia mínima para considerar que no ha llegado a la base
 var bool bPrimeraVez;
 var PEmiter m_pEmiter; //Para poder mostrar las partículas de congelación
 var int m_disparos_giru_congelado;//Disparos de giru recibidos mientras estoy congelado
+var int m_intentos_nuevo_nodo; //Intentos en idle antes de 'suicidarse'??
+
 /**
  * Inicializamos el objetivo principal 
  */
+
+
+var float m_dist_choque_Scout;
+var float m_dist_choque_Minion;
+
+var int m_year,m_month,m_weekday,m_day,m_hour,m_min,m_sec,m_milisec;
+var float ahora, m_last_stop_colision;
+var float distNodo,oldDistNodo;
+var int m_segundosQuieto;
+var float m_distancia_Base_kamikaze; //Distancia a la base en la que se considera que ha llegao
+
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
-	//SetTimer(3, true, 'BrainTimer');
+	SetCollision( true, true,true);
+	self.bCanStepUpOn =false;
+	//self.bMovable = false;
+	self.bPushedByEncroachers = false;
 }
+
+function Parar()
+{
+	self.PushState('StopColision');
+}
+
+function EstanLosColegasCercaNeng()
+{
+	local array<PEnemy> colegas;
+	local PEnemy_AI_Scout elscout;
+	local int i;
+	local float distscout,distcolega,distscoutmio,distscoutcolega;
+
+	PGame(Worldinfo.Game).GetVectorEnemigos(self.id, colegas,elscout);
+	distscout = vsize(self.Pawn.Location-elscout.Pawn.Location);
+	if (distscout < m_dist_choque_Scout)
+	{
+		Parar();
+	}
+
+	//Bucle pa los compis
+	for (i=0;i<colegas.length;i++)
+	{
+		if (colegas[i] == None)
+			continue; //Pasa, no sé en qué circunstancias...
+
+		if (colegas[i] == PEnemy(self.Pawn))
+			continue;
+
+		distcolega = vsize(colegas[i].Location-self.pawn.Location);
+		if (distcolega < m_dist_choque_Minion)
+		{
+			distscoutmio    = vsize(self.Pawn.Location-elscout.Pawn.Location);
+			distscoutcolega = vsize(colegas[i].Location-elscout.Pawn.Location);
+			//Si yo estoy más lejos, me paro y hago un break para no comparar con nadie más
+			if (distscoutmio > distscoutcolega)
+			{   
+				Parar();
+				//DrawDebugSphere(self.Pawn.Location,80,10,0,0,255,true);
+				break; //no tengo que comparar con nadie más, ya me he parado
+			}
+
+		}
+	}
+}
+
 
 
 /* --------------- ESTADO IDLE_INICIAL --------------
@@ -24,7 +86,7 @@ auto state Idle_Inicial
 {
 	event BeginState(Name PrevName)
 	{
-		`log("Penemy_AI_Bot creado, estoy en Idle");
+		//_DEBUG_ ("Penemy_AI_Bot creado, estoy en Idle");
 		m_tiempo_tick = 0;
 	}
 
@@ -36,6 +98,11 @@ auto state Idle_Inicial
 		super.Tick(Deltatime);
 		if (m_tiempo_tick >= 1.0)
 		{
+			m_intentos_nuevo_nodo++;
+			if (m_b_breakpoint)
+			{
+				m_b_breakpoint = true;
+			}
 			m_tiempo_tick = 0; //para el siguiente 'timer'
 			if (!Penemy(Pawn).IsInState('Cayendo'))
 			{
@@ -44,9 +111,31 @@ auto state Idle_Inicial
 				if(theObjective != none)
 				{
 					//Tenemos objetivo. Podemos ir al siguiente estado
-					`log("En idle, tengo nodo nuevo y me voy");
+					//_DEBUG_ ("En idle, tengo nodo nuevo y me voy");
 					GotoState('GoToNextPath');
 				}
+				else
+				{ //La única forma de que GetNextPath devuelva none, a falta de unexpected errors, es que estemos en el último nodo
+				  //Si es así, es porque no le hemos dado tiempo al scout, o porque hemos llegado a la base. Lo comprobamos
+                  if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+                  {
+					 GoToState('TowerAttack');
+                  }
+				  else if (m_intentos_nuevo_nodo >5)
+				  {
+					GoToState('TowerAttack'); //Yo lo enviaba a explotar y punto, rollo suicida
+				  }
+
+				  if (self.m_b_breakpoint)
+				  {
+						m_tiempo_tick = m_tiempo_tick;
+				  }
+				  
+				}
+			}
+			else if (self.m_b_breakpoint)
+			{
+					m_tiempo_tick = m_tiempo_tick;
 			}
 		}//if >1 segundo
 	}//Tick
@@ -54,12 +143,21 @@ auto state Idle_Inicial
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
+		self.m_b_breakpoint = true;
 	}
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
 	}
+
+Begin:
+	self.stoplatentexecution();
+	self.velocity = vect (0,0,0);
+	self.pawn.velocity = vect (0,0,0);
+	m_intentos_nuevo_nodo = 0;
+
+	
 
 
 }/* --------------- FIN ESTADO IDLE_INICIAL --------------*/
@@ -75,10 +173,16 @@ state GoToNextPath
 	event Tick (float DeltaTime)
 	{
 		super.Tick(DeltaTime);
-		//Cada 3 segundos, hacemos el control que hacía inicialmente la función BrainTimer
-		if(m_tiempo_tick >=3.0)
+		//Cada segundo, hacemos el control que hacía inicialmente la función BrainTimer
+		if (theObjective == None)
 		{
-			m_tiempo_tick = m_tiempo_tick - 3.0; //Por intentar autoajustar un poco y que no siempre sea 3s y pico
+			GoToState('Idle_Inicial');
+			return;
+		}
+		DrawDebugCylinder(self.Pawn.Location,theObjective.Location,3,4,0,0,200,false);
+		if(m_tiempo_tick >=1.0)
+		{
+			m_tiempo_tick = m_tiempo_tick - 1.0; //Por intentar autoajustar un poco y que no siempre sea 1s y pico
 			// Comprobamos si hemos llegado al destino
 			if(VSize(theBase.Location - Pawn.Location) < Step)
 			{
@@ -90,7 +194,8 @@ state GoToNextPath
 			}
 
 			// Comprobamos si hemos llegado al nodo y pedimos el siguiente punto de ruta
-			if(VSize(theObjective.Location - Pawn.Location) < 100)
+			distNodo = VSize(theObjective.Location - Pawn.Location);
+			if(distNodo < 100)
 			{
 				theObjective = PGame(WorldInfo.Game).GetNextPath(id, NodeIndex);
 				// Si tenemos objetivo, nos movemos a su posición
@@ -102,7 +207,7 @@ state GoToNextPath
 				else
 				{
 					//No hay objetivo
-					//Podríamos no hacer nada y esto se ejecutaría de nuevo a los 3 segundos.
+					//Podríamos no hacer nada y esto se ejecutaría de nuevo al segundo.
 					//Pero lo suyo es ir al estado Idle
 					//`log("Idle al llegar al nodo");
 					GoToState('Idle_Inicial');
@@ -110,16 +215,38 @@ state GoToNextPath
 			}
 			else
 			{
-				//Igualmente hay que decirle que siga para alante hacia donde iba:
+				//Igualmente hay que decirle que siga para alante hacia donde iba.
+				//Pero si por lo que sea estamos parados porque el MoveTo considera que ha llegado, hay que ir
+				//al siguiente nodo.
+				//Control de que se queda quieto:
+				if (abs(distNodo - oldDistNodo)<0.1)
+				{
+					m_segundosQuieto +=1;
+					if (m_segundosQuieto == 2)
+					{
+						m_segundosQuieto = 0;
+						theObjective = PGame(WorldInfo.Game).GetNextPath(id, NodeIndex);
+					}
+				}
+				oldDistNodo = distNodo;
 				GotoState('GoToNextPath');
 			}
 
-		}   
+		} 
+		EstanLosColegasCercaNeng();
 	}//Tick
+
+
+	function Parar()
+	{
+		self.PushState('StopColision');
+	}
 
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
+		
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH"@self.Name);
+		self.PushState('StopColision');
 	}
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
@@ -135,6 +262,12 @@ state GoToNextPath
 		self.PushState('Congelado');
 	}
 
+	function Control_BaseChangedPenemy(Actor PEnemyOtro)
+	{   
+	//`log("PEnemy_AI_Controller::Control_BaseChangedPenemy, DEBES SOBREESCRIBIRME!!!");
+	//PEnemyPawn_Minion(self.Pawn).PararEsperar();
+	self.PushState('StopColision');
+	}
 
 Begin:
 	m_tiempo_tick = 0;
@@ -248,6 +381,74 @@ state DeadAnyicos
 
 
 
+/* --------------- ESTADO STOP_COLISION --------------
+ * --- Estábamos andando, hemos hecho BaseChange contra otro coleguilla, espermos 1 segundo
+ */
+
+state StopColision
+{
+	//Todas las funciones sobreescribibles las dejamos vacías just in case
+	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en StopColision "@self.Name);
+		self.m_b_breakpoint = true;
+	}
+
+	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser){}
+	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser){}
+	
+	/*
+	event Tick(float delta)
+	{
+		local Vector Gravity;
+		local vector vAlCentro;
+		local vector FallDirection;
+
+		super.Tick(delta);
+		if (m_tiempo_tick > 3.0)
+		{
+			self.PopState();
+			//self.Possess(m_PawnAntesUnpossess,false);
+
+		}
+	}
+   */
+	
+Begin:
+	
+	//`log("Soy un PEnemy_AI_Bot, y me paro porque he enculao a un colega");
+	//old_velocity=pawn.Velocity;
+	if (m_b_breakpoint)
+	{
+		m_b_breakpoint = true;
+	}
+	GetSystemTime(m_year,m_month,m_weekday,m_day,m_hour,m_min,m_sec,m_milisec);
+	ahora = m_sec+m_milisec/1000.0;
+	if (abs(ahora-m_last_stop_colision) >= 0.5)
+	{
+		StopLatentExecution();
+		Velocity = vect(0,0,0);
+		Acceleration = vect(0,0,0);
+		pawn.Velocity = vect(0,0,0);
+		pawn.Acceleration = vect(0,0,0);
+		Sleep(0.6);
+		//PEnemyPawn_Minion(self.pawn).PararEsperar();   
+		m_tiempo_tick = 0;
+	}
+	else
+	{
+		//`log("no me paro otra vez");
+	}
+	GetSystemTime(m_year,m_month,m_weekday,m_day,m_hour,m_min,m_sec,m_milisec);
+	m_last_stop_colision = m_sec+m_milisec/1000.0;
+
+	self.PopState();
+
+
+}/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
+//__________________
+
+
 
 
 
@@ -269,6 +470,35 @@ state TowerAttack
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
 	}
 
+	event Tick(float delta)
+	{
+		local Vector Gravity;
+		local vector vAlCentro;
+		local vector FallDirection;
+
+		super.Tick(delta);
+		if (m_tiempo_tick < 10 )
+		{
+			DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,false);
+			self.Pawn.Acceleration = vect (0,0,0);
+			self.Pawn.Velocity = vect(0,0,0);
+		}
+		else
+		{
+			m_tiempo_tick = 0;
+		}
+	}
+   
+Begin:
+	StopLatentExecution();
+	m_tiempo_tick = 0;
+	self.Velocity = vect(0,0,0);
+    self.Acceleration = vect(0,0,0);
+	self.Pawn.Velocity = vect(0,0,0);
+	self.Pawn.Acceleration = vect(0,0,0);
+
+	
+
 }/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
 //____________________________________________________________________________________________________________________________________
 
@@ -278,4 +508,8 @@ defaultproperties
 	NodeIndex=0
 	Step=400
 	bPrimeraVez=true
+	bMovable=false
+	m_dist_choque_Minion=250
+	m_dist_choque_Scout=125
+	m_distancia_Base_kamikaze=150
 }

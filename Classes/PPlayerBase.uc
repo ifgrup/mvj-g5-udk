@@ -88,7 +88,7 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 
 function pupitabase()
 {
-	`log("man dao augthhh");
+	//_DEBUG_ ("man dao augthhh");
 	life--;
 	if(life <= 0)
 	{

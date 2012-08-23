@@ -1,4 +1,4 @@
-class PEnemy extends UTPawn
+class PEnemy extends GamePawn
 Placeable;
 
 var PPawn P; // variable to hold the pawn we bump into
@@ -12,42 +12,79 @@ var int m_puntos_al_morir; //Puntos que da al jugador cuando lo mata
 
 var Vector FloorActual;
 
+
 function SetColor(LinearColor Col)
 {
 	
 }
 
+function ApplyGravity(float DeltaTime)
+{
+		local Vector Gravity;
+		local vector vAlCentro;
+
+		fTiempoDeSalto+=DeltaTime;
+		if (fTiempoDeSalto>3.0) //Se le ha ido la castaña al salto. Hay que bajarlo a la tierra.Utilizamos el centro del planeta
+		{
+			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Location; 
+			FallDirection = Normal(vAlCentro);
+			//_DEBUG_ DrawDebugSphere(Location,100,30,255,10,10,false);
+			//_DEBUG_ ("volviendo pa la tierra neng! hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" @self.Name);
+		}
+
+		Gravity = FallDirection * WorldInfo.WorldGravityZ * -1 * DeltaTime;
+
+		// Add force to velocity
+		Velocity += Gravity;
+		////_DEBUG_ ('Gravity on Pawn en estado Falling');
+}
 
 simulated function PostBeginPlay()
 {
    super.PostBeginPlay();
 
-   //Hacemos que caigan hasta el suelo. Una vez en el suelo, spider
-   GoToState('Cayendo');
+    // Turning collision on for skelmeshcomp and off for cylinder
+	CylinderComponent.SetActorCollision(false, false);
+	
+    //Hacemos que caigan hasta el suelo. Una vez en el suelo, spider
+    //GoToState('Cayendo');
 }
 
-function bool DoJump( bool bUpdating )
+function bool Salta( bool bUpdating , optional bool bParado = false)
 {
+	local vector vAlCentro;
 	// Si podemos saltar...
-	if(bJumpCapable && !bIsCrouched && !bWantsToCrouch && Physics == PHYS_Spider)
+	if(bJumpCapable && !bIsCrouched && !bWantsToCrouch)// && Physics == PHYS_Spider)
 	{
 		// Calculamos la velocidad a partir de la constante de salto + el vector de suelo
-		Velocity += JumpZ * Floor;
-
-		// Y vamos al estado PawnFalling
-		GotoState('PawnFalling');
-		//`log('DoJump de PPawn');
+		if(!bParado && Floor != vect(0,0,1))
+		{
+			Velocity = - Velocity + (JumpZ/10) * Floor;
+			FallDirection = -Floor;
+		}
+		else
+		{
+			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Location; 
+			Velocity = -Velocity + (JumpZ/10) *(-1)* Normal(vAlCentro) + VRand() * (jumpZ/20);
+			FallDirection =  Normal(vAlCentro);
+			//DrawDebugCylinder(self.Location,self.Location-Normal(vAlCentro)*300,6,12,0,255,0,true);
+    	}
+		// Y vamos al estado PawnFalling, sólo si no estamos ya claro, para evitar doble push y que al hacer
+		//pop, no vuelva al estado original
+		if (!self.IsInState('PawnFalling'))
+		{
+			self.PushState('PawnFalling');
+		}
 		return true;
 	}
-	`log('DoJump de PPawn NO PUEDE SALTAR');
+	//_DEBUG_ ('Salta de PEnemy NO PUEDE SALTAR');
 	return false;
 }
 
 function ActualizaRotacion(float DeltaTime)
 {
 	local rotator ViewRotation;
-	local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
-	local float angulo;
+	local vector MyFloor;//, CrossDir, FwdDir, OldFwdDir, RealFloor;
 		
 	MyFloor = self.Floor;
 	if(OldFloor == vect(0,0,1))
@@ -115,7 +152,10 @@ function ActualizaRotacion(float DeltaTime)
 	DrawDebugCylinder(self.Location,self.Location+normal(self.Velocity)*100,5,5,0,0,255,false);
 	DrawDebugCylinder(self.Location,self.Location+ViewZ*100,5,5,0,255,0,false);
     */
-
+	if (PEnemyPawn_Minion(self) != none)
+	{
+		//DrawDebugSphere(self.Location+ViewZ*300,90,25,255,255,0,false);
+	}
 	//GetAxes(self.Rotation,viewx,viewy,viewz);
 
 }
@@ -143,7 +183,7 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 	//Ha sido por disparo de Giru?
 	if(PMisiles(DamageCauser) != None && PPlayerController(EventInstigator) != None)
 	{
-		`log("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
+		//_DEBUG_ ("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
 		RecibidoDisparoGiru(HitLocation, Momentum,DamageCauser);
 		PEnemy_AI_Controller(Owner).ControlTakeDisparoGiru(HitLocation, Momentum,DamageCauser);
 		return;
@@ -152,7 +192,7 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 	//Ha sido por disparo de TurretCannon?
     if(PMisiles(DamageCauser) != None && PMisiles(DamageCauser).disparador == 'PTurretCannon')
 	{
-		`log("Recibido disparo de TurretCannon(Global TakeDamage PEnemy) "@self.Name);
+		//_DEBUG_ ("Recibido disparo de TurretCannon(Global TakeDamage PEnemy) "@self.Name);
 		RecibidoDisparoTurretCannon(HitLocation,Momentum,DamageCauser);
 		PEnemy_AI_Controller(Owner).ControlTakeDisparoTurretCannon(HitLocation, Momentum,DamageCauser);
 		return;
@@ -160,7 +200,7 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 	//Ha sido por disparo de TurretIce?
 	if(PTurretIce(DamageCauser) != None)
 	{
-		`log("Recibida congelación de TurretIce (Global TakeDamage PEnemy) "@self.Name);
+		//_DEBUG_ ("Recibida congelación de TurretIce (Global TakeDamage PEnemy) "@self.Name);
 		RecibidoDisparoTurretIce(HitLocation,Momentum,DamageCauser);
 		PEnemy_AI_Controller(Owner).ControlTakeDisparoTurretIce(HitLocation, Momentum,DamageCauser);
 		return;
@@ -171,7 +211,7 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 	//Ha sido por la trampa cual?
 
 	//Tratamiento default
-	`log("Recibido TakeDamage no sé por quién "@self.Name);
+	//_DEBUG_ ("Recibido TakeDamage no sé por quién "@self.Name);
     RecibidoDanyoSinIdentificar(HitLocation,Momentum,DamageCauser);	
 } //TakeDamage
 
@@ -182,7 +222,7 @@ function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCau
 	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoGiru + lo que deba hacer
 
     life--;
-	`log("Vida PEnemy" @life);
+	//_DEBUG_ ("Vida PEnemy" @life);
 	if(life == 0)
 	{
 		
@@ -202,7 +242,7 @@ function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor D
 	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoTurretCannon + lo que deba hacer
 
     life-=3; //Cada disparo de torreta es un toñazo 3 veces más grande que el del Giru, por ejemplo
-	`log("Vida PEnemy" @life);
+	//_DEBUG_ ("Vida PEnemy" @life);
 	if(life == 0)
 	{
 		
@@ -231,7 +271,7 @@ function RecibidoDanyoSinIdentificar(vector HitLocation, vector Momentum,Actor D
 	//Creo que no se debería ejecutar nunca, siempre deberíamos saber por qué motivos recibe daño.
 	//Pero en desarrollo debería seguir así para poder ir depurando los distintos tipos de daño recibidos
 	local int i;
-	for (i=0;i<10;i++)
+	for (i=0;i<3;i++)
 	{
 		`log("__________________________!!!____________________");
 	}
@@ -263,7 +303,7 @@ state ChafadoPorPawn
 
 	event EndState(Name NextState)
 	{
-		`log('el pawn deja de esar en Falling');
+		//`log('el pawn deja de esar en ChafadoPorPawn');
 	}
 }//ChafadoPorPawn
 
@@ -278,23 +318,6 @@ state ChafadoPorPawn
  */
 state PawnFalling
 {
-
-
-	event BeginState(Name PrevName)
-	{
-
-		`log('pawn en estado Falling');
-		//DBG WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
-		FallDirection = -Floor;
-		
-        // Direct hit wall enabled just for the custom falling
-		bDirectHitWall = true;
-
-		// flying instead of Falling as flying allows for custom gravity
-		SetPhysics(PHYS_Flying);
-		fTiempoDeSalto=0.0; //tiempo de salto
-	}
-
 	event Tick(float DeltaTime)
 	{	
 		local vector vAlCentro;
@@ -304,40 +327,56 @@ state PawnFalling
 		// Apply Gravitational Force
 		ApplyGravity(DeltaTime);
 		fTiempoDeSalto+=DeltaTime;
-		if (fTiempoDeSalto>3.0) //Se le ha ido la castaña al salto. Hay que bajarlo a la tierra.Utilizamos el centro del planeta
+		if (fTiempoDeSalto>2.0) //Se le ha ido la castaña al salto. Hay que bajarlo a la tierra.Utilizamos el centro del planeta
 		{
 			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-Location; 
 			FallDirection = Normal(vAlCentro);
-			`log("volviendo pa la tierra neng!");
+			//DrawDebugSphere(Location,100,30,255,10,10,false);
+			//`log("volviendo pa la tierra neng! hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" @self.Name);
 		}
-	}
+	}//Tick
+
 
 	/** Adds gravity to the velocity based on floor normal pawn was last on */
+
 	function ApplyGravity(float DeltaTime)
 	{
 		local Vector Gravity;
-
 		Gravity = FallDirection * WorldInfo.WorldGravityZ * -1 * DeltaTime;
-
 		// Add force to velocity
 		Velocity += Gravity;
 		//`log('Gravity on Pawn en estado Falling');
 	}
 
+
 	// called when the pawn lands or hits another surface
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
-		GotoState('');
+		//`log("__HA LLEGADO a la tierra neng!" @self.Name);
 		SetBase(Wall, HitNormal);
+		self.PopState();
+
 	}
    
-	event EndState(Name NextState)
+	event PoppedState()
 	{
 		FallDirection = vect(0,0,0); // CLEAR DESTINATION FLOOR
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
-		`log('el pawn deja de esar en Falling');
+		//`log('el pawn deja de esar en Falling');
 	}
+
+
+Begin :
+	//`log('PEnemy estado Falling');
+	//DBG WorldInfo.Game.Broadcast(self,"Entrando en PawnFalling");
+	
+    // Direct hit wall enabled just for the custom falling
+	bDirectHitWall = true;
+	// flying instead of Falling as flying allows for custom gravity
+	SetPhysics(PHYS_Flying);
+	fTiempoDeSalto=0.0; //tiempo de salto
+
 }
 
 auto state Cayendo
@@ -352,7 +391,7 @@ auto state Cayendo
 		Velocity=Normal(vCaida) * WorldInfo.WorldGravityZ * -1; //Lo decimos la velocidad a la que volará hasta el suelo, como si estuviera cayendo
 		SetPhysics(PHYS_Flying);
 		DireccionCaida=Normal(vCaida);
-		`log('Enemy entrando en estado CAYENDO');
+		//`log('Enemy entrando en estado CAYENDO');
 		bDirectHitWall = true;
 		OldFloor=vect(0,0,1);
 
@@ -378,11 +417,21 @@ auto state Cayendo
 		//`log("->" @self.Location @self.Velocity);
 		//DBG DrawDebugCone(self.Location,Velocity,100,0.01,0.1,20,MakeColor(200,0,0));
 		ApplyGravity(delta);
+
+		//Si al caer choca contra otro penemy que esté en el suelo, saltará por Bump o por BaseChange, y en el estado
+		//de PawnFalling ya detectará el HitWall, y por tanto este HitWall no se producirá nunca.
+		//Así pues, hay que estar en este estado hasta que se ejecute este HitWall, o bien hasta que este pawn
+		//tenga una base diferente de none, o mejor,  igual al planeta
+		if (self.Base != None && self.Base.Name=='StaticMeshActor_1')
+		{
+			//Lo mismo que en el caso del HitWall, volvemos al estado 'base'
+			GotoState(''); //estado default
+		}
 	}
 	// cuando llegue al suelo:
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
-		`log('Enemy ha llegado al suelo');
+		//_DEBUG_ ('Enemy ha llegado al suelo');
 		//SetBase(Wall, HitNormal);
 		bDirectHitWall = false; 
 		SetPhysics(PHYS_None);
@@ -395,7 +444,7 @@ auto state Cayendo
 	event EndState(Name NextState)
 	{
 		
-		`log('Enemy sale de estado Cayendo '@NextState);
+		//_DEBUG_ ('Enemy sale de estado Cayendo '@NextState);
 	}
 
 }//state Cayendo
@@ -407,25 +456,28 @@ simulated function SetCharacterClassFromInfo(class<UTFamilyInfo> Info)
 	return;
 }
 
+
 simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNormal )
 {
+
+	local PEnemy Pbump;
 
 	if ( (Other == None) || Other.bStatic )
 		return;
 
-	P = PPawn(Other); //the pawn we might have bumped into
+	Pbump = PEnemy(Other); //the pawn we might have bumped into
 
-	if ( P != None)  //if we hit a pawn
+	if ( Pbump != None )  //Si nos chocamos contra otro PEnemy
 	{
-		if (PEnemy(Other) != None)  //we hit another zombie
-		{
-			DoJump(true);
-			return; //dont do owt
-		}
+		self.Velocity=vect(0,0,0);
+		self.Acceleration = vect (0,0,0);
+		Salta(true);
+		return; //ya tá
 	}
 	
-	super.Bump( Other, OtherComp, HitNormal );
+	//super.Bump( Other, OtherComp, HitNormal );
 }
+
 
 /** BaseChange
  Si un enemigo se sube encima de otro, le hacemos saltar fuera de él.
@@ -439,7 +491,7 @@ singular event BaseChange()
 	{
 		if ( GetStateName() != 'PawnFalling' && GetStateName() != 'Cayendo' ) 
 	    {
-			`log('Base Changed to None en estado '@GetStateName() @self.Name);
+			//_DEBUG_ ('Base Changed to None en estado '@GetStateName() @self.Name);
 			return;
 	    }
 		else
@@ -455,8 +507,11 @@ singular event BaseChange()
 
 	if(PEnemy(Base) != None)
 	{
-		`log("PEnemy encima de otro "@self.Name @self.GetStateName());
-		PEnemy_AI_Controller(Owner).Control_BaseChangedPenemy(Base);
+		//_DEBUG_ ("PEnemy encima de otro "@self.Name @self.GetStateName());
+		//PEnemy_AI_Controller(Owner).Control_BaseChangedPenemy(Base);
+		self.Velocity = vect(0,0,0);
+		self.Acceleration = vect (0,0,0);
+		Salta(true,true);
 		//DrawDebugCylinder(self.Location,self.Location+floor*3000,6,15,200,0,200,true);
 		return;
 
@@ -471,7 +526,8 @@ singular event BaseChange()
 
 defaultproperties 
 {
-	Begin Object Name=WPawnSkeletalMeshComponent
+	
+	Begin Object Class=SkeletalMeshComponent Name=PEnemySkeletalMeshComponent
 		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
 		SkeletalMesh=SkeletalMesh'CH_IronGuard_Male.Mesh.SK_CH_IronGuard_MaleA'
 		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
@@ -498,6 +554,8 @@ defaultproperties
 		
 	End Object
 
+	Components.Add(PEnemySkeletalMeshComponent)
+
 	RagdollLifespan=180.0 //how long the dead body will hang around for
 
 	AirSpeed=200
@@ -512,4 +570,5 @@ defaultproperties
 	MaxStepHeight=45
 	WalkableFloorZ=0
 	life=40
+
 }

@@ -94,7 +94,7 @@ simulated  function vector GetTargetLocation(optional actor RequestedBy, optiona
 //super.GetTargetLocation(RequestedBy,bRequestAlternateLoc);
 
 /*MouseInteractionInterface = */GetMouseActor(HitLocation, HitNormal);
-`Log("la hit location del GetTarget del HUD"@HitLocation);
+//_DEBUG_ ("la hit location del GetTarget del HUD"@HitLocation);
 return HitLocation;
 }
 
@@ -222,7 +222,7 @@ event PostRender()
 		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.TTowerActive!=2 && pct )
 		    {
 
-				`log("la pgfx ttower active " @pGFx.TTowerActive);
+				//_DEBUG_ ("la pgfx ttower active " @pGFx.TTowerActive);
 				pPlayerController = PPlayerController(PlayerOwner);
 
 				//Creamos torreta solo si hemos clickado dentro del planeta, no en el skybox (control por distancia)
@@ -235,8 +235,8 @@ event PostRender()
 
 					if(pGFx.TTowerActive==0)
 					{
-						`log("Vamos a spawnear una torreta ice");
-						pPlayerController.StartFire();
+						//_DEBUG_ ("Vamos a spawnear una torreta ice");
+						//pPlayerController.StartFire();
 						//spawn(class'MU_AutoTurret', ,,HitLocation,rTorreta,);
 						PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-1000);
 						ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
@@ -258,7 +258,7 @@ event PostRender()
 				}
 				else
 				{
-					`Log("Click fuera de planeta "@dist @hitlocation);
+					//_DEBUG_ ("Click fuera de planeta "@dist @hitlocation);
 				}
 				PendingLeftPressed = false;
 			}
@@ -644,12 +644,12 @@ function Vector GetMirillaWorldLocation()
 		
 		if (HitLocationNoActor !=HitLocation)
 		{
-			`log("__________Traces Diferentes!!!" @HitLocationNoActor @HitLocation);
+			//_DEBUG_ ("__________Traces Diferentes!!!" @HitLocationNoActor @HitLocation);
 		}
 		return HitLocation;
     
     }
-	`log("__________SIN Traces DisparoActor______");
+	//_DEBUG_ ("__________SIN Traces DisparoActor______");
 	return HitLocationNoActor;
 }
 
@@ -800,7 +800,7 @@ exec function mirillatierrapos(float x, float y)
 	DI.Y=Pixel_Y_Mirilla+y;
 
 	pGFx.pmiratierraMC.SetDisplayInfo(DI);
-	//`log("Nueva Posicion mirilla "@DI.X @DI.Y);
+	////_DEBUG_ ("Nueva Posicion mirilla "@DI.X @DI.Y);
 }
 
 

@@ -103,7 +103,7 @@ function Init(optional LocalPlayer LocalPlayer)
 function SetOverUIElement(bool val)
 {
 	bMouseOverUIElement = val;
-	`log("Flash");
+	//_DEBUG_ ("Flash");
 }
 function SetTowerActive(bool val)
 {
@@ -117,7 +117,7 @@ function SetTTowerActive(TTower val)
 {
 
 TTowerActive=val;
-`log("La torre activa es: " @TTowerActive);
+//_DEBUG_ ("La torre activa es: " @TTowerActive);
 }
 function TurretReload(){
 tdcMC.GotoAndPlay("reload");
