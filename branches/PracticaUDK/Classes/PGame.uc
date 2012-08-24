@@ -432,6 +432,11 @@ function GetVectorEnemigos(int idSpawner, out array<PEnemy> enemigos, out PEnemy
 		}
 	 }
 }
+exec function ponerpasta(int p)
+{
+SetCredito(p);
+}
+
 
 defaultproperties
 {

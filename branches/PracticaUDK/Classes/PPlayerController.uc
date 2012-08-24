@@ -1354,13 +1354,15 @@ exec function ZoomPlanetaAleja()
 exec function vuela()
 {
 	local bool bTierraAire;
-	
+	local PHUD pHUD;
+
+	pHUD = PHUD(myHUD);
 	//Si estamos en el suelo, pasamos al estado de preparar el salto, pero no actualizamos el booleano
 	//de bEarthNotFlying hasta que realmente estemos en el aire. 
 
 	
 	bTierraAire=PGame(WorldInfo.Game).bEarthNotFlying;
-	
+	pHUD.inibotoneshud();
 	if(!bTierraAire) //Si estoy volando, es que quiero bajar al planeta
 	{
 		PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;

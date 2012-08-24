@@ -53,6 +53,31 @@ var int Pixel_X_Mirilla;
 var int Pixel_Y_Mirilla;
 var int m_min_offset_mirilla_y, m_max_offset_mirilla_y; //OFFSET de la mirilla al subir/bajar cámara
 
+
+
+//gestion de iconos en pantalla 
+
+
+
+struct SRadarInfo
+{
+	var UTPawn UTPawn;
+	var MaterialInstanceConstant MaterialInstanceConstant;
+	var bool DeleteMe;
+	var Vector2D Offset;
+	var float Opacity;
+};
+var array<SRadarInfo> RadarInfo;
+
+var const linearcolor RedLinearColor,BlueLinearColor,DMLinearColor;
+
+
+
+
+
+
+//
+
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
@@ -71,6 +96,8 @@ simulated event PostBeginPlay()
 			pGFx.Init(class'Engine'.static.GetEngine().GamePlayers[pGFx.LocalPlayerOwnerIndex]);
 		}
 	}
+
+	pGFx.SetTurretIdle();
 }
 
 simulated event Destroyed()
@@ -94,7 +121,7 @@ simulated  function vector GetTargetLocation(optional actor RequestedBy, optiona
 //super.GetTargetLocation(RequestedBy,bRequestAlternateLoc);
 
 /*MouseInteractionInterface = */GetMouseActor(HitLocation, HitNormal);
-//_DEBUG_ ("la hit location del GetTarget del HUD"@HitLocation);
+//`Log("la hit location del GetTarget del HUD"@HitLocation);
 return HitLocation;
 }
 
@@ -111,36 +138,9 @@ function PreCalcValues()
 	{
 		pGFx.SetViewport(0, 0, SizeX, SizeY);
 		pGFx.SetViewScaleMode(SM_NoScale);
-		pGFx.SetAlignment(Align_TopLeft);
+		pGFx.SetAlignment(Align_TopRight);
 
-		//Alinear los elementos de la pelicula flash por si acaso
-//		margenBotones = 20;
-/*
-		//Inventario
-		DI = titGFx.panelInventarioMC.GetDisplayInfo();
-		DI.X = SizeX/2;
-		DI.Y = SizeY;
-		titGFx.panelInventarioMC.SetDisplayInfo(DI);
 
-		//Boton para abrir el inventario
-		DI = titGFx.botonInventarioMC.GetDisplayInfo();
-		DI.X = 0;
-		DI.Y = SizeY;
-		titGFx.botonInventarioMC.SetDisplayInfo(DI);
-
-		//Boton de ayuda
-		DI = titGFx.botonAyudaMC.GetDisplayInfo();
-		DI.X = SizeX - margenBotones;
-		DI.Y = margenBotones;
-		titGFx.botonAyudaMC.SetDisplayInfo(DI);
-
-		//Boton del mapa
-		DI = titGFx.botonMapaMC.GetDisplayInfo();
-		DI.X = SizeX - margenBotones;
-		DI.Y = SizeY - margenBotones;
-		titGFx.botonMapaMC.SetDisplayInfo(DI);
-
-*/
 	}
 }
 
@@ -165,10 +165,7 @@ event PostRender()
 
 	//Conseguir la altura de los ojos del jugador
 	//no necesario por tipo de  vista ortogonal -- vlr
-	/*
-	titPlayerController = TITPlayerController(PlayerOwner);
-	titPlayerController.PawnEyeLocation = Pawn(PlayerOwner.ViewTarget).Location + Pawn(PlayerOwner.ViewTarget).EyeHeight * vect(0,0,1);
-	*/
+	
 	//Si no estamos utilizando Scaleform y tenemos CursorTexture valido, dibujaremos el cursor en el canvas
 	if(!UsingScaleform && CursorTexture != None)
 	{
@@ -187,15 +184,15 @@ event PostRender()
 		}
 	}
 
-
-
+//renderizar iconos en  pantalla 
+iconosapantalla();
 
 
 
 	//Conseguir la actual interfaz de interaccion del mouse
 	MouseInteractionInterface = GetMouseActor(HitLocation, HitNormal);
 
-	//Si MouseInteractionInterface es nulo, significa que el mouse no esta encima de nningun item
+	//Si MouseInteractionInterface es nulo, significa que el mouse no esta encima de ningun item
 	if(MouseInteractionInterface == none)
 	{	
 		area.SetLocation(HitLocation+HitNormal*100);
@@ -215,14 +212,19 @@ event PostRender()
 		
 			pPlayerController.StartFire();
 			}
-			
-
+			/*
+			if(!PGame(WorldInfo.Game).bEarthNotFlying)
+			{
+				`log("mierdote");
+			}
+			*/
 			//bMouseOverUIElement me dice siestoy encima del propio clip de flash.En talcaso obviamente no podemos actuar encima suyo
 			//reload dice si la torreta esta recargada. bTowerActive si esta habilitada por credito
-		    if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.TTowerActive!=2 && pct )
+		   // if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.HbtActive!=2 && pct )
+			if(!pGFx.bMouseOverUIElement && pct && !PGame(WorldInfo.Game).bEarthNotFlying )
 		    {
 
-				//_DEBUG_ ("la pgfx ttower active " @pGFx.TTowerActive);
+				//`log("la pgfx ttower active " @pGFx.TTowerActive);
 				pPlayerController = PPlayerController(PlayerOwner);
 
 				//Creamos torreta solo si hemos clickado dentro del planeta, no en el skybox (control por distancia)
@@ -232,33 +234,92 @@ event PostRender()
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
 					
-
-					if(pGFx.TTowerActive==0)
+				`log ( "la torreta activa es:"	@pGFx.HbtActive);		
+		
+				switch (pGFx.HbtActive)
+			{
+				case hbt1:
+					if(pGfx.hbt1reload)
 					{
-						//_DEBUG_ ("Vamos a spawnear una torreta ice");
-						//pPlayerController.StartFire();
+					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt1precio);
+						tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+						tc.setNormalSuelo(HitNormal);
+						pGFx.TurretReload();
+					}
+					break;
+
+				case hbt2:
+					if(pGfx.hbt2reload)
+					{
+					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt2precio);
+						ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
+						ti.setNormalSuelo(HitNormal);
+						pGFx.TurretReload();
+					}
+					
+					break;
+
+				case hbt3:
+					if(pGfx.hbt3reload)
+					{
+					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt3precio);
+						ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
+						ti.setNormalSuelo(HitNormal);
+						pGFx.TurretReload();
+					}
+					
+					break;
+				case hbt4:
+					if(pGfx.hbt4reload)
+					{
+					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt4precio);
+						tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+						tc.setNormalSuelo(HitNormal);
+						pGFx.TurretReload();
+					}
+					
+					break;
+			}
+
+
+
+
+
+
+
+
+
+/*
+					if(pGFx.HbtActive==1 && pGfx.hbt1reload)
+					{
+						//`log("Vamos a spawnear una torreta ice");
+						pPlayerController.StartFire();
 						//spawn(class'MU_AutoTurret', ,,HitLocation,rTorreta,);
 						PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-1000);
 						ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
 						ti.setNormalSuelo(HitNormal);
+						//pGFx.SetHbtReload(1,false);
 					}
 					else
 					{
 						tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
 						tc.setNormalSuelo(HitNormal);
 						PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
-					}
+						//pGFx.SetHbtReload(0,false);
+					
+						//pGFx.SetHbtReload(pGFx.HbtActive,false);
+					}*/
 					//spawn(class'MU_AutoTurret', ,,HitLocation, rTorreta,);
 				
-					pGFx.SetTowerActive(false);
-					pGFX.SetReload(false);
-					pGFx.TurretReload();
+				//	pGFx.SetTowerActive(false);
+					//pGFX.SetReload(false);
+					
 					
 
 				}
 				else
 				{
-					//_DEBUG_ ("Click fuera de planeta "@dist @hitlocation);
+					`Log("Click fuera de planeta "@dist @hitlocation);
 				}
 				PendingLeftPressed = false;
 			}
@@ -372,20 +433,7 @@ event PostRender()
 				//Calcular la distancia que hay del jugador hasta el item clickado
 				DistanceCheck.X = KActorSpawnable(LastClickedItem).Location.X - PlayerOwner.Pawn.Location.X;
 				DistanceCheck.Y = KActorSpawnable(LastClickedItem).Location.Y - PlayerOwner.Pawn.Location.Y;
-//				DistanceToItem = Sqrt((DistanceCheck.X*DistanceCheck.X) + (DistanceCheck.Y*DistanceCheck.Y));
 
-				//Si el panel de interaccion esta visible, cerrarlo
-			/*
-				if(titGFx.bPanelInteraccionVisible)
-				{
-					titGFx.HideInteractionPanel();
-				}
-				//Si el jugador esta cerca del item podra interactuar con el
-				else if(DistanceToItem<150)
-				{
-					//Visualizar el panel de interaccion, en el lugar donde se encuentra el mouse
-					titGFx.ShowInteractionPanel(titPlayerInput.MousePosition);
-				}*/
 			}
 		}
 		else if(PendingLeftReleased)
@@ -560,6 +608,7 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 		}
 		if(enemigo != none)
 		{
+
 			return false;
 		}
 
@@ -644,12 +693,12 @@ function Vector GetMirillaWorldLocation()
 		
 		if (HitLocationNoActor !=HitLocation)
 		{
-			//_DEBUG_ ("__________Traces Diferentes!!!" @HitLocationNoActor @HitLocation);
+			//`log("__________Traces Diferentes!!!" @HitLocationNoActor @HitLocation);
 		}
 		return HitLocation;
     
     }
-	//_DEBUG_ ("__________SIN Traces DisparoActor______");
+	//`log("__________SIN Traces DisparoActor______");
 	return HitLocationNoActor;
 }
 
@@ -740,53 +789,20 @@ simulated event Tick(float DeltaTime)
 {
 
 	super.Tick(DeltaTime);
-pGFx.SetCredito(PGame(WorldInfo.Game).creditos);
-if(pGFx.reload &&(PGame(WorldInfo.Game).creditos>=200) )
-{
-pGFx.SetTurretIdle();
-pGFx.SetTowerActive(true);
-}
-
-pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
-
-
-	/*
-	local ASDisplayInfo DI;
-	local int PanelShowSpeed;
-
-	PanelShowSpeed = 40;
-
-	super.Tick(DeltaTime);
-
-	//Ocultar el panel de interaccion poco a poco cuando se quita el raton (si el panel no se esta cerrando)
-	//Mientras se va ocultando si se vuelve a pasar el raton, vuelve a ser opaco
-	if(titGFx.bPanelInteraccionVisible && !titGFx.bClosingInteractionPanel)
-	{				
-		DI=titGFx.panelInteraccionMC.GetDisplayInfo();
-
-		if(!titGFx.bMouseOverInteractionPanel)
-		{
-			DI.Alpha -= DeltaTime*PanelShowSpeed;
-			//Cuando la opacidad este a la mitad, ocultar el panel
-			if(DI.Alpha<50)
-			{
-				//DI.Alpha = 0;
-				//titGFx.SetInteractionPanelVisible(false);
-				titGFx.HideInteractionPanel();
-			}
-		}
-		else
-		{
-			DI.Alpha += DeltaTime*PanelShowSpeed;
-			if(DI.Alpha>100)
-			{
-				DI.Alpha = 100;
-			}
-		}
-
-		titGFx.panelInteraccionMC.SetDisplayInfo(DI);
+	pGFx.SetCredito(PGame(WorldInfo.Game).creditos);
+	
+/*
+	if(pGFx.reload &&(PGame(WorldInfo.Game).creditos>=200) )
+	{
+		pGFx.SetTurretIdle();
+		pGFx.SetTowerActive(true);
 	}
 */
+	//comprueba que tengamos dinero para tener las torretas activas, sino las desactiva 
+	ADbotonesporCredito();
+	pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
+
+	
 }
 
 
@@ -795,15 +811,302 @@ pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
 exec function mirillatierrapos(float x, float y)
 {
 	local ASDisplayInfo DI;
+	
 	DI=pGFx.pmiratierraMC.GetDisplayInfo();
 	DI.X=Pixel_X_Mirilla+x;
 	DI.Y=Pixel_Y_Mirilla+y;
 
 	pGFx.pmiratierraMC.SetDisplayInfo(DI);
-	////_DEBUG_ ("Nueva Posicion mirilla "@DI.X @DI.Y);
+	//`log("Nueva Posicion mirilla "@DI.X @DI.Y);
 }
 
 
+function ADbotonesporCredito()
+{
+	if((PGame(WorldInfo.Game).creditos <pGFx.hbt1precio))
+		{
+		pGFx.SetHbtDisabled(hbt1,true);
+		
+		}else{
+		pGFx.SetHbtDisabled(hbt1,false);
+		
+		
+		}
+
+		if((PGame(WorldInfo.Game).creditos < pGFx.hbt2precio))
+		{
+		pGFx.SetHbtDisabled(hbt2,true);
+		
+		}else{
+		pGFx.SetHbtDisabled(hbt2,false);
+		
+		}
+
+		if( (PGame(WorldInfo.Game).creditos <pGFx.hbt3precio))
+		{
+		pGFx.SetHbtDisabled(hbt3,true);
+		
+		}else{
+		pGFx.SetHbtDisabled(hbt3,false);
+		
+		}
+
+		if( (PGame(WorldInfo.Game).creditos <pGFx.hbt4precio))
+		{
+		pGFx.SetHbtDisabled(hbt4,true);
+		
+		}else{
+		pGFx.SetHbtDisabled(hbt4,false);
+
+		
+		}
+}
+
+
+function inibotoneshud()
+{
+	pGFx.SetHbtActive(ini);
+	pGFx.TurretReload();
+	
+
+}
+
+
+//Gestion de iconos en pantalla 
+
+
+function AddPostRenderedActor(Actor A)
+{
+	// Remove post render call for UTPawns as we don't want the name bubbles showing
+	if (UTPawn(A) != None)
+	{
+		return;
+	}
+
+	Super.AddPostRenderedActor(A);
+}
+
+function iconosapantalla() 
+{
+	local int i, Index;
+	local Vector WorldHUDLocation, ScreenHUDLocation, ActualPointerLocation, CameraViewDirection, PawnDirection, CameraLocation;
+	local Rotator CameraRotation;
+	local UTPawn UTPawn;
+	local LinearColor TeamLinearColor;
+	local float PointerSize;
+
+	if (PlayerOwner == None || PlayerOwner.Pawn == None)
+	{
+		return;
+	}
+
+	// Set up the render delta
+	RenderDelta = WorldInfo.TimeSeconds - LastHUDRenderTime;
+
+	// Set all radar infos to delete if not found 
+	for (i = 0; i < RadarInfo.Length; ++i)
+	{
+		RadarInfo[i].DeleteMe = true;
+	}
+	
+	// Update the radar infos and see if we need to add or remove any
+	ForEach DynamicActors(class'UTPawn', UTPawn)
+	{
+		if (UTPawn != PlayerOwner.Pawn)
+		{
+			Index = RadarInfo.Find('UTPawn', UTPawn);
+			// This pawn was not found in our radar infos, so add it
+			if (Index == INDEX_NONE && UTPawn.Health > 0)
+			{
+				i = RadarInfo.Length;
+				RadarInfo.Length = RadarInfo.Length + 1;
+				RadarInfo[i].UTPawn = UTPawn;
+				RadarInfo[i].MaterialInstanceConstant = new () class'MaterialInstanceConstant';
+
+				if (RadarInfo[i].MaterialInstanceConstant != None)
+				{
+					RadarInfo[i].MaterialInstanceConstant.SetParent(Material'GemOnscreenRadarContent.PointerMaterial');
+
+					if (UTPawn.PlayerReplicationInfo != None && UTPawn.PlayerReplicationInfo.Team != None)
+					{
+						TeamLinearColor = (UTPawn.PlayerReplicationInfo.Team.TeamIndex == 0) ? Default.RedLinearColor : Default.BlueLinearColor;
+						RadarInfo[i].MaterialInstanceConstant.SetVectorParameterValue('TeamColor', TeamLinearColor);
+					}
+					else
+					{
+						RadarInfo[i].MaterialInstanceConstant.SetVectorParameterValue('TeamColor', Default.DMLinearColor);
+					}
+				}
+
+				RadarInfo[i].DeleteMe = false;
+			}
+			else if (UTPawn.Health > 0)
+			{
+				RadarInfo[Index].DeleteMe = false;
+			}
+		}
+	}
+
+	// Handle rendering of all of the radar infos
+	PointerSize = Canvas.ClipX * 0.083f;
+	PlayerOwner.GetPlayerViewPoint(CameraLocation, CameraRotation);
+	CameraViewDirection = Vector(CameraRotation);
+
+	for (i = 0; i < RadarInfo.Length; ++i)
+	{
+		if (!RadarInfo[i].DeleteMe)
+		{
+			if (RadarInfo[i].UTPawn != None && RadarInfo[i].MaterialInstanceConstant != None)
+			{
+				// Handle the opacity of the pointer. If the player cannot see this pawn,
+				// then fade it out half way, otherwise if he can, fade it in
+				if (WorldInfo.TimeSeconds - RadarInfo[i].UTPawn.LastRenderTime > 0.1f)
+				{
+					// Player has not seen this pawn in the last 0.1 seconds
+					RadarInfo[i].Opacity = Lerp(RadarInfo[i].Opacity, 0.4f, RenderDelta * 4.f);
+				}
+				else
+				{
+					// Player has seen this pawn in the last 0.1 seconds
+					RadarInfo[i].Opacity = Lerp(RadarInfo[i].Opacity, 1.f, RenderDelta * 4.f);
+				}
+				// Apply the opacity
+				RadarInfo[i].MaterialInstanceConstant.SetScalarParameterValue('Opacity', RadarInfo[i].Opacity);
+
+				// Get the direction from the player's pawn to the pawn
+				PawnDirection = Normal(RadarInfo[i].UTPawn.Location - PlayerOwner.Pawn.Location);
+
+				// Check if the pawn is in front of me
+				if (PawnDirection dot CameraViewDirection >= 0.f)
+				{
+					// Get the world HUD location, which is just above the pawn's head
+					WorldHUDLocation = RadarInfo[i].UTPawn.Location + (RadarInfo[i].UTPawn.GetCollisionHeight() * Vect(0.f, 0.f, 1.f));
+					// Project the world HUD location into screen HUD location
+					ScreenHUDLocation = Canvas.Project(WorldHUDLocation);
+
+					// If the screen HUD location is more to the right, then swing it to the left
+					if (ScreenHUDLocation.X > (Canvas.ClipX * 0.5f))
+					{
+						RadarInfo[i].Offset.X -= PointerSize * RenderDelta * 4.f;
+					}
+					else
+					{
+						// If the screen HUD location is more to the left, then swing it to the right
+						RadarInfo[i].Offset.X += PointerSize * RenderDelta * 4.f;
+					}
+					RadarInfo[i].Offset.X = FClamp(RadarInfo[i].Offset.X, PointerSize * -0.5f, PointerSize * 0.5f);
+				
+					// Set the rotation of the material icon
+					ActualPointerLocation.X = Clamp(ScreenHUDLocation.X, 8, Canvas.ClipX - 8) + RadarInfo[i].Offset.X;
+					ActualPointerLocation.Y = Clamp(ScreenHUDLocation.Y - PointerSize + RadarInfo[i].Offset.Y, 8, Canvas.ClipY - 8 - PointerSize) + (PointerSize * 0.5f);
+					RadarInfo[i].MaterialInstanceConstant.SetScalarParameterValue('Rotation', GetAngle(ActualPointerLocation, ScreenHUDLocation));
+
+					// Draw the material pointer
+					Canvas.SetPos(ActualPointerLocation.X - (PointerSize * 0.5f), ActualPointerLocation.Y - (PointerSize * 0.5f));
+					//Canvas.DrawMaterialTile(RadarInfo[i].MaterialInstanceConstant, PointerSize, PointerSize, 0.f, 0.f, 1.f, 1.f);
+					 Canvas.SetDrawColor(255,255,255,80);
+				 Canvas.DrawRect(8,12);
+				}
+				else
+				{
+					// Handle rendering the on screen indicator when the actor is behind the camera
+					// Project the pawn's location
+					ScreenHUDLocation = Canvas.Project(RadarInfo[i].UTPawn.Location);
+
+					// Inverse the Screen HUD location
+					ScreenHUDLocation.X = Canvas.ClipX - ScreenHUDLocation.X;
+
+					// If the screen HUD location is on the right edge, then swing it to the left
+					if (ScreenHUDLocation.X > (Canvas.ClipX - 8))
+					{
+						RadarInfo[i].Offset.X -= PointerSize * RenderDelta * 4.f;
+						RadarInfo[i].Offset.X = FClamp(RadarInfo[i].Offset.X, PointerSize * -0.5f, PointerSize * 0.5f);
+					}
+					else if (ScreenHUDLocation.X < 8)
+					{
+						// If the screen HUD location is on the left edge, then swing it to the right
+						RadarInfo[i].Offset.X += PointerSize * RenderDelta * 4.f;
+						RadarInfo[i].Offset.X = FClamp(RadarInfo[i].Offset.X, PointerSize * -0.5f, PointerSize * 0.5f);
+					}
+					else
+					{
+						// If the screen HUD location is somewhere in the middle, then straighten it up
+						RadarInfo[i].Offset.X = Lerp(RadarInfo[i].Offset.X, 0.f, 4.f * RenderDelta);
+					}
+
+					// Set the screen HUD location
+					ScreenHUDLocation.X = Clamp(ScreenHUDLocation.X, 8, Canvas.ClipX - 8);
+					ScreenHUDLocation.Y = Canvas.ClipY - 8;
+
+					// Set the actual pointer location
+					ActualPointerLocation.X = ScreenHUDLocation.X + RadarInfo[i].Offset.X;
+					ActualPointerLocation.Y = ScreenHUDLocation.Y - (PointerSize * 0.5f);
+
+					// Set the rotation of the material icon
+					RadarInfo[i].MaterialInstanceConstant.SetScalarParameterValue('Rotation', GetAngle(ActualPointerLocation, ScreenHUDLocation));
+
+					// Draw the material pointer
+					Canvas.SetPos(ActualPointerLocation.X - (PointerSize * 0.5f), ActualPointerLocation.Y - (PointerSize * 0.5f));
+					    Canvas.SetDrawColor(255,255,255,80);
+				 Canvas.DrawRect(8,12);
+				//Canvas.DrawMaterialTile(RadarInfo[i].MaterialInstanceConstant, PointerSize, PointerSize, 0.f, 0.f, 1.f, 1.f);
+				}
+			}
+		}
+		else
+		{
+			// Null the variables previous stored so garbage collection can occur
+			RadarInfo[i].UTPawn = None;
+			RadarInfo[i].MaterialInstanceConstant = None;
+			// Remove from the radar info array
+			RadarInfo.Remove(i, 1);
+			// Back step one, to maintain the for loop
+			--i;
+		}
+	}
+
+	// Setup the render delta
+	LastHUDRenderTime = WorldInfo.TimeSeconds;
+	
+}
+
+
+
+function float GetAngle(Vector PointB, Vector PointC)
+{
+	// Check if angle can easily be determined if it is up or down
+	if (PointB.X == PointC.X)
+	{
+		return (PointB.Y < PointC.Y) ? Pi : 0.f;
+	}
+
+	// Check if angle can easily be determined if it is left or right
+	if (PointB.Y == PointC.Y)
+	{
+		return (PointB.X < PointC.X) ? (Pi * 1.5f) : (Pi * 0.5f);
+	}
+
+	return (2.f * Pi) - atan2(PointB.X - PointC.X, PointB.Y - PointC.Y);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
 
 defaultproperties
 {
@@ -818,5 +1121,11 @@ defaultproperties
 	Pixel_Y_Mirilla = 362
 	m_min_offset_mirilla_y = 55
 	m_max_offset_mirilla_y = -90
+
+	//parametros de  iconos de pantalla
+	RedLinearColor=(R=3.0,G=0.0,B=0.05,A=0.8)
+	BlueLinearColor=(R=0.5,G=0.8,B=10.0,A=0.8)
+	DMLinearColor=(R=1.0,G=1.0,B=1.0,A=0.5)
+
 }
 

@@ -10,41 +10,61 @@ var GFxObject tdcMC;
 var GFxObject tdiceMC;
 var GFxObject ctdiceMC;
 var GFxObject ctdcMC;
-var GFxObject creditoMC;
-var GFxObject pelicula;
+
+
 //variables para capturar ratón y cursores de la pelicula flash
-var GFxObject raton;// _clip pelicula que controla el ratón
+
 var GFxObject bcursor;// cursor de la brocha
 var GFxObject cice;//cursor del cubito de hielo
 var GFxObject cct;//cursor de la torreta cañon 
+
+//
+
+// variables para capturar los objetos de la película flash
+//botones del HUD
+var GFxObject hbt1MC,hbt1icotoMC,hbt1icotrMC; 
+var GFxObject hbt2MC,hbt2icotoMC,hbt2icotrMC;
+var GFxObject hbt3MC,hbt3icotoMC,hbt3icotrMC;
+var GFxObject hbt4MC,hbt4icotoMC,hbt4icotrMC;
+var GFxObject camarilloMC,cttorretrampaMC;
+var GFxObject creditoMC;
+var GFxObject hvidaMC;
+var GFxObject pelicula;
+var GFxObject raton;// _clip pelicula que controla el ratón
 var GFxObject pmiratierraMC;//  _clip pelicula que controla el ratón punto de mira en la tierra
+
+enum Hbt
+{
+	hbt1,
+	hbt2,
+	hbt3,
+	hbt4,
+	ini,
+	nob,
+};
+var Hbt HbtActive;
+
+
+//Estado de botones
+var bool hbt1active,hbt1over,hbt1reload,hbt1disabled;
+var int hbt1precio;
+var bool hbt2active,hbt2over,hbt2reload,hbt2disabled;
+var int hbt2precio;
+var bool hbt3active,hbt3over,hbt3reload,hbt3disabled;
+var int hbt3precio;
+var bool hbt4active,hbt4over,hbt4reload,hbt4disabled;
+var int hbt4precio;
+
 //
 var bool bMouseOverUIElement;
 var bool bTowerActive;
 var bool reload;
-
-enum TTower
-{
-	ice,
-	cannon,
-	ninguna,
-	
-	
-};
-var TTower TTowerActive;
-
-//RR
-
-
-
-
-
-
 var bool bMouseOverInteractionPanel;
 var bool bClosingInteractionPanel;
 
 function Init(optional LocalPlayer LocalPlayer)
 {
+	local ASDisplayInfo DI;
 	//Inicializar la pelicula Scaleform
 	super.Init(LocalPlayer);
 
@@ -71,20 +91,46 @@ function Init(optional LocalPlayer LocalPlayer)
 */
 	//Hud nuevo
 
-
+/*
 	tdcMC = GetVariableObject("_root.nhud.tdc");
-	tdiceMC= GetVariableObject("_root.nhud.tdice");
+	tdiceMC= GetVariableObject("_root.nhud.tdice.itice");
 	ctdiceMC= GetVariableObject("_root.nhud.tdice.ctdice");
 	ctdcMC= GetVariableObject("_root.nhud.tdc.ctdc");
-	creditoMC= GetVariableObject("_root.nhud.credito");
+
 	//capturamos de la pelicula flash los objetos y los asignamos a nuestras variables
+	
+	cice= GetVariableObject("_root.nhud.cice");
+	cct= GetVariableObject("_root.nhud.cct");
+	
+
+	ctdiceMC.SetText("1000");
+*/
+
+
+	hbt1MC=GetVariableObject("_root.nhud.hbt1");
+ 	hbt1icotoMC=GetVariableObject("_root.nhud.hbt1.hbt1icoto");
+ 	hbt1icotrMC=GetVariableObject("_root.nhud.hbt1.hbt1icotr");
+	hbt2MC=GetVariableObject("_root.nhud.hbt2");
+ 	hbt2icotoMC=GetVariableObject("_root.nhud.hbt2.hbt2icoto");
+ 	hbt2icotrMC=GetVariableObject("_root.nhud.hbt2.hbt2icotr");
+	hbt3MC=GetVariableObject("_root.nhud.hbt3");
+ 	hbt3icotoMC=GetVariableObject("_root.nhud.hbt3.hbt3icoto");
+ 	hbt3icotrMC=GetVariableObject("_root.nhud.hbt3.hbt3icotr");
+	hbt4MC=GetVariableObject("_root.nhud.hbt4");
+ 	hbt4icotoMC=GetVariableObject("_root.nhud.hbt4.hbt4icoto");
+ 	hbt4icotrMC=GetVariableObject("_root.nhud.hbt4.hbt4icotr");
+
+
+
+	 camarilloMC=GetVariableObject("_root.nhud.camarillo");
+	 cttorretrampaMC=GetVariableObject("_root.nhud.camarillo.cttorretrampa");
+	 hvidaMC=GetVariableObject("_root.nhud.hvida");
+
+	pmiratierraMC=GetVariableObject("_root.pmiratierra");
 	pelicula=GetVariableObject("_root");
 	raton= GetVariableObject("_root._clip");
 	bcursor= GetVariableObject("_root.bcursor");
-	cice= GetVariableObject("_root.nhud.cice");
-	cct= GetVariableObject("_root.nhud.cct");
-	pmiratierraMC=GetVariableObject("_root.pmiratierra");
-
+	creditoMC= GetVariableObject("_root.nhud.credito");
 	//Hud nuevo
 
 
@@ -93,6 +139,7 @@ function Init(optional LocalPlayer LocalPlayer)
 
 
 	bTowerActive=true;
+	HbtActive=ini;
 	TurretReload();
 //RR
 
@@ -103,7 +150,7 @@ function Init(optional LocalPlayer LocalPlayer)
 function SetOverUIElement(bool val)
 {
 	bMouseOverUIElement = val;
-	//_DEBUG_ ("Flash");
+	`log("Flash");
 }
 function SetTowerActive(bool val)
 {
@@ -113,14 +160,124 @@ bTowerActive=val;
 }
 
 
-function SetTTowerActive(TTower val)
+function SetHbtActive(Hbt val)
 {
+	
+	switch (val)
+			{
+				case hbt1:
+					if(!hbt1disabled)
+					{
+					hbt1MC.GotoAndPlay("idle");
+					hbt1active=true;
+					    hbt1reload=true;
+					hbt2active=false;
+					hbt3active=false;
+					hbt4active=false;
+					HbtActive=val;
+					}
+					break;
 
-TTowerActive=val;
-//_DEBUG_ ("La torre activa es: " @TTowerActive);
+				case hbt2:
+					if(!hbt2disabled)
+					{
+					hbt2MC.GotoAndPlay("idle");
+					hbt1active=false;
+					hbt2active=true;
+						hbt2reload=true;
+					hbt3active=false;
+					hbt4active=false;
+					HbtActive=val;
+					}
+					break;
+
+				case hbt3:
+					if(!hbt3disabled)
+					{
+					hbt3MC.GotoAndPlay("idle");
+					hbt1active=false;
+					hbt2active=false;
+					hbt3active=true;
+					    hbt3reload=true;
+					hbt4active=false;
+					HbtActive=val;
+					}
+					break;
+				case hbt4:
+					if(!hbt4disabled)
+					{
+					hbt4MC.GotoAndPlay("idle");
+					hbt1active=false;
+					hbt2active=false;
+					hbt3active=false;
+					hbt4active=true;
+						hbt4reload=true;
+					HbtActive=val;
+					}
+					break;
+			
+				case ini:
+					/*hbt1active=false;
+					hbt2active=false;
+					hbt3active=false;
+					hbt4active=false;*/
+					break;
+			}
+
+
+
+	cttorretrampaMC.SetText(PrecioHbtActive());
+	camarilloMC.GotoAndPlay(string(HbtActive));
+
+
+
+`log("La torre activa es: " @HbtActive);
+
+
+
 }
-function TurretReload(){
-tdcMC.GotoAndPlay("reload");
+function TurretReload()
+{
+	switch (HbtActive)
+			{
+				case hbt1:
+					hbt1reload=false;
+					hbt1MC.GotoAndPlay("reload");
+					
+					break;
+
+				case hbt2:
+					hbt2reload=false;
+				hbt2MC.GotoAndPlay("reload");
+					
+					break;
+
+				case hbt3:
+					hbt3reload=false;
+					hbt3MC.GotoAndPlay("reload");
+					
+					break;
+				case hbt4:
+					hbt4reload=false;
+					hbt4MC.GotoAndPlay("reload");
+					
+					break;
+			
+				case ini:
+					hbt1reload=false;
+					hbt2reload=false;
+					hbt3reload=false;
+					hbt4reload=false;
+					hbt1MC.GotoAndPlay("reload");
+					
+					hbt2MC.GotoAndPlay("reload");
+					
+					hbt3MC.GotoAndPlay("reload");
+					
+					hbt4MC.GotoAndPlay("reload");
+					
+					break;
+			}
 
 }
 
@@ -134,33 +291,266 @@ function SetReload(bool val)
 
 function SetTurretIdle()
 {
-	tdcMC.GotoAndPlay("Idle");
+	/*switch (HbtActive)
+			{
+				case ice:
+					tdiceMC.GotoAndPlay("Idle");
+					break;
+
+				case cannon:
+					tdcMC.GotoAndPlay("Idle");
+					
+					break;
+
+				case ninguna:
+					
+					break;
+
+			
+				default:
+					break;
+			}
+
+
+	*/
+}
+
+function SetHbtDisabled(Hbt boton,bool val)
+{
+		switch (boton)
+			{
+				case hbt1:
+					hbt1disabled=val;
+					if(hbt1disabled)
+					{
+					hbt1MC.GotoAndPlay("Disabled");
+					if(HbtActive==hbt1)HbtActive=nob;
+					}else{
+						if(hbt1reload)hbt1MC.GotoAndPlay("idle");
+					
+					}
+					break;
+
+				case hbt2:
+				hbt2disabled=val;
+					if(hbt2disabled)
+					{
+					hbt2MC.GotoAndPlay("Disabled");
+					if(HbtActive==hbt2)HbtActive=nob;
+					}else{
+					if(hbt2reload)hbt2MC.GotoAndPlay("idle");
+					}
+					break;
+					
+				case hbt3:
+					hbt3disabled=val;
+					if(hbt3disabled)
+					{
+					hbt3MC.GotoAndPlay("Disabled");
+					if(HbtActive==hbt3)HbtActive=nob;
+					}else{
+					
+					if(hbt3reload)hbt3MC.GotoAndPlay("idle");
+					}
+					break;
+				case hbt4:
+					hbt4disabled=val;
+					if(hbt4disabled)
+					{
+					hbt4MC.GotoAndPlay("Disabled");
+					if(HbtActive==hbt4)HbtActive=nob;
+					}else{
+						
+					if(hbt4reload)hbt4MC.GotoAndPlay("idle");
+					}
+					break;
+			
+				
+			}
+
+
+
+}
+function SetHbtReload(int boton,bool val)
+{
+	switch (boton)
+			{
+					case 0:
+					
+					hbt1reload=val;
+					break;
+
+					case 1:
+			
+					hbt2reload=val;
+					break;
+
+					case 2:
+					
+					hbt3reload=val;
+					break;
+					case 3:
+				
+					hbt4reload=val;
+					break;
+			
+			/*	case ini:
+					
+					hbt1reload=val;
+					
+					hbt2reload=val;
+					
+					hbt3reload=val;
+					
+					hbt4reload=val;
+					break;*/
+			}
+
+
+}
+
+function SetHbtOver(Hbt boton,bool val)
+{
+	
+	
+	switch (boton)
+			{
+				case hbt1:
+					if(!hbt1active)
+					{   
+						if(val)
+						{
+						cttorretrampaMC.SetText(string(hbt1precio));
+						camarilloMC.GotoAndPlay("hbt1");
+						hbt1MC.GotoAndPlay("over");
+						
+						}else{
+						hbt1MC.GotoAndPlay("idle");
+						cttorretrampaMC.SetText(PrecioHbtActive());
+						camarilloMC.GotoAndPlay(string(HbtActive));
+						
+						}
+					}
+					break;
+
+					case hbt2:
+					if(!hbt2active)
+					{   
+						if(val)
+						{
+						cttorretrampaMC.SetText(string(hbt2precio));
+						camarilloMC.GotoAndPlay("hbt2");
+						hbt2MC.GotoAndPlay("over");
+						
+						}else{
+						hbt2MC.GotoAndPlay("idle");
+						cttorretrampaMC.SetText(PrecioHbtActive());
+						camarilloMC.GotoAndPlay(string(HbtActive));
+						
+						}
+					
+					}
+
+					break;
+
+					case hbt3:
+					if(!hbt3active)
+					{   
+						if(val)
+						{
+						cttorretrampaMC.SetText(string(hbt3precio));
+						camarilloMC.GotoAndPlay(string(boton));
+						hbt3MC.GotoAndPlay("over");
+						
+						}else{
+						hbt3MC.GotoAndPlay("idle");
+						cttorretrampaMC.SetText(PrecioHbtActive());
+						camarilloMC.GotoAndPlay(string(HbtActive));
+						
+						}
+					
+					}
+
+					break;
+					case hbt4:
+					if(!hbt4active)
+					{   
+						if(val)
+						{
+						cttorretrampaMC.SetText(string(hbt4precio));
+						camarilloMC.GotoAndPlay(string(boton));
+						hbt4MC.GotoAndPlay("over");
+						
+						}else{
+						hbt4MC.GotoAndPlay("idle");
+						cttorretrampaMC.SetText(PrecioHbtActive());
+						camarilloMC.GotoAndPlay(string(HbtActive));
+						
+						}
+					
+					}
+
+					break;
+				default:
+					break;
+			}
+
+
+
+	//`log("botón over" @boton);
+		//`log("botón over valor" @val);
+
+
+
+
+
 }
 
 function SetCredito(int c)
 {
 	creditoMC.SetText(c);
+	
 }
 
+/*function SetPrecioTorretas(int ice,int fire, int ca,int plas)
+{
+	ctdiceMC.SetText(ice);
+	ctdcMC.SetText(fire);
 
+
+}*/
 function AUIVuela(bool val)
 {
 
 if(!val)
 {
 	raton.GotoAndPlay("mirilla");
-	TTowerActive=2;
+	HbtActive=2;
+	
 }else{
 //raton.GotoAndPlay("ctcannon");
 
 }
+
+hbt1icotoMC.SetBool("_visible", val);
+	//hbt1icotrMC.SetBool("_visible", val);
+hbt2icotoMC.SetBool("_visible", val);
+	hbt2icotrMC.SetBool("_visible", !val);
+hbt3icotoMC.SetBool("_visible", val);
+	hbt3icotrMC.SetBool("_visible", !val);
+hbt4icotoMC.SetBool("_visible", val);
+	hbt4icotrMC.SetBool("_visible", !val);
+
 raton.SetBool("_visible", val);
  pmiratierraMC.SetBool("_visible", !val);
-tdcMC.SetBool("_visible", val);
 
- tdiceMC.SetBool("_visible", val);
- ctdiceMC.SetBool("_visible", val);
- ctdcMC.SetBool("_visible", val);
+
+
+//tdcMC.SetBool("_visible", val);
+
+ //tdiceMC.SetBool("_visible", val);
+ //ctdiceMC.SetBool("_visible", val);
+ //ctdcMC.SetBool("_visible", val);
 
 
 
@@ -168,8 +558,8 @@ tdcMC.SetBool("_visible", val);
 
 function PauseMenu(bool val)
 {
-	tdcMC.SetBool("enabled", val);
-	tdiceMC.SetBool("enabled", val);
+	//tdcMC.SetBool("enabled", val);
+	//tdiceMC.SetBool("enabled", val);
 }
 
 
@@ -204,7 +594,42 @@ event UpdateMousePosition(float x, float y)
 	}
 }
 
+function string PrecioHbtActive()
+{
+	local string precio;
 
+	switch (HbtActive)
+			{
+				case hbt1:
+					precio=string(hbt1precio);
+
+					break;
+
+				case hbt2:
+					precio=string(hbt2precio);
+					
+					break;
+
+				case hbt3:
+					precio=string(hbt3precio);
+					break;
+				case hbt4:
+					precio=string(hbt4precio);
+					break;
+			
+				default:
+					precio="0";
+					break;
+			}
+
+			return precio;
+
+}
+
+function nnnn()
+{
+	`log("el flash acaba el reload");
+}
 
 DefaultProperties
 {
@@ -215,5 +640,9 @@ DefaultProperties
 	//nuevo
 	MovieInfo=SwfMovie'PGameMenuFlash.nhud'
 	bPauseGameWhileActive=false
-	TTowerActive=2;
+	hbt1precio=200
+	hbt2precio=400
+	hbt3precio=500
+	hbt4precio=2000
+	HbtActive=ini
 }
