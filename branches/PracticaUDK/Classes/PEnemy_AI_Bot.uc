@@ -1,6 +1,7 @@
 class PEnemy_AI_Bot extends PEnemy_AI_Controller;
 
 var PPathNode theObjective; //Siguiente nodo al que van
+var PPathNode nodotemporal; //Para guardar el de antes de aplicar el offset
 var int NodeIndex;
 var bool bParado;
 var int Step;   //Distancia mínima para considerar que no ha llegado a la base
@@ -34,7 +35,10 @@ simulated event PostBeginPlay()
 
 function Parar()
 {
-	self.PushState('StopColision');
+	if (!self.IsInState('StopColision'))
+	{
+		self.PushState('StopColision');
+	}
 }
 
 function EstanLosColegasCercaNeng()
@@ -95,6 +99,8 @@ auto state Idle_Inicial
 		//Debemos permanecer en este estado mientras el pawn esté cayendo,
 		//y no tengamos nodo objetivo.
 		//Lo comprobamos cada segundo
+		local vector antes,despues;
+
 		super.Tick(Deltatime);
 		if (m_tiempo_tick >= 1.0)
 		{
@@ -110,6 +116,23 @@ auto state Idle_Inicial
 				theObjective = PGame(WorldInfo.Game).GetNextPath(id, NodeIndex);
 				if(theObjective != none)
 				{
+					if (m_b_breakpoint)
+					{
+						antes = theObjective.Location;
+						//_DEBUG_DrawDebugSphere(antes,30,10,255,0,0,true);
+						//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
+					}
+					nodotemporal = theObjective;
+					theObjective = AplicarOffsetNodo(nodotemporal); //Para el pseudo-flocking
+					//nodotemporal = none ; //Porque si no el garbage no se lo carga creo...
+
+					if (m_b_breakpoint)
+					{
+						despues = theObjective.Location;
+						//_DEBUG_DrawDebugSphere(despues,30,10,0,0,255,true);
+						//_DEBUG_DrawDebugCylinder(antes,despues,5,10,0,255,0,true);
+					}
+
 					//Tenemos objetivo. Podemos ir al siguiente estado
 					//_DEBUG_ ("En idle, tengo nodo nuevo y me voy");
 					GotoState('GoToNextPath');
@@ -172,14 +195,23 @@ state GoToNextPath
 {
 	event Tick (float DeltaTime)
 	{
+		local vector antes,despues;
+
 		super.Tick(DeltaTime);
+		if (m_b_breakpoint)
+		{
+			DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
+		}
 		//Cada segundo, hacemos el control que hacía inicialmente la función BrainTimer
 		if (theObjective == None)
 		{
 			GoToState('Idle_Inicial');
 			return;
 		}
-		DrawDebugCylinder(self.Pawn.Location,theObjective.Location,3,4,0,0,200,false);
+		//_DEBUG_DrawDebugCylinder(self.Pawn.Location,theObjective.Location,3,4,0,0,200,false);
+		//_DEBUG_DrawDebugCylinder(self.Pawn.Location,nodotemporal.Location,3,4,200,0,200,false);
+		//_DEBUG_DrawDebugSphere(theObjective.Location,25,10,0,0,200,false);
+
 		if(m_tiempo_tick >=1.0)
 		{
 			m_tiempo_tick = m_tiempo_tick - 1.0; //Por intentar autoajustar un poco y que no siempre sea 1s y pico
@@ -201,7 +233,25 @@ state GoToNextPath
 				// Si tenemos objetivo, nos movemos a su posición
 				if(theObjective != none)
 				{
+					if (m_b_breakpoint)
+					{
+						antes = theObjective.Location;
+						//_DEBUG_DrawDebugSphere(antes,30,10,255,0,0,true);
+						//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
+					}
+					nodotemporal = theObjective;
+					theObjective = AplicarOffsetNodo(nodotemporal); //Para el pseudo-flocking
+					//nodotemporal = none ; //Porque si no el garbage no se lo carga creo...
+			
+					if (m_b_breakpoint)
+					{
+						despues = theObjective.Location;
+						//_DEBUG_DrawDebugSphere(despues,30,10,0,0,255,true);
+						//_DEBUG_DrawDebugCylinder(antes,despues,5,10,0,255,0,true);
+					}
+
 					//`log("Nuevo nodo seleccionado, voy palla");
+
 					GotoState('GoToNextPath'); //Autollamada al begin state para ir hacia el nuevo nodo
 				}
 				else
@@ -226,6 +276,26 @@ state GoToNextPath
 					{
 						m_segundosQuieto = 0;
 						theObjective = PGame(WorldInfo.Game).GetNextPath(id, NodeIndex);
+						if (theObjective != None)
+						{
+							if (m_b_breakpoint)
+							{
+								antes = theObjective.Location;
+								//_DEBUG_DrawDebugSphere(antes,30,10,255,0,0,true);
+								//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
+							}
+
+							nodotemporal = theObjective;
+							theObjective = AplicarOffsetNodo(nodotemporal); //Para el pseudo-flocking
+							//nodotemporal = none ; //Porque si no el garbage no se lo carga creo...
+			
+							if (m_b_breakpoint)
+							{
+								despues = theObjective.Location;
+								//_DEBUG_DrawDebugSphere(despues,30,10,0,0,255,true);
+								//_DEBUG_DrawDebugCylinder(antes,despues,5,10,0,255,0,true);
+							}
+						}
 					}
 				}
 				oldDistNodo = distNodo;
@@ -239,14 +309,18 @@ state GoToNextPath
 
 	function Parar()
 	{
-		self.PushState('StopColision');
+		if (!self.IsInState('StopColision'))
+		{
+			self.PushState('StopColision');
+		}
 	}
 
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH"@self.Name);
-		self.PushState('StopColision');
+		//self.PushState('StopColision');
+		self.m_b_breakpoint = true;
 	}
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
@@ -418,6 +492,7 @@ Begin:
 	
 	//`log("Soy un PEnemy_AI_Bot, y me paro porque he enculao a un colega");
 	//old_velocity=pawn.Velocity;
+
 	if (m_b_breakpoint)
 	{
 		m_b_breakpoint = true;
@@ -443,7 +518,6 @@ Begin:
 	m_last_stop_colision = m_sec+m_milisec/1000.0;
 
 	self.PopState();
-
 
 }/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
 //__________________
@@ -472,9 +546,6 @@ state TowerAttack
 
 	event Tick(float delta)
 	{
-		local Vector Gravity;
-		local vector vAlCentro;
-		local vector FallDirection;
 
 		super.Tick(delta);
 		if (m_tiempo_tick < 10 )

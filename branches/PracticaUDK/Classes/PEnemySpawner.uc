@@ -15,6 +15,14 @@ var array<PEnemy_AI_Bot> AIBot;
 
 var(SpawnConfig) int MaxEnemies;
 
+var float m_distDelHuevoAlNacer;
+
+struct OffsetNodo
+{
+	var vector posicion;
+	var float  giro_angulo;
+};
+
 function PostBeginPlay()
 {
 	// Si no tenemos grupo, generamos uno
@@ -39,8 +47,11 @@ function SpawnEnemy()
 {
 	local PEnemy EN;
 	local Penemy_AI_Bot AIB;
-	local vector posspawn;
+	local vector vector_hacia_primer_nodo;
 	local int i;
+	local array<OffsetNodo> posiciones;
+	local int cuantos;
+
 
     if(EnemyScout == none)
     {
@@ -61,15 +72,29 @@ function SpawnEnemy()
 	{
 		if(CanSpawnEnemy())
 		{
-			for (i=0;i<3;i++)
+		    //Sacamos tantos como la orda que toque.
+			//Simplemente guardaría en las estructuras que tenemos, el id de orda que llevamos,
+			//Y vamos haciendo que incremente el número de minions por orda.
+			//Ahora para probar, hacemos 3.
+
+			vector_hacia_primer_nodo = PGame(Worldinfo.game).GetFirstNodeLocation(Group);
+			DrawDebugCylinder(self.Location,vector_hacia_primer_nodo,10,10,0,255,0,true);
+			DrawDebugSphere(self.Location,120,20,255,0,0,true);
+			vector_hacia_primer_nodo  = vector_hacia_primer_nodo - self.Location;
+			
+			cuantos = 5;
+
+			generarPosicionSpawn(vector_hacia_primer_nodo,cuantos,posiciones);
+			for (i=0;i<cuantos;i++)
 			{
-				posspawn= generarPosicionSpawn(Location);
-				EN = spawn(class'PEnemyPawn_Minion',,, posspawn);
+				
+				EN = spawn(class'PEnemyPawn_Minion',,, posiciones[i].posicion);
 				if (EN!=None) //Proteccion Víctor
 				{
 					EN.SetColor(Col2);
-					AIB = spawn(class'PEnemy_AI_Bot',,, posspawn);
+					AIB = spawn(class'PEnemy_AI_Bot',,, posiciones[i].posicion);
 					AIB.SetID(Group);
+					AIB.m_AnguloOffsetInicial = posiciones[i].giro_angulo;
 					Enemy.AddItem(EN);
 					AIBot.AddItem(AIB);
 					AIB.Possess(EN, false);
@@ -79,16 +104,66 @@ function SpawnEnemy()
 	}
 }
 
-function vector generarPosicionSpawn(vector poshuevo)
+function  generarPosicionSpawn(vector v_haciaprimernodo, int num_bichos, out array<OffsetNodo> posiciones)
 {
-	local vector valcentro;
-	local vector parriba;
-	local vector vrandom;
+	local vector vdesdecentro, p;
+	//local vector parriba;
+    //local vector vrandom;
+	local rotator rot;
+	local float deltaangulo;
+	local int i,signo;
+	local vector rx,ry,rz,v;
+	local Quat ernion,ernion2;
+	local float giro_radianes;
+	local OffsetNodo o;
 
-	valcentro=PGame(Worldinfo.Game).GetCentroPlaneta()-poshuevo;
-	parriba = poshuevo-  200*normal(valcentro);
-	vrandom = vrand()* 200;
-	return parriba + vrandom;
+	vdesdecentro = self.location + (self.Location -PGame(Worldinfo.Game).GetCentroPlaneta()); //un pseudo floor
+	vdesdecentro = normal (vdesdecentro);
+
+	rot = rotator (vdesdecentro);
+	getaxes(rot,rx,ry,rz);
+
+	//Ahora debemos mover en yaw, en función del número de bichos que pidan.
+	deltaangulo = 180 / (num_bichos -1 );
+	for (i = 0; i < num_bichos; i++)
+	{
+		if (i%2 ==0)
+		{
+			signo = -1;
+		}
+		else
+		{
+			signo =1 ;
+		}
+		//el rot va de centro a huevo. Por tanto, queremos girar en rx
+		giro_radianes =  ((i+1)/2) * signo * deltaangulo *DegToRad;
+
+		v = normal(v_haciaprimernodo);
+		if (giro_radianes != 0)
+		{
+			ernion =  QuatFromAxisAndAngle(vdesdecentro ,giro_radianes);
+			ernion2 = QuatFromRotator(Rotator(normal(v_haciaprimernodo)));
+			ernion =  QuatProduct(ernion,ernion2);
+			v = vector(QuatToRotator(ernion));
+		}
+
+		/**********
+		ernion =  QuatFromAxisAndAngle(rx,giro_radianes);
+		ernion2 = QuatFromRotator(Rotator(normal(v_haciaprimernodo)));
+		ernion =  QuatProduct(ernion,ernion2);
+		v = vector(QuatToRotator(ernion));
+		***************/
+		//Y aplicamos la rotación
+		p = 150 * normal(vdesdecentro) + self.Location + (v * m_distDelHuevoAlNacer);
+		o.giro_angulo = giro_radianes;
+		o.posicion = p;
+		posiciones.AddItem(o);
+		DrawDebugCylinder(self.Location,p,2,2,0,200,200,true);
+		
+		//posiciones[i].posicion = p;
+		//posiciones[i].giro_angulo = giro_radianes ;
+
+	}
 }
 
 function bool CanSpawnEnemy()
@@ -115,4 +190,5 @@ defaultproperties
 	Components.Add(BaseMesh)
 
 	MaxEnemies=12;
+	m_distDelHuevoAlNacer = 300
 }
