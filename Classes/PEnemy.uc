@@ -1,4 +1,4 @@
-class PEnemy extends GamePawn
+class PEnemy extends UTPawn//GamePawn
 Placeable;
 
 var PPawn P; // variable to hold the pawn we bump into
@@ -11,7 +11,6 @@ var int life;
 var int m_puntos_al_morir; //Puntos que da al jugador cuando lo mata
 
 var Vector FloorActual;
-
 
 function SetColor(LinearColor Col)
 {
@@ -353,8 +352,18 @@ state PawnFalling
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
 		//`log("__HA LLEGADO a la tierra neng!" @self.Name);
-		SetBase(Wall, HitNormal);
-		self.PopState();
+		//SI el Wall sigue siendo otro PEnemy, pasando, hay que volver a saltar:
+		if(PEnemy(Wall) != None)
+		{
+			Velocity = -FallDirection * 150;
+			fTiempoDeSalto = 0;
+			SetBase(None);
+		}
+		else
+		{
+			SetBase(Wall, HitNormal);
+			self.PopState();
+		}
 
 	}
    
@@ -461,6 +470,7 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 {
 
 	local PEnemy Pbump;
+	local PAutoTurret ptorreta;
 
 	if ( (Other == None) || Other.bStatic )
 		return;
@@ -469,11 +479,22 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 
 	if ( Pbump != None )  //Si nos chocamos contra otro PEnemy
 	{
-		self.Velocity=vect(0,0,0);
+		self.Velocity = 30 * (other.Location - self.Location);
 		self.Acceleration = vect (0,0,0);
 		Salta(true);
 		return; //ya tá
 	}
+
+	ptorreta = PAutoTurret(Other);
+	if ( ptorreta != None )  //Si nos chocamos contra una torreta
+	{
+		self.Velocity= 30 * (other.Location - self.Location);
+		self.Acceleration = vect (0,0,0);
+		Salta(true);
+		ptorreta.Toque();
+		return; //ya tá
+	}
+
 	
 	//super.Bump( Other, OtherComp, HitNormal );
 }
@@ -511,6 +532,9 @@ singular event BaseChange()
 		//PEnemy_AI_Controller(Owner).Control_BaseChangedPenemy(Base);
 		self.Velocity = vect(0,0,0);
 		self.Acceleration = vect (0,0,0);
+		//self.Velocity = 100 * (base.Location -self.Location);
+		self.Velocity = 20 * (self.Location-base.Location) + 10  *Vrand();
+		self.SetBase(None);
 		Salta(true,true);
 		//DrawDebugCylinder(self.Location,self.Location+floor*3000,6,15,200,0,200,true);
 		return;
@@ -521,6 +545,27 @@ singular event BaseChange()
 	
 }//BaseChange
 
+event Touch(actor other, PrimitiveComponent othercomp,vector HitLocation,vector HitNormal)
+{
+	local int i;
+	i=0;
+	
+}
+
+event bool EncroachingOn(Actor Other)
+{
+	if (PEnemy(Other) != none)
+	{
+		salta (true,true);
+		return false;
+	}
+	return true;
+}
+
+event EncroachedBy(Actor other)
+{
+	Encroachingon(Other);
+}
 
 
 

@@ -37,7 +37,9 @@ var array<GrupoNodosMundo> NodosMundo;
 
 var bool bSpawnBoss;
 var Vector  m_CentroPlaneta;
-var float m_max_radiorandom;
+var float m_max_radiorandom; //Máxima distancia a aplicar al offset de los nodos del minion
+var float m_min_radiorandom; //Mínima distancia a aplicar al offset de los nodos del minion
+
 
 simulated function PostBeginPlay()
 {
@@ -270,50 +272,34 @@ function PPathNode GetNextPath(int id, out int NodeIndex)
 	else
 	{
 		NodeIndex ++;
-		/*
-		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
-		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
-		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
-		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
-		AplicarRandomNodoMinion(Nodos[indice].Nodos[NodeIndex]);
-		*/
-		return AplicarRandomNodoMinion(GroupNodos[indice].Nodos[NodeIndex]);
+		return GroupNodos[indice].Nodos[NodeIndex];
 	}
 }
 
-function PPathNode AplicarRandomNodoMinion(PPathNode nodo)
+function vector GetFirstNodeLocation(int id)
 {
-	local PPathnode p;
-	local vector f ;
-	local vector v,r ;
-	local Quat ernion,ernion2;
-
-
-	//Creamos una copia de nodo en p
-	p = spawn(class'PPathNode',,,nodo.Location);
-	p.id = nodo.id;
-	p.m_floor_nodo = nodo.m_floor_nodo;
-	p.m_direccion_nodo = nodo.m_direccion_nodo;
-
-	f = p.m_floor_nodo;
-	v = p.m_direccion_nodo;
+	local int indice;
 	
-	ernion =  QuatFromAxisAndAngle(f,rand(360)*DegToRad);
-	ernion2 = QuatFromRotator(Rotator(v));
-	ernion =  QuatProduct(ernion,ernion2);
-	v = vector(QuatToRotator(ernion));
-
-	r = normal(v)*rand(m_max_radiorandom);
-    p.SetLocation(p.Location + r );//+ p.m_floor_nodo * 30);
-
 	/*
-	DrawDebugSphere(nodo.Location,30,7,255,0,0,true);
-	DrawDebugSphere(p.Location,20,7,0,0,255,true);
-	DrawDebugCylinder(nodo.Location,p.Location,4,5,200,0,0,true);
-    */
-	
-    return p;
+	 * local GrupoNodos GN;
+	local vector res;
+	local int len;
+	*/
+	indice = 0 ;
+	return GetNextPath(id,indice).Location;
+	/*
+	res = vect(0,0,0);
+	indice = GroupNodos.Find('id', id);
+	GN = GroupNodos[indice];
+	len = GN.Nodos.Length;
 
+	if(len>0)
+	{
+		res = GN.Nodos[0].Location;
+	}
+	
+	return res;
+  */
 }
 
 function ActivateSpawners()
@@ -331,7 +317,7 @@ function ActivateSpawners()
     
     EnemySpawners[Rand(EnemySpawners.length)].SpawnPoint.SpawnEnemy();
 	// Con esto controlamos que sólo haya un spawn activo a la vez y que no spawneen todos los enemigos a la vez
-    SetTimer(3, false, 'ActivateSpawners');
+    SetTimer(7, false, 'ActivateSpawners');
 }
 
 function SetCredito(int credito)
@@ -453,5 +439,6 @@ defaultproperties
 	//m_CentroPlaneta=(X=528,Y=144,Z=8752)
 	m_CentroPlaneta=(X=0.000000,Y=0.000000,Z=0.000000)
 	NodosCreados=false
-	m_max_radiorandom = 400;
+	m_max_radiorandom = 100;
+	m_min_radiorandom = 400;
 }
