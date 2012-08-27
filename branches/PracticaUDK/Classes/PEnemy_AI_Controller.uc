@@ -7,6 +7,8 @@ var int id;                 //Id del spawner que lo creó. Para identificar el sc
 var bool m_b_breakpoint; //Se pone a true al disparar con Giru, usado para poner un if y un breakpoint dentro, para
 					     //poder debugar un bicho en concreto
 
+var float m_AnguloOffsetInicial; //Angulo con el que fui creado por el EnemySpawner
+
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
@@ -77,6 +79,70 @@ function Control_BaseChangedPenemy(Actor PEnemyOtro)
 	//`log("PEnemy_AI_Controller::Control_BaseChangedPenemy, DEBES SOBREESCRIBIRME!!!");
 	
 }
+
+function PPathNode AplicarOffsetNodo(PPathNode nodo)
+{
+	local PPathnode p;
+	local vector f ;
+	local vector v,r ;
+	local Quat ernion,ernion2;
+
+	local Rotator rot;
+	local vector centro,hitlocation,hitnormal,fintrace;
+	local float maxdist,mindist;
+	local vector initlocation;
+
+	maxdist = Pgame(Worldinfo.Game).m_max_radiorandom;
+	mindist = Pgame(Worldinfo.Game).m_min_radiorandom;
+	initlocation = nodo.Location ; //antes de aplicarle el offset
+
+	
+	//Creamos una copia de nodo en p
+	p = spawn(class'PPathNode',,,nodo.Location);
+	p.id = nodo.id;
+	p.m_floor_nodo = nodo.m_floor_nodo;
+	p.m_direccion_nodo = nodo.m_direccion_nodo;
+
+    
+	f = nodo.m_floor_nodo;
+	v = nodo.m_direccion_nodo;
+
+	/****************** CON QUATERNIONS *****************/
+	if (m_AnguloOffsetInicial != 0)
+	{
+		ernion =  QuatFromAxisAndAngle(f,self.m_AnguloOffsetInicial); //Está en radianes ya!!
+		ernion2 = QuatFromRotator(Rotator(v));
+		ernion =  QuatProduct(ernion,ernion2);
+		v = vector(QuatToRotator(ernion));
+	}
+
+	r = nodo.location + (normal(v) * maxdist); //(mindist + rand(maxdist-mindist));
+    nodo.SetLocation(r);
+
+	//Ahora, a colocar el nodo cerquita de la superficie, por si el cálculo ha hecho que esté debajo
+	centro = PGame(Worldinfo.Game).m_CentroPlaneta;
+	fintrace = r + (r-centro); //Seguro que está por encima del planeta
+	trace(hitLocation,hitNormal,fintrace,centro,true,vect(5,5,5));
+	if (hitlocation != vect(0,0,0))
+	{
+		//Lo colocamos en la superficie, un poco por encima just in case
+		nodo.SetLocation(hitlocation + 10 *normal(r-centro));
+	}
+	else
+	{
+		nodo = nodo;
+	}
+
+	/*
+	DrawDebugCylinder(initlocation,nodo.Location,3,4,0,100,0,true);
+	DrawDebugSphere(initlocation,30,10,255,0,0,true);
+	DrawDebugSphere(nodo.Location,30,10,0,0,255,true);
+    */
+	//`log("OffsetAplicado "@vsize(initlocation-nodo.Location));
+	return p;
+
+}
+
 
 DefaultProperties
 {
