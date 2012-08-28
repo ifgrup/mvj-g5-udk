@@ -1,4 +1,4 @@
-class PGFxUI_PauseMenu extends UTGFxTweenableMoviePlayer;
+class PGFxUI_PauseMenu extends GFxMoviePlayer;
 
 var GFxObject RootMC, PauseMC, OverlayMC, Btn_Resume_Wrapper, Btn_Exit_Wrapper,Btn_RStart_Wrapper;
 var GFxClikWidget Btn_ResumeMC, Btn_ExitMC,Btn_RStart,Btn_ffMC,Btn_f1MC,Btn_f2MC,Btn_f3MC;

@@ -559,8 +559,8 @@ hbt3icotoMC.SetBool("_visible", val);
 hbt4icotoMC.SetBool("_visible", val);
 	hbt4icotrMC.SetBool("_visible", !val);
 
-raton.SetBool("_visible", val);
- pmiratierraMC.SetBool("_visible", !val);
+	raton.SetBool("_visible", val);
+	pmiratierraMC.SetBool("_visible", !val);
 
 
 
@@ -713,7 +713,7 @@ function MensajitoPotPantalla(string texto)
 }
 function SetAnimLog(bool val)
 {
-animLog=val;
+	animLog=val;
 }
 
 

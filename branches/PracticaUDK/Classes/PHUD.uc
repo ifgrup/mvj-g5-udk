@@ -70,7 +70,7 @@ struct SRadarInfo
 var array<SRadarInfo> RadarInfo;
 
 var const linearcolor RedLinearColor,BlueLinearColor,DMLinearColor;
-
+var bool bgameover;
 
 
 
@@ -779,7 +779,10 @@ function CompletePauseMenuClose()
 exec function ShowMenu()
 {
 	// if using GFx HUD, use GFx pause menu
-	TogglePauseMenu();
+	if(!bgameover)
+	{
+		TogglePauseMenu();
+	}
 	
 }
 
@@ -1082,6 +1085,7 @@ function float GetAngle(Vector PointB, Vector PointC)
 {
 
 	local int pvida;
+
 	pvida=(ERadarInfo.UTPawn.life*100) /ERadarInfo.UTPawn.MaxLife;
 	//`log("la vida de los Penemy en %"@pvida);
 	Canvas.SetPos(ScreenHUDLocation.X-100 , ScreenHUDLocation.Y-50);
@@ -1111,7 +1115,7 @@ pGFx.MensajitoPotPantalla(texto);
 //pGFx.loghudMC.GotoAndPlay("ini");
 }
 
-
+//Coloca la película de GameOver en medio de la pantalla y ponemos la variable bgameover a true para que no pueda funcionar la tecla ESC que ejecuta el pauseMenu.
 exec function fineee()
 {
 	local ASDisplayInfo DI;
@@ -1123,9 +1127,15 @@ exec function fineee()
 	DI.Alpha=80;
 	pGFx.gameoverMC.SetDisplayInfo(DI);
 	pGFx.gameoverMC.GotoAndPlayI(4);
-	PlayerOwner.SetPause(True);
+	pGFx.raton.SetBool("_visible", true);
+	bgameover=true;
+	PlayerOwner.SetPause(True,gover);
+	
 
-
+}
+delegate bool gover()
+{
+	return false;
 }
 
 
@@ -1149,6 +1159,7 @@ defaultproperties
 	RedLinearColor=(R=3.0,G=0.0,B=0.05,A=0.8)
 	BlueLinearColor=(R=0.5,G=0.8,B=10.0,A=0.8)
 	DMLinearColor=(R=1.0,G=1.0,B=1.0,A=0.5)
+	bgameover=false;
 
 }
 
