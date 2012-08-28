@@ -62,6 +62,17 @@ var bool reload;
 var bool bMouseOverInteractionPanel;
 var bool bClosingInteractionPanel;
 
+
+
+//demo GameOver y Mensaje
+
+var GFxObject gameoverMC;
+var GFxObject loghudMC;
+var GFxObject	tloghudMC;
+var GFxClikWidget Btn_menu, Btn_salir;
+var bool animLog;
+
+
 function Init(optional LocalPlayer LocalPlayer)
 {
 	local ASDisplayInfo DI;
@@ -133,17 +144,24 @@ function Init(optional LocalPlayer LocalPlayer)
 	creditoMC= GetVariableObject("_root.nhud.credito");
 	//Hud nuevo
 
+//demo
 
 
+ gameoverMC=GetVariableObject("_root.gameover");
+ loghudMC=GetVariableObject("_root.loghud");
+	tloghudMC=GetVariableObject("_root.loghud.conlog.tloghud");
+
+loghudMC.SetBool("_visible", false);
+animLog=true;
+
+//demo
 
 
 
 	bTowerActive=true;
 	HbtActive=ini;
 	TurretReload();
-//RR
-
-
+	
 	
 }
 //RR
@@ -626,10 +644,79 @@ function string PrecioHbtActive()
 
 }
 
-function nnnn()
+
+
+
+
+
+//demo
+
+
+event bool WidgetInitialized(name WN,name WP, GFxObject w)
 {
-	`log("el flash acaba el reload");
+	
+	switch(WN)
+	{
+		case ('menu'):
+			Btn_menu=GFxClikWidget(w);
+			
+			Btn_menu.SetString("label", "Menú");
+			Btn_menu.AddEventListener('CLIK_press',OnPressMenuButton);
+			break;
+
+			case ('salir'):
+			Btn_salir=GFxClikWidget(w);
+			
+			Btn_salir.SetString("label", "Salir");
+			Btn_salir.AddEventListener('CLIK_press',OnPressExitButton);
+			break;
+			
+		default:
+			break;
+
+	}
+	return true;
 }
+
+
+
+
+function OnPressExitButton(GFxClikWidget.EventData ev)
+{
+	//UTPlayerController(GetPC()).QuitToMainMenu();	
+	ConsoleCommand("exit");
+}
+function OnPressMenuButton(GFxClikWidget.EventData ev)
+{
+	//UTPlayerController(GetPC()).QuitToMainMenu();	
+	ConsoleCommand("Open PGameMenuini");
+}
+
+
+ function GameOver()
+{
+	gameoverMC.SetBool("_visible", true);
+
+
+
+
+}
+
+function MensajitoPotPantalla(string texto)
+{
+	SetAnimLog(false);
+	loghudMC.SetBool("_visible", true);
+	loghudMC.GotoAndPlay("reload");
+	tloghudMC.SetText(texto);
+
+
+}
+function SetAnimLog(bool val)
+{
+animLog=val;
+}
+
+
 
 DefaultProperties
 {
@@ -645,4 +732,11 @@ DefaultProperties
 	hbt3precio=500
 	hbt4precio=2000
 	HbtActive=ini
+
+	IconsPenemyCount=0
+	//demo
+
+
+	WidgetBindings.Add((WidgetName="menu",WidgetClass=class'GfxClikWidget'));
+	WidgetBindings.Add((WidgetName="salir",WidgetClass=class'GfxClikWidget'));
 }

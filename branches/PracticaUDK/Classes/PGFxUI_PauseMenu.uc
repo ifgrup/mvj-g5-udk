@@ -65,12 +65,12 @@ event bool WidgetInitialized(name WN,name WP, GFxObject w)
 			Btn_f3MC.SetString("label", "Menú");
 			Btn_f3MC.AddEventListener('CLIK_press',OnPressMenuButton);
 			break;
-			case ('RStart'):
+			/*case ('RStart'):
 			Btn_RStart=GFxClikWidget(w);
 			
 			Btn_RStart.SetString("label", "FishTros");
 			Btn_RStart.AddEventListener('CLIK_press',OnPressMenuButton);
-			break;
+			break;*/
 		default:
 			break;
 

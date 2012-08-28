@@ -7,7 +7,7 @@ var vector DireccionCaida;
 var vector FallDirection;
 var vector ViewX, ViewY, ViewZ,OldFloor;
 var float fTiempoDeSalto; //tiempo que lleva saltando. Si se pasa de un límite, para evitar que se pire volando, lo bajamos
-var int life;
+var int life,MaxLife;
 var int m_puntos_al_morir; //Puntos que da al jugador cuando lo mata
 
 var Vector FloorActual;
@@ -615,5 +615,5 @@ defaultproperties
 	MaxStepHeight=45
 	WalkableFloorZ=0
 	life=40
-
+	MaxLife=80
 }
