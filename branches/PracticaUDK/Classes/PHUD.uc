@@ -61,7 +61,7 @@ var int m_min_offset_mirilla_y, m_max_offset_mirilla_y; //OFFSET de la mirilla a
 
 struct SRadarInfo
 {
-	var UTPawn UTPawn;
+	var PEnemy UTPawn;
 	var MaterialInstanceConstant MaterialInstanceConstant;
 	var bool DeleteMe;
 	var Vector2D Offset;
@@ -891,9 +891,14 @@ function iconosapantalla()
 	local int i, Index;
 	local Vector WorldHUDLocation, ScreenHUDLocation, ActualPointerLocation, CameraViewDirection, PawnDirection, CameraLocation;
 	local Rotator CameraRotation;
-	local UTPawn UTPawn;
+	local PEnemy  UTPawn;
 	local LinearColor TeamLinearColor;
 	local float PointerSize;
+	local float distcentro;
+	local vector rx,ry,rz;
+	local float altura_cil_colision;
+	local vector cabeza_pawn_location;
+	local rotator cabeza_pawn_rotation;
 
 	if (PlayerOwner == None || PlayerOwner.Pawn == None)
 	{
@@ -910,8 +915,18 @@ function iconosapantalla()
 	}
 	
 	// Update the radar infos and see if we need to add or remove any
-	ForEach DynamicActors(class'UTPawn', UTPawn)
+	distcentro = VSize(PGame(Worldinfo.Game).m_CentroPlaneta - PlayerOwner.Pawn.Location);
+	PlayerOwner.Pawn.Mesh.GetSocketWorldLocationAndRotation('Socket_Cabeza',cabeza_pawn_location,cabeza_pawn_rotation);
+	//ForEach DynamicActors(class'PEnemy', UTPawn)
+    ForEach VisibleCollidingActors ( class 'PEnemy', UTPawn, distcentro,cabeza_pawn_location,,vect(10,10,10))
 	{
+		/**
+		if ( 
+			VSize(UTPawn.Location - PlayerOwner.Pawn.Location)  >
+			VSize(PGame(Worldinfo.Game).m_CentroPlaneta - PlayerOwner.Pawn.Location) )
+			continue;
+		**/
+
 		if (UTPawn != PlayerOwner.Pawn)
 		{
 			Index = RadarInfo.Find('UTPawn', UTPawn);
@@ -925,7 +940,11 @@ function iconosapantalla()
 
 				if (RadarInfo[i].MaterialInstanceConstant != None)
 				{
-					RadarInfo[i].MaterialInstanceConstant.SetParent(Material'GemOnscreenRadarContent.PointerMaterial');
+					//RadarInfo[i].MaterialInstanceConstant.SetParent(Material'PGameContentTice.copo_Mat');
+					//RadarInfo[i].MaterialInstanceConstant.SetParent(Material'EditorMaterials.MatineeGroups.MAT_Groups_Event_Mat');
+						RadarInfo[i].MaterialInstanceConstant.SetParent(Material'GemOnscreenRadarContent.PointerMaterial');
+					//RadarInfo[i].MaterialInstanceConstant.SetParent(DecalMaterial'PGameHUDT.towericedecaldemo');
+					
 
 					if (UTPawn.PlayerReplicationInfo != None && UTPawn.PlayerReplicationInfo.Team != None)
 					{
@@ -963,24 +982,29 @@ function iconosapantalla()
 				if (WorldInfo.TimeSeconds - RadarInfo[i].UTPawn.LastRenderTime > 0.1f)
 				{
 					// Player has not seen this pawn in the last 0.1 seconds
-					RadarInfo[i].Opacity = Lerp(RadarInfo[i].Opacity, 0.4f, RenderDelta * 4.f);
+					//RadarInfo[i].Opacity = Lerp(RadarInfo[i].Opacity, 0.4f, RenderDelta * 4.f);
 				}
 				else
 				{
 					// Player has seen this pawn in the last 0.1 seconds
-					RadarInfo[i].Opacity = Lerp(RadarInfo[i].Opacity, 1.f, RenderDelta * 4.f);
+					//RadarInfo[i].Opacity = Lerp(RadarInfo[i].Opacity, 1.f, RenderDelta * 4.f);
 				}
 				// Apply the opacity
-				RadarInfo[i].MaterialInstanceConstant.SetScalarParameterValue('Opacity', RadarInfo[i].Opacity);
+				//RadarInfo[i].MaterialInstanceConstant.SetScalarParameterValue('Opacity', RadarInfo[i].Opacity);
 
 				// Get the direction from the player's pawn to the pawn
 				PawnDirection = Normal(RadarInfo[i].UTPawn.Location - PlayerOwner.Pawn.Location);
 
 				// Check if the pawn is in front of me
+				/*
 				if (PawnDirection dot CameraViewDirection >= 0.f)
 				{
+				*/
 					// Get the world HUD location, which is just above the pawn's head
-					WorldHUDLocation = RadarInfo[i].UTPawn.Location + (RadarInfo[i].UTPawn.GetCollisionHeight() * Vect(0.f, 0.f, 1.f));
+					GetAxes(RadarInfo[i].UTPawn.Rotation,rx,ry,rz);
+					altura_cil_colision = RadarInfo[i].UTPawn.GetCollisionHeight() ;
+					altura_cil_colision = 50;
+					WorldHUDLocation = RadarInfo[i].UTPawn.Location + (altura_cil_colision * rz);
 					// Project the world HUD location into screen HUD location
 					ScreenHUDLocation = Canvas.Project(WorldHUDLocation);
 
@@ -1002,55 +1026,17 @@ function iconosapantalla()
 					RadarInfo[i].MaterialInstanceConstant.SetScalarParameterValue('Rotation', GetAngle(ActualPointerLocation, ScreenHUDLocation));
 
 					// Draw the material pointer
-					Canvas.SetPos(ActualPointerLocation.X - (PointerSize * 0.5f), ActualPointerLocation.Y - (PointerSize * 0.5f));
-					//Canvas.DrawMaterialTile(RadarInfo[i].MaterialInstanceConstant, PointerSize, PointerSize, 0.f, 0.f, 1.f, 1.f);
-					 Canvas.SetDrawColor(255,255,255,80);
-				 Canvas.DrawRect(8,12);
+
+					DibujaEstadoPEnemy(RadarInfo[i],ScreenHUDLocation,PointerSize);
+					//Canvas.SetPos(ActualPointerLocation.X - (PointerSize * 0.5f), ActualPointerLocation.Y - (PointerSize * 0.5f));
+				//	Canvas.SetPos(ScreenHUDLocation.X-100 , ScreenHUDLocation.Y-50);
+				//	pGFx.demoMC(ScreenHUDLocation.X,ScreenHUDLocation.Y);
+					//Canvas.DrawMaterialTile(RadarInfo[i].MaterialInstanceConstant, PointerSize, PointerSize);
+					//Canvas.SetDrawColor(255,0,0,255);
+					//Canvas.DrawRect(20,10);
+				/*
 				}
-				else
-				{
-					// Handle rendering the on screen indicator when the actor is behind the camera
-					// Project the pawn's location
-					ScreenHUDLocation = Canvas.Project(RadarInfo[i].UTPawn.Location);
-
-					// Inverse the Screen HUD location
-					ScreenHUDLocation.X = Canvas.ClipX - ScreenHUDLocation.X;
-
-					// If the screen HUD location is on the right edge, then swing it to the left
-					if (ScreenHUDLocation.X > (Canvas.ClipX - 8))
-					{
-						RadarInfo[i].Offset.X -= PointerSize * RenderDelta * 4.f;
-						RadarInfo[i].Offset.X = FClamp(RadarInfo[i].Offset.X, PointerSize * -0.5f, PointerSize * 0.5f);
-					}
-					else if (ScreenHUDLocation.X < 8)
-					{
-						// If the screen HUD location is on the left edge, then swing it to the right
-						RadarInfo[i].Offset.X += PointerSize * RenderDelta * 4.f;
-						RadarInfo[i].Offset.X = FClamp(RadarInfo[i].Offset.X, PointerSize * -0.5f, PointerSize * 0.5f);
-					}
-					else
-					{
-						// If the screen HUD location is somewhere in the middle, then straighten it up
-						RadarInfo[i].Offset.X = Lerp(RadarInfo[i].Offset.X, 0.f, 4.f * RenderDelta);
-					}
-
-					// Set the screen HUD location
-					ScreenHUDLocation.X = Clamp(ScreenHUDLocation.X, 8, Canvas.ClipX - 8);
-					ScreenHUDLocation.Y = Canvas.ClipY - 8;
-
-					// Set the actual pointer location
-					ActualPointerLocation.X = ScreenHUDLocation.X + RadarInfo[i].Offset.X;
-					ActualPointerLocation.Y = ScreenHUDLocation.Y - (PointerSize * 0.5f);
-
-					// Set the rotation of the material icon
-					RadarInfo[i].MaterialInstanceConstant.SetScalarParameterValue('Rotation', GetAngle(ActualPointerLocation, ScreenHUDLocation));
-
-					// Draw the material pointer
-					Canvas.SetPos(ActualPointerLocation.X - (PointerSize * 0.5f), ActualPointerLocation.Y - (PointerSize * 0.5f));
-					    Canvas.SetDrawColor(255,255,255,80);
-				 Canvas.DrawRect(8,12);
-				//Canvas.DrawMaterialTile(RadarInfo[i].MaterialInstanceConstant, PointerSize, PointerSize, 0.f, 0.f, 1.f, 1.f);
-				}
+				*/
 			}
 		}
 		else
@@ -1092,18 +1078,55 @@ function float GetAngle(Vector PointB, Vector PointC)
 
 
 
+ function DibujaEstadoPEnemy(SRadarInfo ERadarInfo,Vector ScreenHUDLocation,float PointerSize)
+{
+
+	local int pvida;
+	pvida=(ERadarInfo.UTPawn.life*100) /ERadarInfo.UTPawn.MaxLife;
+	//`log("la vida de los Penemy en %"@pvida);
+	Canvas.SetPos(ScreenHUDLocation.X-100 , ScreenHUDLocation.Y-50);
+	Canvas.DrawMaterialTile(ERadarInfo.MaterialInstanceConstant, PointerSize, PointerSize);
+
+
+	// Borde
+	Canvas.SetPos(ScreenHUDLocation.X-100, ScreenHUDLocation.Y-50);
+	Canvas.SetDrawColor(0,0,0, 200);
+	Canvas.DrawBox(102,20);
+
+	// Barra
+	Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-48);
+	Canvas.SetDrawColor(255,0,0,255);
+	Canvas.DrawRect(pvida,16);
+
+
+	
+}
 
 
 
+exec function msgpantalla(string texto)
+{
+
+pGFx.MensajitoPotPantalla(texto);
+//pGFx.loghudMC.GotoAndPlay("ini");
+}
 
 
+exec function fineee()
+{
+	local ASDisplayInfo DI;
+	
+	DI=pGFx.gameoverMC.GetDisplayInfo();
+	DI.X=self.CenterX;
+	DI.Y=self.CenterY;
+	DI.Visible=true;
+	DI.Alpha=80;
+	pGFx.gameoverMC.SetDisplayInfo(DI);
+	pGFx.gameoverMC.GotoAndPlayI(4);
+	PlayerOwner.SetPause(True);
 
 
-
-
-
-
-
+}
 
 
 //
