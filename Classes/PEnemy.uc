@@ -431,7 +431,7 @@ auto state Cayendo
 		//de PawnFalling ya detectará el HitWall, y por tanto este HitWall no se producirá nunca.
 		//Así pues, hay que estar en este estado hasta que se ejecute este HitWall, o bien hasta que este pawn
 		//tenga una base diferente de none, o mejor,  igual al planeta
-		if (self.Base != None && self.Base.Name=='StaticMeshActor_1')
+		if (self.Base != None && PGame(Worldinfo.game).EsPlaneta(self.Base))
 		{
 			//Lo mismo que en el caso del HitWall, volvemos al estado 'base'
 			GotoState(''); //estado default
@@ -521,7 +521,7 @@ singular event BaseChange()
 		}
 	}
 
-	if (Base.Name=='StaticMeshActor_1')
+	if (PGame(Worldinfo.game).EsPlaneta(Base))
 	{
 		return;
 	}
