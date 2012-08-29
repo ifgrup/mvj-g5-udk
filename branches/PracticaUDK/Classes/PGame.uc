@@ -262,6 +262,12 @@ function PPathNode GetNextPath(int id, out int NodeIndex)
 	NodeIndexTmp = NodeIndex +1;
 
 	indice = GroupNodos.Find('id', id);
+	if (indice == -1)
+	{
+		//Grave problema... significa que no hemos creado los nodos..
+		`log("___ERROR___ No se han creado los nodos para el grupo " @id);
+		return none;
+	}
 	GN = GroupNodos[indice];
 	len = GN.Nodos.Length;
 
@@ -279,27 +285,18 @@ function PPathNode GetNextPath(int id, out int NodeIndex)
 function vector GetFirstNodeLocation(int id)
 {
 	local int indice;
-	
-	/*
-	 * local GrupoNodos GN;
-	local vector res;
-	local int len;
-	*/
-	indice = 0 ;
-	return GetNextPath(id,indice).Location;
-	/*
-	res = vect(0,0,0);
-	indice = GroupNodos.Find('id', id);
-	GN = GroupNodos[indice];
-	len = GN.Nodos.Length;
+	local PPathNode nodo;
 
-	if(len>0)
+	indice = 0 ;
+	nodo = GetNextPath(id,indice);
+	if (nodo != None)
 	{
-		res = GN.Nodos[0].Location;
+		return nodo.Location;
 	}
-	
-	return res;
-  */
+	else
+	{
+		return vect(0,0,0);
+	}
 }
 
 function ActivateSpawners()
@@ -421,6 +418,17 @@ function GetVectorEnemigos(int idSpawner, out array<PEnemy> enemigos, out PEnemy
 exec function ponerpasta(int p)
 {
 SetCredito(p);
+}
+
+function bool EsPlaneta(Actor a)
+{
+	//versión hasta ahora:
+	/****
+	return (a.Name == 'StaticMeshActor_1');
+	***/
+	
+	//versión planeta troceado
+	return a.Tag == 'Planeta';
 }
 
 

@@ -23,8 +23,6 @@ var vector m_ULtimoFloorAntesSalto; //Por si en el salto el floor se ha perdido 
 var int m_DistanciaAlSuelo; //Distancia del robot al suelo
 var int m_backupDistanciaAlSuelo; //para guardar el valor de m_DistanciaAlSuelo cuando se modifica
 
-var Actor m_BasePlaneta;
-var bool m_BasePlanetaGuardado;
 
 //Los sistemas de partículas del robot, para poder encenderlos y apagarlos todos juntos:
 var array<EmitterSpawnable>	m_ParticulasPropulsoresRobot;
@@ -462,14 +460,8 @@ singular event BaseChange()
 		PPaintCanvas(self.Base).ChangeTexture();
 	}
 
-	if (!m_BasePlanetaGuardado && Base.Name=='StaticMeshActor_1')
-	{
-		//El planeta. Lo guardamos
-		m_BasePlaneta=Base;
-		m_BasePlanetaGuardado=true;
-	}
 	//Hacemos lo mismo que en Bump pa probar
-	if(Base!=None && Base.Name!= 'StaticMeshActor_1')
+	if(Base!=None &&   !PGame(Worldinfo.game).EsPlaneta(Base)  )
 	{
 	     if(PAutoTurret (Base) != None)
 	     {  //Es una torreta. Rebotamos
@@ -491,7 +483,7 @@ singular event BaseChange()
 			 * No lo borro just in case, aunque si se demuestra que lo del rebote funciona, a eliminarlo ;)
 			direc=Base.Location-self.Location;
 			self.SetLocation(self.Location+Normal(-direc)*5); //Nos alejamos un pelín
-		 	self.SetBase(m_BasePlaneta);
+		 	self.SetBase(Base);
 			*/
 
 		 }
@@ -681,7 +673,7 @@ state PawnFalling
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn");
 
-		if (Wall == m_BasePlaneta)
+		if (PGame(Worldinfo.game).EsPlaneta(Wall))
 		{
 			OrientarPawnPorNormal(HitNormal,routPawn);
 			PC.GotoState('PlayerSpidering'); //Porque si veniamos de rebote al caer del planeta, el PC esta en otro estado
@@ -784,7 +776,7 @@ state PawnFallingSky
 		PC = PPlayerController(Instigator.Controller);
 		PC.ClientMessage("HitWallPawn al caer del cielo_________________________________________");
 		
-		if (Wall == self.m_BasePlaneta)
+		if (  PGame(Worldinfo.game).EsPlaneta(Wall))
 		{
 			//_DEBUG_ ('el pawn ha caido al suelo despues de bajar de vista aerea');
 			SetBase(Wall, HitNormal);
@@ -1058,8 +1050,5 @@ defaultproperties
 	bCollideWorld=true
 	CollisionType=COLLIDE_BlockAll
 	
-	m_BasePlaneta = None
-	m_BasePlanetaGuardado = false
-
 	m_DistanciaAlSuelo = 10
 }

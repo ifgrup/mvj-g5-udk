@@ -928,7 +928,7 @@ state PlayerFallingSky
 		//_DEBUG_DrawDebugSphere(m_PosicionCaidaPlaneta,30,40,0,1,200,true);
 		//Si caigo sobre algo que no es el planeta ni contra un PEnemy, la caida es contra ese algo
 		if(  m_ActorContraElQueCaemos != None && 
-			(m_ActorContraElQueCaemos !=elpaun.m_BasePlaneta && (PEnemy(m_ActorContraElQueCaemos) ==None))   )
+			(!PGame(Worldinfo.game).EsPlaneta(m_ActorContraElQueCaemos) && (PEnemy(m_ActorContraElQueCaemos) ==None))   )
 		{
 			
 			//_DEBUG_ ("Caemos encima de "@m_ActorContraElQueCaemos.Name);
@@ -1055,9 +1055,7 @@ state PlayerFallingSky
 					PPawn(pawn).m_ULtimoFloorAntesSalto =  m_NormalCaidaPlaneta;
 					PPawn(pawn).m_VenimosDeBump = true; //Si no no deja saltar
 					PPawn(pawn).DoJump(true);
-					
-					//PPawn(pawn).HitWall(m_NormalCaidaPlaneta,PPawn(pawn).m_BasePlaneta,none);
-					
+				
 					GoToState('PlayerRecienCaido'); //EL Pawn también nos llevará, pero así aseguramos que
 				}
 				else

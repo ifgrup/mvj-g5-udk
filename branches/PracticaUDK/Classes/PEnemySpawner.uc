@@ -16,6 +16,7 @@ var array<PEnemy_AI_Bot> AIBot;
 var(SpawnConfig) int MaxEnemies;
 
 var float m_distDelHuevoAlNacer;
+var vector m_location_primer_nodo;
 
 struct OffsetNodo
 {
@@ -38,6 +39,7 @@ function PostBeginPlay()
 	mat.SetVectorParameterValue('Color_Emissive02', Col2);
 
 	ColorMesh.SetMaterial(0, mat);
+	DrawDebugCylinder(self.Location, self.location + (self.Location - (PGame(Worldinfo.Game)).m_CentroPlaneta),10,10,200,0,0,true);
 }
 
 /**
@@ -76,11 +78,21 @@ function SpawnEnemy()
 			//Simplemente guardaría en las estructuras que tenemos, el id de orda que llevamos,
 			//Y vamos haciendo que incremente el número de minions por orda.
 			//Ahora para probar, hacemos 3.
+			if (m_location_primer_nodo == vect(0,0,0))
+			{
+				m_location_primer_nodo = PGame(Worldinfo.game).GetFirstNodeLocation(Group);
+			}
+			if (m_location_primer_nodo == vect(0,0,0))
+			{
+				//Aún no existe el primer nodo. Puede pasar si los minions salen enseguida después del scout y éste aún
+				//no lo ha creado
+				//así que le damos más tiempo, y esperamos al siguiente timer
+				return;
+			}
 
-			vector_hacia_primer_nodo = PGame(Worldinfo.game).GetFirstNodeLocation(Group);
-			DrawDebugCylinder(self.Location,vector_hacia_primer_nodo,10,10,0,255,0,true);
+			DrawDebugCylinder(self.Location,m_location_primer_nodo,10,10,0,255,0,true);
 			DrawDebugSphere(self.Location,120,20,255,0,0,true);
-			vector_hacia_primer_nodo  = vector_hacia_primer_nodo - self.Location;
+			vector_hacia_primer_nodo  = m_location_primer_nodo - self.Location;
 			
 			cuantos = 5;
 
@@ -168,7 +180,22 @@ function  generarPosicionSpawn(vector v_haciaprimernodo, int num_bichos, out arr
 
 function bool CanSpawnEnemy()
 {
-    return Enemy.Length <= MaxEnemies;
+	local bool res;
+	local int indice;
+	res = false;
+
+	//Si no tiene creado el grupo de nodos todavía, no puede hacer spawn
+	indice =  PGame(Worldinfo.game).GroupNodos.Find('id', self.Group);
+	if (indice != -1)
+	{
+		res = Enemy.Length <= MaxEnemies;
+	}
+	else
+	{
+		`log("No hay nodos todavía para el grupo " @group);
+	}
+   
+	return res;
 }
 
 defaultproperties
