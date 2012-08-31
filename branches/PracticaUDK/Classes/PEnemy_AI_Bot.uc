@@ -23,6 +23,10 @@ var float ahora, m_last_stop_colision;
 var float distNodo,oldDistNodo;
 var int m_segundosQuieto;
 var float m_distancia_Base_kamikaze; //Distancia a la base en la que se considera que ha llegao
+var float m_max_dist_disparo_ppawn; //distancia máxima del minion al PPawn en la que le puede disparar si lo ve
+var bool m_disparo_posible;
+var float m_tick_disparo;
+var float m_timout_entre_disparos; //cada cuanto puedo disparar al Giru
 
 simulated event PostBeginPlay()
 {
@@ -40,6 +44,24 @@ function Parar()
 		self.PushState('StopColision');
 	}
 }
+
+function DisparaAPPawn(PPawn giru)
+{
+	local vector minionpos,ppawnpos;
+	local Projectile Proj;
+	
+	minionpos = self.Pawn.Location  ;
+	ppawnpos =  giru.Location + giru.m_TranslateZ;
+			
+	minionpos+= 50 * normal(ppawnpos - minionpos);
+	//Obtener pos del socket del minion
+	//Mesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+	
+	Proj = Spawn(class'PMisilMinion',self,,minionpos,,,True);
+	Proj.Init(Normal(ppawnpos-minionpos));
+	DrawDebugCylinder(minionpos,ppawnpos,3,3,0,100,0,false);
+}
+
 
 function EstanLosColegasCercaNeng()
 {
@@ -193,6 +215,21 @@ Begin:
 
 state GoToNextPath
 {
+	event SeePlayer(Pawn seen)
+	{
+
+		if (PPawn(seen) != None)
+		{
+			if (m_disparo_posible && vsize(self.Pawn.Location - seen.Location) < m_max_dist_disparo_ppawn )
+			{
+				self.DisparaAPPawn(PPawn(seen));
+				m_disparo_posible = false;
+			}
+			
+		}
+		
+	}
+
 	event Tick (float DeltaTime)
 	{
 		local vector antes,despues;
@@ -202,6 +239,16 @@ state GoToNextPath
 		{
 			DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
 		}
+
+		//Control de timing entre disparos
+		m_tick_disparo += DeltaTime;
+		if (m_tick_disparo >= m_timout_entre_disparos)
+		{
+			m_disparo_posible = true;
+			m_tick_disparo = 0;
+		}
+		
+
 		//Cada segundo, hacemos el control que hacía inicialmente la función BrainTimer
 		if (theObjective == None)
 		{
@@ -583,4 +630,6 @@ defaultproperties
 	m_dist_choque_Minion=250
 	m_dist_choque_Scout=125
 	m_distancia_Base_kamikaze=150
+	m_max_dist_disparo_ppawn=400
+	m_timout_entre_disparos = 3
 }

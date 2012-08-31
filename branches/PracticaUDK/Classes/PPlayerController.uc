@@ -1470,9 +1470,10 @@ function pontorretahielo ()
 	m_torreta_victor.GotoState('Disparando');
 }
 
-exec function icer(int radio)
+exec function icer(int radio, int altura)
 {
 	m_torreta_victor.m_radioinicial = radio;
+	m_torreta_victor.m_alturainicial = altura;
 	ice();
 }
 defaultproperties

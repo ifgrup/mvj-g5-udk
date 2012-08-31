@@ -41,6 +41,8 @@ var int m_idx_brazo_ido,m_idx_brazo_dcho,m_idx_antebrazo_ido,m_idx_antebrazo_dch
 var int m_roll_antes_caer_cielo; //Roll que teníamos antes de caer del cielo para mantener la orientación
 var bool m_bEstoyCayendoDelCielo; //Para saber si debemos utilizar m_roll_antes_caer_cielo o no
 
+var float life;
+
 function float CalcularMediaTranslateZ(float valorZ)
 {
 	local int i;
@@ -937,6 +939,32 @@ state PawnPreparandoFlaying
 }//state PawnPreparandoFlaying
 
 
+
+event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+{
+
+	//Ha sido por disparo de Minion?
+	if(PMisilMinion(DamageCauser) != None)
+	{
+		//_DEBUG_ ("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
+		RecibidoDisparoMisil(HitLocation, Momentum,PMisiles(DamageCauser));
+		return;
+	}
+
+} //TakeDamage
+
+
+function RecibidoDisparoMisil(vector HitLocation, vector Momentum,PMisiles misil)
+{
+	self.Life -= misil.Damage;
+	`log("Toñazo recibido en Giru "@self.life);
+
+	if (self.Life <= 0)
+	{
+		self.GotoState('GiruMuerto');
+	}
+}
+
 defaultproperties
 {
 	// Propiedades que daremos por defecto
@@ -1050,5 +1078,6 @@ defaultproperties
 	bCollideWorld=true
 	CollisionType=COLLIDE_BlockAll
 	
-	m_DistanciaAlSuelo = 10
+	m_DistanciaAlSuelo= 10
+	life=100;
 }
