@@ -13,6 +13,7 @@ struct DisparoHielo
 
 var array<DisparoHielo> m_array_disparos_hielo;
 var float m_radioinicial;
+var float m_alturainicial;
 
 //Funcion definida en PAutoTurret, redefinida en cada hija
 function DisparoTorreta()
@@ -137,8 +138,10 @@ state Disparando
 				
 				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetVectorParameter('RadioToroide',radio_v); 
 				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('RadioCilindro',radio_i); 
-				parasin = 300 + sin (tiempo_i) *50;
-				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('AlturaCilindro',parasin); 
+				parasin = 200 + sin (tiempo_i*2) * 150;
+				`log ("Altura "@parasin);
+				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('AlturaCilindro',parasin); 
+				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('AlturaCilindro',100); 
 				
 				
 				//hay que orientar en la perpendicular
@@ -285,5 +288,6 @@ defaultproperties
 	RoundsPerSec=50
 	m_TimeoutEntreDisparo=10 //Disparo de hielo cada 3 segundos
 	m_radioinicial = 300;
+	m_alturainicial = 300;
 
 }
