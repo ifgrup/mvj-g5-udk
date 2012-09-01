@@ -27,7 +27,13 @@ function SetColor(LinearColor Col)
 defaultproperties
 {
 	Begin Object Name=PEnemySkeletalMeshComponent
-		SkeletalMesh=SkeletalMesh'Gelatinos.Gusano.GelatinoGusano01'
+		//SkeletalMesh=SkeletalMesh'Gelatinos.Gusano.GelatinoGusano01'
+		SkeletalMesh=SkeletalMesh'Ogro.Ogre'
+		PhysicsAsset=PhysicsAsset'Ogro.Ogre_Physics_V2'
+		AnimTreeTemplate=AnimTree'Ogro.Ogro_AnimTree'
+		AnimSets(0)=AnimSet'Ogro.Ogro_Anim'
+
+
 		Translation=(Z=-50.0)
 		Scale=3
 	End Object
