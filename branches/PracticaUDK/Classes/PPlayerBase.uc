@@ -116,7 +116,7 @@ DefaultProperties
 	Components.Add(MyLightEnvironment)
 
 	begin object class=StaticMeshComponent Name=BaseMesh
-		StaticMesh=StaticMesh'EditorMeshes.TexPropCube'
+		StaticMesh=StaticMesh'Edificios.Casa01'
 		LightEnvironment=MyLightEnvironment
 	end object
 
