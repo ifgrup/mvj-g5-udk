@@ -185,7 +185,7 @@ event PostRender()
 	}
 
 //renderizar iconos en  pantalla 
-iconosapantalla();
+	iconosapantalla();
 
 
 
@@ -195,11 +195,14 @@ iconosapantalla();
 	//Si MouseInteractionInterface es nulo, significa que el mouse no esta encima de ningun item
 	if(MouseInteractionInterface == none)
 	{	
-		area.SetLocation(HitLocation+HitNormal*100);
-					area.SetRotation(rTorreta);
-					pct=PuedocolocarTorreta(HitLocation,HitNormal);
-	area.interruptor(pct);
-	//area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
+		if(!PGame(WorldInfo.Game).bEarthNotFlying)
+		{
+			area.SetLocation(HitLocation+HitNormal*100);
+			area.SetRotation(rTorreta);
+			pct=PuedocolocarTorreta(HitLocation,HitNormal);
+			area.interruptor(pct);
+		}
+		
 
 
 		//Si se presiona el boton izquierdo del mouse 
@@ -237,36 +240,36 @@ iconosapantalla();
 				`log ( "la torreta activa es:"	@pGFx.HbtActive);		
 		
 				switch (pGFx.HbtActive)
-			{
-				case hbt1:
-					if(pGfx.hbt1reload)
-					{
-					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt1precio);
-						tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
-						tc.setNormalSuelo(HitNormal);
-						pGFx.TurretReload();
-					}
+				{
+					case hbt1:
+						if(pGfx.hbt1reload)
+						{
+							PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt1precio);
+							tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+							tc.setNormalSuelo(HitNormal);
+							pGFx.TurretReload();
+						}
 					break;
 
-				case hbt2:
-					if(pGfx.hbt2reload)
-					{
-					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt2precio);
-						ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
-						ti.setNormalSuelo(HitNormal);
-						pGFx.TurretReload();
-					}
+					case hbt2:
+						if(pGfx.hbt2reload)
+						{
+							PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt2precio);
+							ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
+							ti.setNormalSuelo(HitNormal);
+							pGFx.TurretReload();
+						}
 					
 					break;
 
-				case hbt3:
-					if(pGfx.hbt3reload)
-					{
-					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt3precio);
-						ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
-						ti.setNormalSuelo(HitNormal);
-						pGFx.TurretReload();
-					}
+					case hbt3:
+						if(pGfx.hbt3reload)
+						{
+							PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt3precio);
+							ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
+							ti.setNormalSuelo(HitNormal);
+							pGFx.TurretReload();
+						}
 					
 					break;
 				case hbt4:
@@ -279,107 +282,19 @@ iconosapantalla();
 					}
 					
 					break;
-			}
-
-
-
-
-
-
-
-
-
-/*
-					if(pGFx.HbtActive==1 && pGfx.hbt1reload)
-					{
-						//`log("Vamos a spawnear una torreta ice");
-						pPlayerController.StartFire();
-						//spawn(class'MU_AutoTurret', ,,HitLocation,rTorreta,);
-						PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-1000);
-						ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
-						ti.setNormalSuelo(HitNormal);
-						//pGFx.SetHbtReload(1,false);
-					}
-					else
-					{
-						tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
-						tc.setNormalSuelo(HitNormal);
-						PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-200);
-						//pGFx.SetHbtReload(0,false);
-					
-						//pGFx.SetHbtReload(pGFx.HbtActive,false);
-					}*/
-					//spawn(class'MU_AutoTurret', ,,HitLocation, rTorreta,);
-				
-				//	pGFx.SetTowerActive(false);
-					//pGFX.SetReload(false);
-					
-					
-
 				}
-				else
-				{
-					`Log("Click fuera de planeta "@dist @hitlocation);
-				}
-				PendingLeftPressed = false;
+
 			}
-		    PendingLeftPressed = false;
-			// rr demo Spawn towwer
-			
-	//		
-//	s.ClientMessage("Posición del raton para spawn" );
-		//	s = Spawn(class'PPlayerController', self,,HitLocation);
-		//	
-			//s.StaticMeshComponent.SetStaticMesh();
-			//s.SetPhysics( PHYS_Falling );
-		//	s.SetBase(none);
-
-		//	s.bCollideWorld = true;
-		//	s.bBounce = true;
-//
-
-
-
-
-
-
-
-
-
-
-
-
-
-			//rr demo
-
-
-
-			//Si el mouse no esta sobre ningun elemento de la interface
-			
-			
-			
-			
-			//dirigiremos al personaje a dicha localizacion
-			
-
-
-
-
-			/*
-			if(!pGFx.bMouseOverUIElement)
+			else
 			{
-				titPlayerController.MovementHitLocation = GetMouseWorldLocation();
-				titPlayerController.NuevoDestino();
-				//Si esta abierto el panel de interaccion, lo cerramos
-				if(titGFx.bPanelInteraccionVisible)
-				{
-					titGFx.HideInteractionPanel();
-				}
-			}*/
+				`Log("Click fuera de planeta "@dist @hitlocation);
+			}
+			PendingLeftPressed = false;
 		}
-	/*}else{//si estamos encima de 
-	area.SetLocation(HitLocation+HitNormal*100);
-	area.interruptor(false);*/
+		  PendingLeftPressed = false;
+			
+		}
+	
 	}
 
 	/****   Controlar mouse over y out  ****/
@@ -1126,10 +1041,12 @@ exec function fineee()
 	DI.Visible=true;
 	DI.Alpha=80;
 	pGFx.gameoverMC.SetDisplayInfo(DI);
-	pGFx.gameoverMC.GotoAndPlayI(4);
+	pGFx.gameoverMC.GotoAndPlayI(1);
 	pGFx.raton.SetBool("_visible", true);
+	
 	bgameover=true;
-	PlayerOwner.SetPause(True,gover);
+	//PlayerOwner.SetPause(True,gover);
+
 	
 
 }
