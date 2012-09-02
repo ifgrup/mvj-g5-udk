@@ -22,15 +22,21 @@ function posicionarLuz(vector pos)
 
 function interruptor(bool encendido)
 {
-//m_luz.SetEnabled(encendido);
-	if(encendido){
-m_luz.SetLightProperties(500.0,c,);
-	}else{
-m_luz.SetLightProperties(150.0,c2,);
+	m_luz.SetEnabled(encendido);
+}
+
+function ColorEstado(bool estado)
+{
+	if(estado)
+	{
+		m_luz.SetLightProperties(500.0,c,);
+	}
+	else
+	{
+		m_luz.SetLightProperties(150.0,c2,);
 	}
 
 }
-
 DefaultProperties
 {
 	
