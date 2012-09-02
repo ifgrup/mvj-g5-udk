@@ -820,6 +820,7 @@ function iconosapantalla()
 	local float altura_cil_colision;
 	local vector cabeza_pawn_location;
 	local rotator cabeza_pawn_rotation;
+	local Texture2D portrait;
 
 	if (PlayerOwner == None || PlayerOwner.Pawn == None)
 	{
@@ -863,7 +864,10 @@ function iconosapantalla()
 				{
 					//RadarInfo[i].MaterialInstanceConstant.SetParent(Material'PGameContentTice.copo_Mat');
 					//RadarInfo[i].MaterialInstanceConstant.SetParent(Material'EditorMaterials.MatineeGroups.MAT_Groups_Event_Mat');
-						RadarInfo[i].MaterialInstanceConstant.SetParent(Material'GemOnscreenRadarContent.PointerMaterial');
+						RadarInfo[i].MaterialInstanceConstant.SetParent(Material'PGameHudIco.PointerMaterial');
+						portrait = UTPawn.GetPortrait();
+						RadarInfo[i].MaterialInstanceConstant.SetTextureParameterValue('Portrait', portrait);
+						
 					//RadarInfo[i].MaterialInstanceConstant.SetParent(DecalMaterial'PGameHUDT.towericedecaldemo');
 					
 

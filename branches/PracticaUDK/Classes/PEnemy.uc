@@ -13,6 +13,13 @@ var int m_puntos_al_morir; //Puntos que da al jugador cuando lo mata
 var Vector FloorActual;
 var float m_defaultGroundSpeed;
 
+var Texture2D m_portrait;
+
+function Texture2D GetPortrait()
+{
+	return m_portrait;
+}
+
 function SetColor(LinearColor Col)
 {
 	
@@ -617,6 +624,10 @@ defaultproperties
 
 	AirSpeed=200
 	GroundSpeed=200
+
+
+	m_portrait=Texture2D'PGameHudIco.Topota_Icono'
+
 
 	ControllerClass=class'PEnemyBot'
 	bDontPossess=false

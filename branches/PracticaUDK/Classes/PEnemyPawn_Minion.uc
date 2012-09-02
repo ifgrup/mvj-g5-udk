@@ -10,14 +10,15 @@ var Material minionMaterial0, minionMaterial1;
 var AnimTree minionAnimTree0, minionAnimTree1;
 var Array<AnimSet> minionAnimSet0, minionAnimSet1;
 var PhysicsAsset minionPhysicsAsset0, minionPhysicsAsset1;
+var Texture2D minionPortrait0, minionPortrait1;
+
+var int minionId;
 
 function CambiaBicho()
 {
-	local int i;
 	local Vector translation;
-	
-	i = Rand(2);
-	switch(i)
+	minionId = Rand(2);
+	switch(minionId)
 	{
 		case 0:
 			ColorMesh.SetSkeletalMesh(minionMesh0,true);
@@ -36,6 +37,22 @@ function CambiaBicho()
 			ColorMesh.SetAnimTreeTemplate(minionAnimTree1);
 		break;
 	}
+}
+
+function Texture2D GetPortrait()
+{
+	local Texture2D portrait;
+	switch(minionId)
+	{
+		case 0:
+			portrait = minionPortrait0;
+		break;
+		case 1:
+			portrait = minionPortrait1;
+		break;
+	}
+
+	return portrait;
 }
 
 simulated function PostBeginPlay()
@@ -132,12 +149,15 @@ defaultproperties
 	minionAnimTree0=AnimTree'enemigos.Minion.Murciegalo_AnimTree'
 	minionAnimSet0(0)=AnimSet'enemigos.Minion.Murciegalo_Animset'
 	minionPhysicsAsset0=PhysicsAsset'enemigos.Minion.Murciegalo_Physics'
+	minionPortrait0=Texture2D'PGameHudIco.Murciegalo_Portrait'
+
 
 	minionMesh1=SkeletalMesh'enemigos.Minion.Topota'
 	minionMaterial1=Material'enemigos.Material_Enemigos'
 	minionAnimTree1=AnimTree'enemigos.Minion.Topota_AnimTree'
 	minionAnimSet1(0)=AnimSet'enemigos.Minion.Topota_Animset'
 	minionPhysicsAsset1=PhysicsAsset'enemigos.Minion.Topota_Physics'
+	minionPortrait1=Texture2D'PGameHudIco.Topota_Icono'
 
 
 	ColorMesh=PEnemySkeletalMeshComponent
