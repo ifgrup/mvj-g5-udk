@@ -60,7 +60,7 @@ simulated function PostBeginPlay()
 function SetColor(LinearColor Col)
 {
 	Col1 = Col;
-	mat.SetVectorParameterValue('ColorBase', Col1);
+	//mat.SetVectorParameterValue('ColorBase', Col1);
 }
 
 function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
@@ -89,10 +89,19 @@ function PararEsperar()
 
 	`log("_______________PARAR_ESPERAR __________"@self.Name);	
 	self.Salta(true);
-	
-
 }
 
+function activarEscudoScout(PEnemyPawn_Scout scout)
+{
+	self.GroundSpeed = scout.GroundSpeed; //Igualamos velocidad al scout
+	DrawDebugCylinder(self.Location,scout.Location,5,5,0,0,200,false);
+}
+
+function desactivarEscudoScout()
+{
+	self.GroundSpeed = self.m_defaultGroundSpeed; //Restauramos velocidad
+	`log("Desactivo");
+}
 
 defaultproperties
 {
@@ -137,5 +146,6 @@ defaultproperties
 		
 
 	GroundSpeed=50.0
+	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 100
 }

@@ -11,6 +11,7 @@ var int life,MaxLife;
 var int m_puntos_al_morir; //Puntos que da al jugador cuando lo mata
 
 var Vector FloorActual;
+var float m_defaultGroundSpeed;
 
 function SetColor(LinearColor Col)
 {
@@ -507,6 +508,7 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 */
 singular event BaseChange()
 {
+	local PAutoTurret ptorreta;
 
 	if( Base == None)
 	{
@@ -541,7 +543,17 @@ singular event BaseChange()
 
 	}
 
-	return;
+	ptorreta = PAutoTurret(Base);
+	if ( ptorreta != None )  //Si nos chocamos contra una torreta
+	{
+		return;
+		self.Velocity= 30 * (self.Location - Base.Location);
+		//self.Acceleration = vect (0,0,0);
+		//self.Acceleration = self.Velocity;
+		Salta(true);
+		ptorreta.Toque();
+		return; //ya tá
+	}
 	
 }//BaseChange
 

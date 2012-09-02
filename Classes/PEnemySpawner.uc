@@ -39,7 +39,7 @@ function PostBeginPlay()
 	mat.SetVectorParameterValue('Color_Emissive02', Col2);
 
 	ColorMesh.SetMaterial(0, mat);
-	DrawDebugCylinder(self.Location, self.location + (self.Location - (PGame(Worldinfo.Game)).m_CentroPlaneta),10,10,200,0,0,true);
+	//_DEBUG_DrawDebugCylinder(self.Location, self.location + (self.Location - (PGame(Worldinfo.Game)).m_CentroPlaneta),10,10,200,0,0,true);
 }
 
 /**
@@ -90,8 +90,8 @@ function SpawnEnemy()
 				return;
 			}
 
-			DrawDebugCylinder(self.Location,m_location_primer_nodo,10,10,0,255,0,true);
-			DrawDebugSphere(self.Location,120,20,255,0,0,true);
+			//_DEBUG_DrawDebugCylinder(self.Location,m_location_primer_nodo,10,10,0,255,0,true);
+			//_DEBUG_DrawDebugSphere(self.Location,120,20,255,0,0,true);
 			vector_hacia_primer_nodo  = m_location_primer_nodo - self.Location;
 			
 			cuantos = 5;
@@ -170,7 +170,7 @@ function  generarPosicionSpawn(vector v_haciaprimernodo, int num_bichos, out arr
 		o.giro_angulo = giro_radianes;
 		o.posicion = p;
 		posiciones.AddItem(o);
-		DrawDebugCylinder(self.Location,p,2,2,0,200,200,true);
+		//_DEBUG_DrawDebugCylinder(self.Location,p,2,2,0,200,200,true);
 		
 		//posiciones[i].posicion = p;
 		//posiciones[i].giro_angulo = giro_radianes ;
