@@ -2,16 +2,18 @@ class PEnemyPawn_Scout extends PEnemy;
 
 var MaterialInstanceConstant mat;
 var SkeletalMeshComponent ColorMesh;
-var LinearColor Col1;
+var LinearColor Col1, Col2;
 
 simulated function PostBeginPlay()
 {
 	//super.PostBeginPlay();
 	Col1 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
+	Col2 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 	mat = new class'MaterialInstanceConstant';
 	mat = ColorMesh.CreateAndSetMaterialInstanceConstant(0);
-	mat.SetParent(Material'Gelatinos.Gusano.GelatinoGusanoMat_MASTER');
-	mat.SetVectorParameterValue('ColorBase', Col1);
+	mat.SetParent(Material'Ogro.Materials.Ogro_Mat');
+	mat.SetVectorParameterValue('BaseColor', Col1);
+	mat.SetVectorParameterValue('EmissiveColor', Col2);
 
 	ColorMesh.SetMaterial(0, mat);
 }
@@ -21,8 +23,6 @@ function SetColor(LinearColor Col)
 	Col1 = Col;
 	mat.SetVectorParameterValue('ColorBase', Col1);
 }
-
-
 
 defaultproperties
 {
