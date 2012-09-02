@@ -333,8 +333,17 @@ function Vector GetPosicionSocketCabeza()
 
 	self.Mesh.GetSocketWorldLocationAndRotation('Socket_Cabeza',sLocation,sRotation);
 	return sLocation;
-
 }
+
+function Vector GetPosicionSocketCuerpo()
+{
+	local vector sLocation;
+	local rotator sRotation;
+
+	self.Mesh.GetSocketWorldLocationAndRotation('Socket_Cuerpo',sLocation,sRotation);
+	return sLocation;
+}
+
 
 function EstadoPropulsores(bool bEstado)
 {

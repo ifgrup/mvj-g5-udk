@@ -23,6 +23,17 @@ var float distanciaBase_antes;
 var bool m_bBreakpoint;
 var float oldDistNodo;
 var int m_segundosQuieto;
+var float m_radio_escudo; //Radio de acción del escudo de los minions
+var float m_escudo; //cantidad de escudo proporcionada por los minions
+
+
+struct EscudoInfo
+{
+	var PEnemyPawn_Minion Pawn;
+	var bool DeleteMe;
+};
+var array<EscudoInfo> m_escudo_info;
+
 
 simulated event PostBeginPlay()
 {
@@ -41,8 +52,73 @@ simulated event PostBeginPlay()
 	/*Nos asignamos uno de los caminos posibles*/
 	id_Path = PGame(WorldInfo.Game).ObtenerIdNodosMundo();
 
-	//SetTimer(1, false, 'BrainTimer');
+	/*Timer para gestión del escudo proporcionado por los minions*/
+	SetTimer(0.3, true, 'GestionEscudo');
 }
+
+function GestionEscudo()
+{
+	local PEnemyPawn_Minion	helper;
+	local int escudo_actual;
+	local int i,Index;
+	local EscudoInfo escudo;
+
+	escudo_actual = 0;
+
+	//Marco todos como borrables inicialmente
+	for (i = 0; i < self.m_escudo_info.Length; i++)
+	{
+		m_escudo_info[i].DeleteMe = true;
+	}
+
+	//__DEBUG__DrawDebugSphere(self.Pawn.Location,m_radio_escudo,20,0,200,200,false);
+	foreach CollidingActors(class'PEnemyPawn_Minion', helper, m_radio_escudo,self.Pawn.Location)//,,,,, HitInfo )
+	{
+		if (Penemy_AI_Bot(helper.Owner).id == self.id)
+		{
+			
+			helper.activarEscudoScout(PEnemyPawn_Scout(self.Pawn));
+			
+			Index = m_escudo_info.Find('Pawn', helper);
+			if (Index == INDEX_NONE && helper.life> 0)
+			{
+
+				escudo.Pawn = helper;
+				escudo.DeleteMe = false;
+				m_escudo_info.AddItem(escudo);
+				/*
+				i = m_escudo_info.Length;
+				m_escudo_info.Length = m_escudo_info.Length + 1;
+				m_escudo_info[i].Pawn = helper;
+				m_escudo_info[i].DeleteMe = false;
+				*/
+			}
+			else
+			{
+				m_escudo_info[Index].DeleteMe = false;
+			}
+		}
+	}
+
+	for (i=0; i< m_escudo_info.Length;i++)
+	{
+		if (m_escudo_info[i].DeleteMe)
+		{
+			m_escudo_info[i].Pawn.desactivarEscudoScout();
+			m_escudo_info[i].Pawn = none; //GC
+			m_escudo_info.Remove(i,1);
+			i--; //ÑAAAAAAAAAPAAAAAAAAAAAAAAAAAAA!!!
+		}
+		else
+		{
+			escudo_actual ++;
+		}
+	}
+
+	m_escudo = escudo_actual;
+	//_DEBUG_`log("Escudo del scout "@self.Name @m_escudo);
+}
+
 
 function SetColor(LinearColor Col)
 {
@@ -321,5 +397,6 @@ defaultproperties
 {
 	Step=1000
 	id_Path=0
-	DestinationOffset=200;
+	DestinationOffset=200
+	m_radio_escudo = 800
 }

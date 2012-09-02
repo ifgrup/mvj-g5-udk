@@ -51,7 +51,7 @@ function DisparaAPPawn(PPawn giru)
 	local Projectile Proj;
 	
 	minionpos = self.Pawn.Location  ;
-	ppawnpos =  giru.Location + giru.m_TranslateZ;
+	ppawnpos =  giru.GetPosicionSocketCuerpo();
 			
 	minionpos+= 50 * normal(ppawnpos - minionpos);
 	//Obtener pos del socket del minion
@@ -59,7 +59,7 @@ function DisparaAPPawn(PPawn giru)
 	
 	Proj = Spawn(class'PMisilMinion',self,,minionpos,,,True);
 	Proj.Init(Normal(ppawnpos-minionpos));
-	DrawDebugCylinder(minionpos,ppawnpos,3,3,0,100,0,false);
+	
 }
 
 

@@ -85,6 +85,7 @@ simulated event PostBeginPlay()
 	
 	area=Spawn(class'PHUD_Area',,,,,,true);
 	area.interruptor(false);
+	area.SetCollision(false,false,false);
 	//Si estamos utilizando Scaleform, crear la pelicula
 	if(UsingScaleform)
 	{
@@ -158,6 +159,7 @@ event PostRender()
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
 	local float dist;
 	local bool bTierraAire,pct;
+	local int bEsPlaneta;
 	
 	Super.PostRender();
 	//Casting
@@ -185,25 +187,25 @@ event PostRender()
 	}
 
 //renderizar iconos en  pantalla 
-	iconosapantalla();
+iconosapantalla();
 
 
-
+	area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
 	//Conseguir la actual interfaz de interaccion del mouse
-	MouseInteractionInterface = GetMouseActor(HitLocation, HitNormal);
+
+	MouseInteractionInterface = GetMouseActor(HitLocation, HitNormal,bEsPlaneta);
 
 	//Si MouseInteractionInterface es nulo, significa que el mouse no esta encima de ningun item
-	if(MouseInteractionInterface == none)
+	if(MouseInteractionInterface == none )
 	{	
-		if(!PGame(WorldInfo.Game).bEarthNotFlying)
+		
+		if (!PGame(WorldInfo.Game).bEarthNotFlying)
 		{
 			area.SetLocation(HitLocation+HitNormal*100);
 			area.SetRotation(rTorreta);
 			pct=PuedocolocarTorreta(HitLocation,HitNormal);
-			area.interruptor(pct);
+			area.ColorEstado(pct);
 		}
-		
-
 
 		//Si se presiona el boton izquierdo del mouse 
 		if(PendingLeftPressed)
@@ -226,64 +228,58 @@ event PostRender()
 		   // if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.HbtActive!=2 && pct )
 			if(!pGFx.bMouseOverUIElement && pct && !PGame(WorldInfo.Game).bEarthNotFlying )
 		    {
-
-				//`log("la pgfx ttower active " @pGFx.TTowerActive);
 				pPlayerController = PPlayerController(PlayerOwner);
-
-				//Creamos torreta solo si hemos clickado dentro del planeta, no en el skybox (control por distancia)
-				dist=Vsize(pPlayerController.Pawn.Location-HitLocation);
-				if(dist < pPlayerController.m_DistanciaAlCentro)
+				//Creamos torreta solo si hemos clickado dentro del planeta
+				if (bEsPlaneta != 0)
 				{
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
-					
-				`log ( "la torreta activa es:"	@pGFx.HbtActive);		
+					`log ( "la torreta activa es:"	@pGFx.HbtActive);		
 		
-				switch (pGFx.HbtActive)
-				{
-					case hbt1:
-						if(pGfx.hbt1reload)
-						{
-							PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt1precio);
-							tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
-							tc.setNormalSuelo(HitNormal);
-							pGFx.TurretReload();
-						}
-					break;
-
-					case hbt2:
-						if(pGfx.hbt2reload)
-						{
-							PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt2precio);
-							ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
-							ti.setNormalSuelo(HitNormal);
-							pGFx.TurretReload();
-						}
-					
-					break;
-
-					case hbt3:
-						if(pGfx.hbt3reload)
-						{
-							PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt3precio);
-							ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
-							ti.setNormalSuelo(HitNormal);
-							pGFx.TurretReload();
-						}
-					
-					break;
-				case hbt4:
-					if(pGfx.hbt4reload)
+					switch (pGFx.HbtActive)
 					{
-					PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt4precio);
-						tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
-						tc.setNormalSuelo(HitNormal);
-						pGFx.TurretReload();
-					}
-					
-					break;
-				}
+						case hbt1:
+							if(pGfx.hbt1reload)
+							{
+									PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt1precio);
+									tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+									tc.setNormalSuelo(HitNormal);
+									pGFx.TurretReload();
+							}
+							break;
 
+						case hbt2:
+							if(pGfx.hbt2reload)
+							{
+								PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt2precio);
+								ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
+								ti.setNormalSuelo(HitNormal);
+								pGFx.TurretReload();
+							}
+					
+							break;
+
+						case hbt3:
+							if(pGfx.hbt3reload)
+							{
+								PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt3precio);
+								ti=spawn(class'PTurretIce', ,,HitLocation,rTorreta,);
+								ti.setNormalSuelo(HitNormal);
+								pGFx.TurretReload();
+							}
+					
+							break;
+
+						case hbt4:
+							if(pGfx.hbt4reload)
+							{
+								PGame(WorldInfo.Game).SetCredito(PGame(WorldInfo.Game).creditos-pGFx.hbt4precio);
+								tc=spawn(class'PTurretCannon', ,,HitLocation,rTorreta,);
+								tc.setNormalSuelo(HitNormal);
+								pGFx.TurretReload();
+							}
+							break;
+					}
 			}
 			else
 			{
@@ -291,7 +287,7 @@ event PostRender()
 			}
 			PendingLeftPressed = false;
 		}
-		  PendingLeftPressed = false;
+		PendingLeftPressed = false;
 			
 		}
 	
@@ -430,12 +426,14 @@ event PostRender()
 	}
 }
 
-function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocation, optional out Vector HitNormal)
+function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocation, optional out Vector HitNormal, optional out int bEsPlaneta)
 {
 	local PMouseInteractionInterface MouseInteractionInterface;
 	local PPlayerInput pPlayerInput;
 	local Vector2D MousePosition;
 	local Actor HitActor;
+	local int i;
+	local vector mundoLocation, mundoNormal;
 
 	//Asegurarnos de que tenemos canvas y player owner validos
 	if(Canvas == none || PlayerOwner == none)
@@ -458,16 +456,24 @@ function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocatio
 	//Hacer Trace para saber sobre que esta el raton
 	//Iteramos sobre todo lo que intersecciona la traza para devolver el objeto mas cercano que sea
 	//del tipo TITMouseInterfaceInteractionInterface
+	bEsPlaneta = 0;
+
 	foreach TraceActors(class'Actor', HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,vect(0,0,0),,TRACEFLAG_Bullet)
 	{
 		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
 		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
 		//MouseInteractionInterface = PTurretCannon(HitActor);
- 
+		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
+		{
+			bEsPlaneta = 1;
+			return none;
+		}
+		
 		if(MouseInteractionInterface != none)
 		{
-			return MouseInteractionInterface;
+			return MouseInteractionInterface; //Y por tanto hitlocation y hitnormal serán las del planeta
 		}
+
 	}
 
 	return none;
@@ -507,6 +513,12 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 	//del tipo TITMouseInterfaceInteractionInterface
 	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,distanciatorreta,,TRACEFLAG_Bullet)
 	{
+
+		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
+		{
+			return true;
+		}
+		
 		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
 		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
 		labase=PPlayerBase(HitActor);
@@ -523,20 +535,11 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 		}
 		if(enemigo != none)
 		{
-
 			return false;
 		}
-
-
 	}
-
 	return true;
 }
-
-
-
-
-
 
 /*
 function Vector GetMouseWorldLocation()
