@@ -41,7 +41,7 @@ var bool pauseMenu;
 var PGFxUI_PauseMenu		PauseMenuMovie;
 //var PMainMenu		PauseMenuMovie;
 var bool	bEnableActorOverlays;
-var SoundCue musica,musicamenu;
+var SoundCue musica,musicamenu,irasonido1;
 
 //PHUD_Area
 var PHUD_Area area;
@@ -82,7 +82,7 @@ var bool bgameover;
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
-	//PlaySound(musica);
+	//PlaySound(musica,true);
 	
 	area=Spawn(class'PHUD_Area',,,,,,true);
 	area.interruptor(false);
@@ -1024,6 +1024,7 @@ function float GetAngle(Vector PointB, Vector PointC)
 		{
 			Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
 			Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
+			playsound(irasonido1,true);
 			
 			
 		
@@ -1094,7 +1095,7 @@ pGFx.MensajitoPotPantalla(texto);
 }
 
 //Coloca la película de GameOver en medio de la pantalla y ponemos la variable bgameover a true para que no pueda funcionar la tecla ESC que ejecuta el pauseMenu.
-exec function fineee()
+exec function fineee(string frase)
 {
 	local ASDisplayInfo DI;
 	
@@ -1104,11 +1105,12 @@ exec function fineee()
 	DI.Visible=true;
 	DI.Alpha=80;
 	pGFx.gameoverMC.SetDisplayInfo(DI);
-	pGFx.gameoverMC.GotoAndPlayI(1);
+	pGFx.textofinMC.SetText(frase);
+	//pGFx.gameoverMC.GotoAndPlayI(1);
 	pGFx.raton.SetBool("_visible", true);
 	
 	bgameover=true;
-	//PlayerOwner.SetPause(True,gover);
+	PlayerOwner.SetPause(True,gover);
 
 	
 
@@ -1129,6 +1131,7 @@ defaultproperties
 	pauseMenu=false
 	musica=SoundCue'PGameMusicrr.musica2'
 	musicamenu=SoundCue'PGameMusicrr.intro2dgame_2_Cue'
+	irasonido1=SoundCue'A_Character_IGMale_Cue.Efforts.A_Effort_IGMale_MGasp_Cue'
 	distanciatorreta=(X=350,Y=350,Z=350)
 	Pixel_X_Mirilla = 642
 	Pixel_Y_Mirilla = 362
