@@ -71,6 +71,7 @@ var GFxObject loghudMC;
 var GFxObject	tloghudMC;
 var GFxClikWidget Btn_menu, Btn_salir;
 var bool animLog;
+var GFxObject textofinMC;
 
 
 function Init(optional LocalPlayer LocalPlayer)
@@ -148,11 +149,13 @@ function Init(optional LocalPlayer LocalPlayer)
 
 
  gameoverMC=GetVariableObject("_root.gameover");
+ textofinMC=GetVariableObject("_root.gameover.textofin");
  loghudMC=GetVariableObject("_root.loghud");
 	tloghudMC=GetVariableObject("_root.loghud.conlog.tloghud");
 
 loghudMC.SetBool("_visible", false);
 animLog=true;
+
 
 //demo
 
