@@ -4,6 +4,8 @@ var MaterialInstanceConstant mat;
 var SkeletalMeshComponent ColorMesh;
 var LinearColor Col1, Col2;
 
+var float ira,max_ira;
+
 simulated function PostBeginPlay()
 {
 	//super.PostBeginPlay();
@@ -24,6 +26,25 @@ function SetColor(LinearColor Col)
 	mat.SetVectorParameterValue('ColorBase', Col1);
 }
 
+//Gestionamos la ira del Scout true para incrementar ira, flase para decrementarla
+function GestionIra(bool mecabreo)
+{
+	`log("--------------------------------ira"@self.ira);
+
+		if(mecabreo)
+		{    
+
+			if(ira<=max_ira) ira=ira+1;
+			
+		}
+		else
+		{
+			if(ira>0)ira=ira-1;
+		}
+	
+
+}
+
 defaultproperties
 {
 	Begin Object Name=PEnemySkeletalMeshComponent
@@ -40,7 +61,9 @@ defaultproperties
 
 	ColorMesh=PEnemySkeletalMeshComponent
 
-	GroundSpeed=100.0
+	GroundSpeed=25.0
 	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 300
+	ira=0;
+	max_ira=100;
 }
