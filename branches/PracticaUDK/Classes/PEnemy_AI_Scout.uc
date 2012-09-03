@@ -54,17 +54,19 @@ simulated event PostBeginPlay()
 
 	/*Timer para gestión del escudo proporcionado por los minions*/
 	SetTimer(0.3, true, 'GestionEscudo');
+	
 }
 
 function GestionEscudo()
 {
 	local PEnemyPawn_Minion	helper;
+	local GamePawn GP;
 	local int escudo_actual;
 	local int i,Index;
 	local EscudoInfo escudo;
-
+	local bool ira;
 	escudo_actual = 0;
-
+	ira=false;
 	//Marco todos como borrables inicialmente
 	for (i = 0; i < self.m_escudo_info.Length; i++)
 	{
@@ -72,32 +74,47 @@ function GestionEscudo()
 	}
 
 	//__DEBUG__DrawDebugSphere(self.Pawn.Location,m_radio_escudo,20,0,200,200,false);
-	foreach CollidingActors(class'PEnemyPawn_Minion', helper, m_radio_escudo,self.Pawn.Location)//,,,,, HitInfo )
+	foreach CollidingActors(class'GamePawn', GP, m_radio_escudo,self.Pawn.Location)//,,,,, HitInfo )
 	{
-		if (Penemy_AI_Bot(helper.Owner).id == self.id)
+		if(PEnemyPawn_Minion(GP)!=none)
 		{
-			
-			helper.activarEscudoScout(PEnemyPawn_Scout(self.Pawn));
-			
-			Index = m_escudo_info.Find('Pawn', helper);
-			if (Index == INDEX_NONE && helper.life> 0)
+			helper=PEnemyPawn_Minion(GP);
+		
+			if (Penemy_AI_Bot(helper.Owner).id == self.id)
 			{
+			
+				helper.activarEscudoScout(PEnemyPawn_Scout(self.Pawn));
+			
+				Index = m_escudo_info.Find('Pawn', helper);
+				if (Index == INDEX_NONE && helper.life> 0)
+				{
 
-				escudo.Pawn = helper;
-				escudo.DeleteMe = false;
-				m_escudo_info.AddItem(escudo);
-				/*
-				i = m_escudo_info.Length;
-				m_escudo_info.Length = m_escudo_info.Length + 1;
-				m_escudo_info[i].Pawn = helper;
-				m_escudo_info[i].DeleteMe = false;
-				*/
-			}
-			else
-			{
-				m_escudo_info[Index].DeleteMe = false;
+					escudo.Pawn = helper;
+					escudo.DeleteMe = false;
+					m_escudo_info.AddItem(escudo);
+					/*
+					i = m_escudo_info.Length;
+					m_escudo_info.Length = m_escudo_info.Length + 1;
+					m_escudo_info[i].Pawn = helper;
+					m_escudo_info[i].DeleteMe = false;
+					*/
+				}
+				else
+				{
+					m_escudo_info[Index].DeleteMe = false;
+				}
 			}
 		}
+		
+		//Gestión de ira de Scout utilizando el foreach del escudo
+		if(PPawn(GP)!=none)
+		{
+			ira=true;
+		
+		}
+		
+		
+
 	}
 
 	for (i=0; i< m_escudo_info.Length;i++)
@@ -117,6 +134,8 @@ function GestionEscudo()
 
 	m_escudo = escudo_actual;
 	//_DEBUG_`log("Escudo del scout "@self.Name @m_escudo);
+	
+	PEnemyPawn_Scout(self.Pawn).GestionIra(ira);
 }
 
 
