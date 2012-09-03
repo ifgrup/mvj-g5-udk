@@ -72,7 +72,8 @@ var array<SRadarInfo> RadarInfo;
 var const linearcolor RedLinearColor,BlueLinearColor,DMLinearColor;
 var bool bgameover;
 
-
+//Ira
+ var const Texture2D  ira1,ira2;
 
 
 
@@ -1007,24 +1008,79 @@ function float GetAngle(Vector PointB, Vector PointC)
 {
 
 	local int pvida;
+	local float sira;
 
 	pvida=(ERadarInfo.UTPawn.life*100) /ERadarInfo.UTPawn.MaxLife;
 	//`log("la vida de los Penemy en %"@pvida);
-	Canvas.SetPos(ScreenHUDLocation.X-100 , ScreenHUDLocation.Y-50);
-	Canvas.DrawMaterialTile(ERadarInfo.MaterialInstanceConstant, PointerSize, PointerSize);
+	
+	
+	if(PEnemyPawn_Scout (ERadarInfo.UTPawn)!=none && PGame(WorldInfo.Game).bEarthNotFlying)
+	{
+		//Icono ira
+		sira=(PEnemyPawn_Scout(ERadarInfo.UTPawn).ira*100) /PEnemyPawn_Scout(ERadarInfo.UTPawn).max_ira;
+		`log("_____________________________________ % de ira·"@sira);
+		//Lvl1 ira 33%
+		if(sira>33)
+		{
+			Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+			Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
+			
+			
+		
+		}
+		
+		
+		//Lvl2 ira 66%
+		if(sira>66)
+		{
+			Canvas.SetPos(ScreenHUDLocation.X-98+ira2.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+			Canvas.DrawTile(ira2, ira2.SizeX*0.25, ira2.SizeY*0.25, 0.f, 0.f, ira2.SizeX, ira2.SizeY,, true);
+			
+		
+		}
+		
+		
+		//Lvl3 ira 100%
+		if(sira>99)
+		{
+			Canvas.SetPos(ScreenHUDLocation.X-98+ira1.SizeX*0.25+ira1.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+			Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
+			
+
+		}
+		
+		
+		
+		
+		
+		// Borde
+		Canvas.SetPos(ScreenHUDLocation.X-100, ScreenHUDLocation.Y-150);
+		Canvas.SetDrawColor(0,0,0, 200);
+		Canvas.DrawBox(102,20);
+
+		// Barra
+		Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-148);
+		Canvas.SetDrawColor(255,0,0,255);
+		Canvas.DrawRect(pvida,16);
 
 
-	// Borde
-	Canvas.SetPos(ScreenHUDLocation.X-100, ScreenHUDLocation.Y-50);
-	Canvas.SetDrawColor(0,0,0, 200);
-	Canvas.DrawBox(102,20);
 
-	// Barra
-	Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-48);
-	Canvas.SetDrawColor(255,0,0,255);
-	Canvas.DrawRect(pvida,16);
+	}
+
+	if(PEnemyPawn_Minion(ERadarInfo.UTPawn)!=none && !PGame(WorldInfo.Game).bEarthNotFlying)
+	{
+
+		Canvas.SetPos(ScreenHUDLocation.X-100 , ScreenHUDLocation.Y-50);
+		Canvas.DrawMaterialTile(ERadarInfo.MaterialInstanceConstant, PointerSize, PointerSize);
+	
+	}
 
 
+
+
+	
+	
+	
 	
 }
 
@@ -1084,6 +1140,10 @@ defaultproperties
 	BlueLinearColor=(R=0.5,G=0.8,B=10.0,A=0.8)
 	DMLinearColor=(R=1.0,G=1.0,B=1.0,A=0.5)
 	bgameover=false;
+	//iconos de ira
+
+	ira1=Texture2D'PGameHudIco.iraico1'
+	ira2=Texture2D'PGameHudIco.iraico2'
 
 }
 
