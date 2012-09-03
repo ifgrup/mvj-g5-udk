@@ -199,7 +199,7 @@ function Toque()
 	self.m_toques++;
 	if (m_toques >=3)
 	{
-		self.Destroy();
+		//self.Destroy();
 	}
 }
 
