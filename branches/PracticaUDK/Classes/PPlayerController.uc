@@ -1455,6 +1455,12 @@ function pontorretahielo ()
 	pHUD.Canvas.DeProject(p2,wp2,wp);
 	newfloor = wp2-wp1;
 */
+	if (m_torreta_victor != None)
+	{
+		m_torreta_victor.Destroy();
+		m_torreta_victor = None;
+	}
+
 	if (m_torreta_victor == None)
 	{
 		r=Rotator(-m_floor_victor); //hacia el suelo
@@ -1463,11 +1469,12 @@ function pontorretahielo ()
 		ti.m_TiempoEnConstruccion = 0.1;
 		ti.setNormalSuelo(m_floor_victor);
 		m_torreta_victor = ti;
+		//m_torreta_victor.SetCollision(false,false,true);
+		//m_torreta_victor.SetCollisionType(COLLIDE_NoCollision);
+		//m_torreta_victor.DisparoTorreta();
+		//m_torreta_victor.GotoState('Disparando');
 	}
-	m_torreta_victor.SetCollision(false,false,true);
-	m_torreta_victor.SetCollisionType(COLLIDE_NoCollision);
-	m_torreta_victor.DisparoTorreta();
-	m_torreta_victor.GotoState('Disparando');
+
 }
 
 exec function icer(int radio, int altura)

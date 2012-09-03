@@ -483,6 +483,14 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	if ( (Other == None) || Other.bStatic )
 		return;
 
+	if (PGame(Worldinfo.Game).EsPlaneta(other))
+	{
+		//Toñazo contra el suelo? pos interesa principalmente para el controler por si al caer de un rebote no se cosca
+		//y no desapila el estado.
+		PEnemy_AI_Controller(Owner).BumpContraSuelo(other,HitNormal);
+		return;
+	}
+
 	Pbump = PEnemy(Other); //the pawn we might have bumped into
 
 	if ( Pbump != None )  //Si nos chocamos contra otro PEnemy
@@ -496,11 +504,17 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	ptorreta = PAutoTurret(Other);
 	if ( ptorreta != None )  //Si nos chocamos contra una torreta
 	{
+		`log("Bump torreta!");
+		PEnemy_AI_Controller(Owner).ReboteRespectoA(other,HitNormal,false,300);
+		ptorreta.Toque();
+
+		/*
 		self.Velocity= 30 * (other.Location - self.Location);
 		self.Acceleration = vect (0,0,0);
 		Salta(true);
 		ptorreta.Toque();
 		return; //ya tá
+		*/
 	}
 
 	
@@ -532,6 +546,9 @@ singular event BaseChange()
 
 	if (PGame(Worldinfo.game).EsPlaneta(Base))
 	{
+		//Toñazo contra el suelo? pos interesa principalmente para el controler por si al caer de un rebote no se cosca
+		//y no desapila el estado.
+		PEnemy_AI_Controller(Owner).BumpContraSuelo(Base,vect(0,0,1));
 		return;
 	}
 
@@ -553,7 +570,11 @@ singular event BaseChange()
 	ptorreta = PAutoTurret(Base);
 	if ( ptorreta != None )  //Si nos chocamos contra una torreta
 	{
+		`log("BaseChange torreta!");
+		PEnemy_AI_Controller(Owner).ReboteRespectoA(Base,vect(0,0,0),false,300);
+		ptorreta.Toque();
 		return;
+
 		self.Velocity= 30 * (self.Location - Base.Location);
 		//self.Acceleration = vect (0,0,0);
 		//self.Acceleration = self.Velocity;

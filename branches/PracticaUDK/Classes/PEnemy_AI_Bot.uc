@@ -367,6 +367,7 @@ state GoToNextPath
 		
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH"@self.Name);
 		//self.PushState('StopColision');
+		ReboteRespectoA( None,vect(0,0,0),false,300);
 		self.m_b_breakpoint = true;
 	}
 	
@@ -389,6 +390,8 @@ state GoToNextPath
 	//PEnemyPawn_Minion(self.Pawn).PararEsperar();
 	self.PushState('StopColision');
 	}
+
+
 
 Begin:
 	m_tiempo_tick = 0;

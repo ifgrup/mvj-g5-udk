@@ -9,6 +9,9 @@ var bool m_b_breakpoint; //Se pone a true al disparar con Giru, usado para poner
 
 var float m_AnguloOffsetInicial; //Angulo con el que fui creado por el EnemySpawner
 
+var vector m_FallDirection; //Dirección de caída para el estado Rebotando
+var float m_fTiempoDeSalto;
+
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
@@ -58,19 +61,19 @@ function SetID(int i)
  */
 function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("PEnemy_AI_Controller, recibido danyo Giru Global, DEBES SOBREESCRIBIRME!!!" @self.GetStateName());
+	`log("PEnemy_AI_Controller, recibido danyo Giru Global, DEBES SOBREESCRIBIRME!!!\n" @self.GetStateName());
 	m_b_breakpoint = true; //Para poder poner un breakpoint en un if (m_b_breakpoint), y sólo se parará si
 						   //has disparado a ese PEnemy
 }
 
 function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("PEnemy_AI_Controller, recibido danyo TurretCannon Global, DEBES SOBREESCRIBIRME!!!");
+	`log("PEnemy_AI_Controller, recibido danyo TurretCannon Global, DEBES SOBREESCRIBIRME!!!\n");
 }
 
 function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("PEnemy_AI_Controller, recibido danyo TurretIce Global, DEBES SOBREESCRIBIRME!!!");
+	`log("PEnemy_AI_Controller, recibido danyo TurretIce Global, DEBES SOBREESCRIBIRME!!!\n");
 }
 
 
@@ -78,6 +81,11 @@ function Control_BaseChangedPenemy(Actor PEnemyOtro)
 {
 	//`log("PEnemy_AI_Controller::Control_BaseChangedPenemy, DEBES SOBREESCRIBIRME!!!");
 	
+}
+
+function BumpContraSuelo(Actor suelo, vector HitNormal)
+{
+
 }
 
 function PPathNode AplicarOffsetNodo(PPathNode nodo)
@@ -141,6 +149,172 @@ function PPathNode AplicarOffsetNodo(PPathNode nodo)
 	//`log("OffsetAplicado "@vsize(initlocation-nodo.Location));
 	return p;
 
+}
+
+state Rebotando
+{
+	event Tick(float delta)
+	{
+		local vector vAlCentro;
+
+		super.tick(delta);
+		m_fTiempoDeSalto += delta;
+		ApplyGravity(delta);
+
+		if (m_fTiempoDeSalto > 3.0)
+		{
+			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-self.pawn.Location; 
+			m_FallDirection = 2*Normal(vAlCentro); //caer más rápido
+		}
+
+	}
+
+	function ApplyGravity(float delta)
+	{
+		local Vector Gravity;   
+		Gravity = m_FallDirection * WorldInfo.WorldGravityZ * -1 * delta;
+		self.Pawn.Velocity += Gravity;
+		self.Velocity = self.Pawn.Velocity;
+	}
+
+	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
+	{
+
+		if (PGame(Worldinfo.game).EsPlaneta(Wall))
+		{
+			//OrientarPawnPorNormal(HitNormal,routPawn);
+			self.SetBase(Wall,hitnormal);
+			pawn.SetBase(Wall, HitNormal);
+			self.PopState();
+		}
+		else
+		{
+			ReboteRespectoA(Wall,HitNormal,true,400);
+		}
+	}
+	
+	function BumpContraSuelo(Actor suelo, vector HitNormal)
+	{
+			self.SetBase(suelo, HitNormal);
+			pawn.SetBase(suelo, HitNormal);
+			self.PopState();
+	}
+
+	event PushedState()
+	{
+		self.StopLatentExecution();
+		self.pawn.bDirectHitWall = true;
+		self.pawn.SetPhysics(PHYS_Flying);
+		m_fTiempoDeSalto=0.0; //tiempo de salto
+	}
+	event PoppedState()
+	{
+		self.pawn.bDirectHitWall = false;
+		self.pawn.SetPhysics(PHYS_None);
+		self.pawn.SetPhysics(PHYS_Spider);
+	}
+}
+
+function ReboteRespectoA(Actor Other, vector hitnormal,bool bRandom, float altura)
+{
+	local Vector newLocation,newVel;
+	local Vector retroceso;
+	local vector vAlCentro,vFloor;
+	local vector rx,ry,rz;
+
+	self.StopLatentExecution();
+	self.StopLatentExecution();
+	self.Velocity = vect(0,0,0);
+	self.Acceleration = vect (0,0,0);
+	
+	GetAxes(self.Pawn.Rotation,rx,ry,rz);
+
+
+	vAlCentro = normal(PGame(WorldInfo.Game).GetCentroPlaneta() - self.pawn.Location);  
+
+	if (self.Pawn.Floor != vect(0,0,0) && self.Pawn.Floor != vect(0,0,1))
+	{
+		vFloor = self.Pawn.Floor;
+	}
+	else
+	{
+		//vFloor = -vAlCentro;
+		vFloor = rz; //La rotación del pawn en eje Z
+	}
+
+
+
+	if (Other != None) //Es contra algo
+	{
+		retroceso = Normal(self.pawn.Location-Other.Location);
+		if (HitNormal != vect(0,0,0))
+		{
+			newLocation = self.Pawn.Location + (HitNormal*2);//un poquito patrás de donde venía porsiaca
+		}
+		else
+		{
+			newLocation = self.Pawn.Location - (normal(self.Pawn.Velocity)*2); //un poquito patrás de donde venía porsiaca
+		}
+	
+		self.pawn.SetLocation(newLocation);
+		//self.pawn.Velocity = (retroceso * vsize(self.Pawn.Velocity)*300) + (vFloor * 700); 
+		self.pawn.Velocity = -self.Pawn.Velocity + (vFloor * 500); 
+
+	}
+	else
+	{
+		//Queremos que haga un saltito hacia arriba simplemente, sin alterar su velocidad, por ejemplo al dispararle
+		self.pawn.Velocity += vFloor * 300; 
+	}
+	
+	self.m_FallDirection = -vFloor;
+	
+	if (!self.IsInState('Rebotando'))
+	{
+		self.PushState('Rebotando');
+	}
+
+	return;
+
+	
+
+	//self.pawn.Velocity = (retroceso * vsize(self.Pawn.Velocity)*100) - (vAlCentro * 600); 
+	
+
+	if (bRandom)
+	{
+		newVel = normal( hitNormal* 0.6 +vrand() *0.4);
+	}
+	else
+	{
+		if (hitNormal != vect(0,0,0))
+		{
+			newVel = normal ( MirrorVectorByNormal(self.Pawn.Velocity,hitnormal));
+		}
+		else
+		{
+			newVel = retroceso;
+		}
+
+	}
+
+	self.StopLatentExecution();
+	self.pawn.Velocity = (200*newVel* vsize(self.Pawn.Velocity)) - (vAlCentro * altura); 
+
+	//self.pawn.Velocity = (- self.Pawn.Velocity) + (self.Pawn.JumpZ * vFloor) ;
+
+/*	self.pawn.Velocity *= -1;
+	self.pawn.Velocity +=  (self.Pawn.JumpZ * vFloor) ;
+	self.Velocity = self.Pawn.Velocity;
+*/		
+	self.m_FallDirection = vAlCentro;
+
+	
+	if (!self.IsInState('Rebotando'))
+	{
+		self.PushState('Rebotando');
+	}
+    
 }
 
 
