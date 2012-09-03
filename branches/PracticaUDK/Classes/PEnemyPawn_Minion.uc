@@ -120,6 +120,14 @@ function desactivarEscudoScout()
 	`log("Desactivo");
 }
 
+event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
+{
+
+	PEnemy_AI_Controller(Owner).HitWall(HitNormal,Wall,WallComp);
+
+}
+
+
 defaultproperties
 {
 
@@ -165,7 +173,7 @@ defaultproperties
 
 		
 
-	GroundSpeed=50.0
+	GroundSpeed=30.0
 	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 100
 }
