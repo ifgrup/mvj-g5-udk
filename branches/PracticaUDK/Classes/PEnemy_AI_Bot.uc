@@ -138,6 +138,7 @@ auto state Idle_Inicial
 				theObjective = PGame(WorldInfo.Game).GetNextPath(id, NodeIndex);
 				if(theObjective != none)
 				{
+					m_intentos_nuevo_nodo = 0;
 					if (m_b_breakpoint)
 					{
 						antes = theObjective.Location;
@@ -166,9 +167,10 @@ auto state Idle_Inicial
                   {
 					 GoToState('TowerAttack');
                   }
-				  else if (m_intentos_nuevo_nodo >5)
+				  else if (m_intentos_nuevo_nodo >15)
 				  {
 					GoToState('TowerAttack'); //Yo lo enviaba a explotar y punto, rollo suicida
+					`log("_____________No encuentro nodo, ataquer!" @self.Name);
 				  }
 
 				  if (self.m_b_breakpoint)
@@ -307,7 +309,10 @@ state GoToNextPath
 					//Podríamos no hacer nada y esto se ejecutaría de nuevo al segundo.
 					//Pero lo suyo es ir al estado Idle
 					//`log("Idle al llegar al nodo");
+					DrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
+					`log("Idle por no tener nodo after GetNextNode");
 					GoToState('Idle_Inicial');
+
 				}
 			}
 			else
@@ -342,6 +347,13 @@ state GoToNextPath
 								//_DEBUG_DrawDebugSphere(despues,30,10,0,0,255,true);
 								//_DEBUG_DrawDebugCylinder(antes,despues,5,10,0,255,0,true);
 							}
+						}
+						else
+						{
+							//No tiene nodo destino, y no hemos llegado a la base. Nos vamos a Idle
+							DrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
+							`log("Idle por no tener nodo after quieto");
+							GoToState('Idle_Inicial');
 						}
 					}
 				}
@@ -403,7 +415,10 @@ Begin:
 		// en línea recta. El Pawn se moverá a cualquier punto dentro de las 100 unidades de radio
 		// que le estamos indicando.
 		//`log("Begin de GoToNextNode");
-		MoveToward(theObjective,theObjective,10,true,true);
+		
+		//VICTOR MoveToward(theObjective,theObjective,10,true,true);
+		
+		MoveToDirectNonPathPos (theObjective.Location,theObjective,10,true);
 		
 	}
 }/* ---------------FIN ESTADO IDLE_INICIAL --------------*/

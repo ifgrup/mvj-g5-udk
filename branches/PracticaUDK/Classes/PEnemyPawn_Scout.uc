@@ -29,7 +29,7 @@ function SetColor(LinearColor Col)
 //Gestionamos la ira del Scout true para incrementar ira, flase para decrementarla
 function GestionIra(bool mecabreo)
 {
-	`log("--------------------------------ira"@self.ira);
+	//_DEBUG_ `log("--------------------------------ira"@self.ira);
 
 		if(mecabreo)
 		{    

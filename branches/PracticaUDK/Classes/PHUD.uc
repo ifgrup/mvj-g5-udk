@@ -515,11 +515,12 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal, CachedMouseWorldOrigin + CachedMouseWorldDirection * 65536.f, CachedMouseWorldOrigin,distanciatorreta,,TRACEFLAG_Bullet)
 	{
 
+		/*
 		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
 		{
 			return true;
 		}
-		
+		*/
 		//Casting para ver si el actor implementa la interfaz de interaccion del mouse
 		MouseInteractionInterface = PMouseInteractionInterface(HitActor);
 		labase=PPlayerBase(HitActor);
@@ -1018,7 +1019,7 @@ function float GetAngle(Vector PointB, Vector PointC)
 	{
 		//Icono ira
 		sira=(PEnemyPawn_Scout(ERadarInfo.UTPawn).ira*100) /PEnemyPawn_Scout(ERadarInfo.UTPawn).max_ira;
-		`log("_____________________________________ % de ira·"@sira);
+		//_DEBUG_ `log("_____________________________________ % de ira·"@sira);
 		//Lvl1 ira 33%
 		if(sira>33)
 		{

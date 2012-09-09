@@ -20,16 +20,16 @@ function CambiaBicho()
 	minionId = Rand(2);
 	switch(minionId)
 	{
-		case 0:
+		case 0: //Murciégalo
 			ColorMesh.SetSkeletalMesh(minionMesh0,true);
 			//ColorMesh.SetMaterial(0,minionMaterial0);
 			ColorMesh.SetPhysicsAsset(minionPhysicsAsset0);
-			ColorMesh.AnimSets=minionAnimSet0;
-			ColorMesh.SetAnimTreeTemplate(minionAnimTree0);
+			//ColorMesh.AnimSets=minionAnimSet0;
+			//ColorMesh.SetAnimTreeTemplate(minionAnimTree0);
 			translation.Z = 3;
 			ColorMesh.SetTranslation(translation);
 		break;
-		case 1:
+		case 1: //topota
 			ColorMesh.SetSkeletalMesh(minionMesh1,true);
 			//ColorMesh.SetMaterial(0,minionMaterial1);
 			ColorMesh.SetPhysicsAsset(minionPhysicsAsset1);
@@ -138,6 +138,7 @@ defaultproperties
 		PhysicsAsset=PhysicsAsset'Enemigos.Minion.Topota_Physics'
 		AnimTreeTemplate=AnimTree'Enemigos.Minion.Topota_AnimTree'
 		AnimSets(0)=AnimSet'Enemigos.Minion.Topota_Animset'
+
 		Translation=(Z=-40.0)
 		//Scale=3.7
 		//demo
@@ -152,10 +153,10 @@ defaultproperties
 		//demo
 	End Object
 
-	minionMesh0=SkeletalMesh'enemigos.Murciegalo'
+	minionMesh0=SkeletalMesh'enemigos.Minion.Murciegalo'
 	minionMaterial0=Material'enemigos.Material_Enemigos'
-	minionAnimTree0=AnimTree'enemigos.Minion.Murciegalo_AnimTree'
-	minionAnimSet0(0)=AnimSet'enemigos.Minion.Murciegalo_Animset'
+	//minionAnimTree0=AnimTree'enemigos.Minion.Murciegalo_AnimTree'
+	//minionAnimSet0(0)=AnimSet'enemigos.Minion.Murciegalo_Animset'
 	minionPhysicsAsset0=PhysicsAsset'enemigos.Minion.Murciegalo_Physics'
 	minionPortrait0=Texture2D'PGameHudIco.Murciegalo_Portrait'
 

@@ -11,6 +11,16 @@ var float m_AnguloOffsetInicial; //Angulo con el que fui creado por el EnemySpaw
 
 var vector m_FallDirection; //Dirección de caída para el estado Rebotando
 var float m_fTiempoDeSalto;
+var vector m_Floor;
+
+var bool m_ya_en_suelo; //Bump contra suelo y hitwall pueden ejecutarse los dos... el primero marca el booleano para no tratar2veces
+var PPathNode m_nodo_para_rebote;
+var vector m_velocidadRebote;
+var float m_despContraTorreta;//distancia a la que nos mandará un rebote contra una torreta.
+var float m_currentDespContraTorreta; //distancia actual de la torreta contra la que hemos chocado.
+var vector m_posContraTorreta; //posición a la que nos manda el rebote de la torreta.
+var bool m_bPausaContraTorreta; //después del toñazo, tiempo de pausa
+var bool m_ChocandoContraTorreta ; //para evitar reentrada porque Bump y BaseChange se ejecutan a la vez ahora...
 
 simulated event PostBeginPlay()
 {
@@ -36,6 +46,10 @@ function Tick(Float Deltatime)
 		thePawn = PEnemy(Pawn);
 		thePawn.ActualizaRotacion(DeltaTime);
 		setRotation(thePawn.Rotation);
+	}
+	if (m_Floor != vect(0,0,0))
+	{
+		DrawDebugCylinder(self.Pawn.Location,self.Pawn.Location+m_Floor*100,4,4,0,0,1,false);
 	}
 }
 
@@ -95,7 +109,6 @@ function PPathNode AplicarOffsetNodo(PPathNode nodo)
 	local vector v,r ;
 	local Quat ernion,ernion2;
 
-	local Rotator rot;
 	local vector centro,hitlocation,hitnormal,fintrace;
 	local float maxdist,mindist;
 	local vector initlocation;
@@ -161,10 +174,11 @@ state Rebotando
 		m_fTiempoDeSalto += delta;
 		ApplyGravity(delta);
 
-		if (m_fTiempoDeSalto > 3.0)
+		if (m_fTiempoDeSalto > 2.0)
 		{
 			vAlCentro=PGame(WorldInfo.Game).GetCentroPlaneta()-self.pawn.Location; 
 			m_FallDirection = 2*Normal(vAlCentro); //caer más rápido
+
 		}
 
 	}
@@ -179,12 +193,19 @@ state Rebotando
 
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
+		if (m_ya_en_suelo)
+		{
+			return;
+		}
+		m_ya_en_suelo = true;
+
 
 		if (PGame(Worldinfo.game).EsPlaneta(Wall))
 		{
 			//OrientarPawnPorNormal(HitNormal,routPawn);
 			self.SetBase(Wall,hitnormal);
 			pawn.SetBase(Wall, HitNormal);
+			`log("Pop 1");
 			self.PopState();
 		}
 		else
@@ -195,9 +216,17 @@ state Rebotando
 	
 	function BumpContraSuelo(Actor suelo, vector HitNormal)
 	{
-			self.SetBase(suelo, HitNormal);
-			pawn.SetBase(suelo, HitNormal);
-			self.PopState();
+		if (m_ya_en_suelo)
+		{
+			return;
+		}
+
+		m_ya_en_suelo = true;
+		self.SetBase(suelo, HitNormal);
+		pawn.SetBase(suelo, HitNormal);
+		`log("Pop 2");
+		self.PopState();
+		
 	}
 
 	event PushedState()
@@ -206,31 +235,45 @@ state Rebotando
 		self.pawn.bDirectHitWall = true;
 		self.pawn.SetPhysics(PHYS_Flying);
 		m_fTiempoDeSalto=0.0; //tiempo de salto
+		m_ya_en_suelo = false;
 	}
 	event PoppedState()
 	{
 		self.pawn.bDirectHitWall = false;
 		self.pawn.SetPhysics(PHYS_None);
 		self.pawn.SetPhysics(PHYS_Spider);
+		
 	}
+
+Begin:
+	self.Pawn.Velocity=vect(0,0,0);
+	self.Pawn.Acceleration = vect(0,0,0);
+	self.Velocity=vect(0,0,0);
+	self.Acceleration = vect(0,0,0);
+	StopLatentExecution();
+	self.Pawn.Velocity=vect(0,0,0);
+	self.Pawn.Acceleration = vect(0,0,0);
+	self.Velocity=vect(0,0,0);
+	self.Acceleration = vect(0,0,0);
+
+	self.pawn.bDirectHitWall = true;
+	self.pawn.SetPhysics(PHYS_Flying);
+	m_fTiempoDeSalto=0.0; //tiempo de salto
+	m_ya_en_suelo = false;
+	self.pawn.velocity = m_velocidadRebote;
+	MoveToDirectNonPathPos (m_nodo_para_rebote.Location,m_nodo_para_rebote,10);
 }
 
 function ReboteRespectoA(Actor Other, vector hitnormal,bool bRandom, float altura)
 {
-	local Vector newLocation,newVel;
-	local Vector retroceso;
-	local vector vAlCentro,vFloor;
+	local Vector newLocation,v;
+	local vector vFloor;
 	local vector rx,ry,rz;
+	local Quat ernion,ernion2;
 
 	self.StopLatentExecution();
-	self.StopLatentExecution();
-	self.Velocity = vect(0,0,0);
-	self.Acceleration = vect (0,0,0);
 	
 	GetAxes(self.Pawn.Rotation,rx,ry,rz);
-
-
-	vAlCentro = normal(PGame(WorldInfo.Game).GetCentroPlaneta() - self.pawn.Location);  
 
 	if (self.Pawn.Floor != vect(0,0,0) && self.Pawn.Floor != vect(0,0,1))
 	{
@@ -238,88 +281,166 @@ function ReboteRespectoA(Actor Other, vector hitnormal,bool bRandom, float altur
 	}
 	else
 	{
-		//vFloor = -vAlCentro;
 		vFloor = rz; //La rotación del pawn en eje Z
 	}
 
+    m_Floor = vFloor;
 
-
+	
 	if (Other != None) //Es contra algo
 	{
-		retroceso = Normal(self.pawn.Location-Other.Location);
-		if (HitNormal != vect(0,0,0))
-		{
-			newLocation = self.Pawn.Location + (HitNormal*2);//un poquito patrás de donde venía porsiaca
-		}
-		else
-		{
-			newLocation = self.Pawn.Location - (normal(self.Pawn.Velocity)*2); //un poquito patrás de donde venía porsiaca
-		}
-	
-		self.pawn.SetLocation(newLocation);
-		//self.pawn.Velocity = (retroceso * vsize(self.Pawn.Velocity)*300) + (vFloor * 700); 
-		self.pawn.Velocity = -self.Pawn.Velocity + (vFloor * 500); 
+		/****************** CON QUATERNIONS *****************/
+		ernion =  QuatFromAxisAndAngle(ry,205 * DegToRad); 
+		ernion2 = QuatFromRotator(Rotator(rx)); //Rx lleva su dirección
+		ernion =  QuatProduct(ernion,ernion2);
+		v = vector(QuatToRotator(ernion));
 
+		v = normal (v) * Vsize(self.Pawn.Velocity)*30; //Nueva velocidad
+		DrawDebugCylinder(self.Pawn.Location,self.Pawn.Location+normal (self.Pawn.Velocity) * 100,5,5,0,200,0,false);
 	}
 	else
 	{
 		//Queremos que haga un saltito hacia arriba simplemente, sin alterar su velocidad, por ejemplo al dispararle
-		self.pawn.Velocity += vFloor * 300; 
+		v=self.pawn.Velocity += vFloor * 100; 
 	}
 	
 	self.m_FallDirection = -vFloor;
 	
+	//y para que vaya, creo la puta zanahoria de los cojones...
+	
+	self.m_nodo_para_rebote = spawn(class'PPathNode',,,self.Pawn.Location + normal (v) * 120);
+	newLocation = self.Pawn.Location + normal (v) * 10;
+	self.pawn.SetLocation(newLocation);
+
+	m_velocidadRebote = v;
+	DrawDebugSphere(m_nodo_para_rebote.Location,25,5,200,0,0,false);
+	
 	if (!self.IsInState('Rebotando'))
 	{
 		self.PushState('Rebotando');
 	}
+  
+}
 
-	return;
 
-	
+/*Desplazamos el pawn en la dirección contraria a la velocidad que llevaba, y punto, y aplicamos toque a la torreta*/
+function ContraTorreta(PAutoTurret torreta)
+{
+	local Vector newLocation,vAlCentro,HitLocation,HitNormal,centro;
+	local Actor HitActor;
+	local bool bFound;
 
-	//self.pawn.Velocity = (retroceso * vsize(self.Pawn.Velocity)*100) - (vAlCentro * 600); 
-	
-
-	if (bRandom)
+	if (m_ChocandoContraTorreta)
 	{
-		newVel = normal( hitNormal* 0.6 +vrand() *0.4);
+		return;
+	}
+	m_ChocandoContraTorreta = true;
+
+
+	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
+	newLocation = self.Pawn.Location - (normal(self.Pawn.Velocity) * m_despContraTorreta);
+	vAlCentro = Normal(centro - newLocation);  
+	
+	
+
+	self.StopLatentExecution();
+	self.Velocity = vect(0,0,0);
+	self.Acceleration = vect (0,0,0);
+	self.pawn.Velocity = vect(0,0,0);
+	self.pawn.Acceleration = vect (0,0,0);
+	
+	
+	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,newLocation-(vAlCentro*300),vect(10,10,10),,TRACEFLAG_Bullet)
+	{
+
+		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
+		{
+			bfound = true;
+			break;
+		}
+	}		
+
+
+	m_posContraTorreta = newLocation;
+	if (!bfound)
+	{
+		`log("Kagada... no sé qué hacer...\n");
 	}
 	else
 	{
-		if (hitNormal != vect(0,0,0))
-		{
-			newVel = normal ( MirrorVectorByNormal(self.Pawn.Velocity,hitnormal));
-		}
-		else
-		{
-			newVel = retroceso;
-		}
-
+		m_posContraTorreta = HitLocation - (vAlCentro*2); //un pelín parriba
 	}
 
-	self.StopLatentExecution();
-	self.pawn.Velocity = (200*newVel* vsize(self.Pawn.Velocity)) - (vAlCentro * altura); 
+	DrawDebugCylinder(self.Pawn.Location,m_posContraTorreta,3,3,200,0,0,true);
+	DrawDebugSphere(m_posContraTorreta,15,4,0,1,0,true);
 
-	//self.pawn.Velocity = (- self.Pawn.Velocity) + (self.Pawn.JumpZ * vFloor) ;
+	//Aplicamos choque a la torreta!!
+	torreta.Toque();
 
-/*	self.pawn.Velocity *= -1;
-	self.pawn.Velocity +=  (self.Pawn.JumpZ * vFloor) ;
-	self.Velocity = self.Pawn.Velocity;
-*/		
-	self.m_FallDirection = vAlCentro;
-
-	
-	if (!self.IsInState('Rebotando'))
+	if (!self.IsInState('TonyaoContraTorreta'))
 	{
-		self.PushState('Rebotando');
+		self.PushState('TonyaoContraTorreta');
 	}
-    
 }
 
+
+state TonyaoContraTorreta
+{
+	event Tick(float delta)
+	{
+		local vector desp;
+
+		super.tick(delta);
+
+		if (m_currentDespContraTorreta < m_despContraTorreta)
+		{
+			desp = normal(m_posContraTorreta-self.pawn.location); //de donde estoy hasta el destino del toñazo
+			//desp = (desp * 10* delta) / (1+m_tiempo_tick); //intento de desaceleración
+			//desp = desp * 20 * (1/(1+m_tiempo_tick));
+			desp = desp * 100 * delta ;
+	
+			self.pawn.setLocation( self.pawn.location + desp);
+			m_currentDespContraTorreta += vsize(desp);
+			`log("current desp "@self.Name @m_currentDespContraTorreta);
+	
+			DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
+		}
+
+		if (m_currentDespContraTorreta >= m_despContraTorreta && !m_bPausaContraTorreta)
+		{
+			m_bPausaContraTorreta = true;//Empieza el tiempo de que está estoñao (partículas y tal)
+			m_tiempo_tick = 0;
+		}
+
+		if (m_bPausaContraTorreta && m_tiempo_tick >= 3)
+		{
+				m_bPausaContraTorreta = false;
+				m_ChocandoContraTorreta = false;
+				self.PopState();
+		}
+	}
+
+Begin:
+	self.Pawn.Velocity=vect(0,0,0);
+	self.Pawn.Acceleration = vect(0,0,0);
+	self.Velocity=vect(0,0,0);
+	self.Acceleration = vect(0,0,0);
+	StopLatentExecution();
+	self.Pawn.Velocity=vect(0,0,0);
+	self.Pawn.Acceleration = vect(0,0,0);
+	self.Velocity=vect(0,0,0);
+	self.Acceleration = vect(0,0,0);
+	//Primero lo colocamos 50 unidades alejado del toñazo, para evitar dumps repetitivos
+	//Luego en el tick, lo movemos hasta el nuevo destino
+	m_currentDespContraTorreta = 30;
+	self.pawn.setLocation( self.pawn.location + normal(m_posContraTorreta-self.pawn.location)  * m_currentDespContraTorreta);
+	m_tiempo_tick = 0;
+	
+}
 
 DefaultProperties
 {
 	
 	m_tiempo_tick=0
+	m_despContraTorreta = 100;
 }
