@@ -906,7 +906,7 @@ state PlayerFallingSky
 			dist = vsize (HitActorTrace - elPaun.Location);
 			//_DEBUG_  ("TraceActors me devuelve el actor "@ActorTrace.Name);
 			//_DEBUG_if(PEnemy(ActorTrace) != None) `log("Lo puedo convertir a pawn");
-			if (dist < min_dist_actual && PEnemy(ActorTrace) == none) //pasamos de los pawns
+			if (dist < min_dist_actual && PEnemy(ActorTrace) == none && PNoSpawnVolume(ActorTrace)==none) //pasamos de los pawns y volúmenes
 			{
 				//_DEBUG_  ("Candidato TraceActors"@ActorTrace.Name);
 				m_ActorContraElQueCaemos = ActorTrace;
