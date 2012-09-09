@@ -505,16 +505,7 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	if ( ptorreta != None )  //Si nos chocamos contra una torreta
 	{
 		`log("Bump torreta!");
-		PEnemy_AI_Controller(Owner).ReboteRespectoA(other,HitNormal,false,300);
-		ptorreta.Toque();
-
-		/*
-		self.Velocity= 30 * (other.Location - self.Location);
-		self.Acceleration = vect (0,0,0);
-		Salta(true);
-		ptorreta.Toque();
-		return; //ya tá
-		*/
+		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
 	}
 
 	
@@ -571,16 +562,7 @@ singular event BaseChange()
 	if ( ptorreta != None )  //Si nos chocamos contra una torreta
 	{
 		`log("BaseChange torreta!");
-		PEnemy_AI_Controller(Owner).ReboteRespectoA(Base,vect(0,0,0),false,300);
-		ptorreta.Toque();
-		return;
-
-		self.Velocity= 30 * (self.Location - Base.Location);
-		//self.Acceleration = vect (0,0,0);
-		//self.Acceleration = self.Velocity;
-		Salta(true);
-		ptorreta.Toque();
-		return; //ya tá
+		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
 	}
 	
 }//BaseChange
