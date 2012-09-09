@@ -153,6 +153,7 @@ var float m_tiempoNecesarioApuntar;// Tiempo calculado para que la torreta llegu
 var int m_TiempoEnConstruccion; //Segundos que estará en construccion
 
 var int m_toques; //toques que lleva de PEnemys.
+var int m_toquesToDestroy; //toques con los que se destruye
 
 event PostInitAnimTree(SkeletalMeshComponent skelcomp)
 {
@@ -197,9 +198,9 @@ simulated event PostBeginPlay()
 function Toque()
 {
 	self.m_toques++;
-	if (m_toques >=3)
+	if (m_toques >= m_toquesToDestroy)
 	{
-		//self.Destroy();
+		self.Destroy();
 	}
 }
 
@@ -1148,4 +1149,5 @@ defaultproperties
 	m_tocaRotacionIdle=true
 	m_TiempoEnConstruccion=5 //5 segundos en construccion. Cada hija lo podrá redefinir
 	toques = 0
+	m_toquesToDestroy = 10
 }

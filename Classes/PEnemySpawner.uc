@@ -136,7 +136,15 @@ function  generarPosicionSpawn(vector v_haciaprimernodo, int num_bichos, out arr
 	getaxes(rot,rx,ry,rz);
 
 	//Ahora debemos mover en yaw, en función del número de bichos que pidan.
-	deltaangulo = 180 / (num_bichos -1 );
+	if (num_bichos == 1)
+	{
+		deltaangulo = 0;
+	}
+	else
+	{
+		deltaangulo = 180 / (num_bichos -1 );
+	}
+
 	for (i = 0; i < num_bichos; i++)
 	{
 		if (i%2 ==0)
