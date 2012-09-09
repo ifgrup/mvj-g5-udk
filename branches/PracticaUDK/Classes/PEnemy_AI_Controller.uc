@@ -22,6 +22,13 @@ var vector m_posContraTorreta; //posición a la que nos manda el rebote de la tor
 var bool m_bPausaContraTorreta; //después del toñazo, tiempo de pausa
 var bool m_ChocandoContraTorreta ; //para evitar reentrada porque Bump y BaseChange se ejecutan a la vez ahora...
 
+//Control de disparo al Giru
+var float m_max_dist_disparo_ppawn; //distancia máxima al PPawn en la que le puede disparar si lo ve
+var bool  m_disparo_posible;
+var float m_tick_disparo;
+var float m_timout_entre_disparos; //cada cuanto puedo disparar al Giru
+var class<Actor> m_ClaseMisil;
+
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
@@ -50,6 +57,14 @@ function Tick(Float Deltatime)
 	if (m_Floor != vect(0,0,0))
 	{
 		DrawDebugCylinder(self.Pawn.Location,self.Pawn.Location+m_Floor*100,4,4,0,0,1,false);
+	}
+	
+	//Control de timing entre disparos
+	m_tick_disparo += DeltaTime;
+	if (m_tick_disparo >= m_timout_entre_disparos)
+	{
+		m_disparo_posible = true;
+		m_tick_disparo = 0;
 	}
 }
 
@@ -436,6 +451,30 @@ Begin:
 	self.pawn.setLocation( self.pawn.location + normal(m_posContraTorreta-self.pawn.location)  * m_currentDespContraTorreta);
 	m_tiempo_tick = 0;
 	
+}
+
+
+/*Disparo del PEnemy al Giru.
+ * Cada hijo de PEnemy debe indicar la clase de PMisil en su propiedad m_ClaseMisil
+ * Y llamar a esat función cuando desee dispara. Se hace actualmente en el SeePlayer
+ * También son definibles los timeouts entre disparos y la distancia máxima en la que se considera
+ * que se le puede disparar
+ */
+function DisparaAPPawn(PPawn giru)
+{
+	local vector minionpos,ppawnpos;
+	local Projectile Proj;
+
+	minionpos = self.Pawn.Location  ;
+	ppawnpos =  giru.GetPosicionSocketCuerpo();
+			
+	minionpos+= 150 * normal(ppawnpos - minionpos);
+	//Obtener pos del socket del minion
+	//Mesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+
+	Proj = Projectile (Spawn( m_ClaseMisil ,self,,minionpos,,,True));
+	Proj.Init(Normal(ppawnpos-minionpos));
+	self.m_disparo_posible = false ; //Debe pasar otro intervalo para que vuelva a disparar
 }
 
 DefaultProperties
