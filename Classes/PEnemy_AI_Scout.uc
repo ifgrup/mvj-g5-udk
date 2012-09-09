@@ -232,6 +232,17 @@ auto state Idle_Inicial
  */
 state MoveToDestination
 {
+	event SeePlayer(Pawn seen)
+	{
+		if (PPawn(seen) != None)
+		{
+			if (m_disparo_posible && vsize(self.Pawn.Location - seen.Location) < m_max_dist_disparo_ppawn )
+			{
+				self.DisparaAPPawn(PPawn(seen));
+			}
+		}
+	}
+
 	event Tick(float DeltaTime)
 	{
 		local Pawn pDetectado;
@@ -418,4 +429,7 @@ defaultproperties
 	id_Path=0
 	DestinationOffset=200
 	m_radio_escudo = 800
+	m_max_dist_disparo_ppawn=500
+	m_timout_entre_disparos = 0.2
+	m_ClaseMisil=class 'PMisilScout'
 }
