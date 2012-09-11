@@ -1,4 +1,4 @@
-class PMisiles extends UTProj_LinkPowerPlasma;
+class PMisiles extends UTProj_LoadedRocket;
 var name disparador; //Quién dispara el projectile. Para control de TakeDamage ñaposillo...
 DefaultProperties
 {
@@ -7,4 +7,5 @@ DefaultProperties
 	ExplosionColor=(X=1.2,Y=2.0,Z=0.075)
 	MaxEffectDistance=+100.0
 	MaxExplosionLightDistance=+40.0
+	
 }

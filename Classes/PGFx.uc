@@ -546,7 +546,7 @@ function AUIVuela(bool val)
 if(!val)
 {
 	raton.GotoAndPlay("mirilla");
-	HbtActive=2;
+	HbtActive=0;
 	
 }else{
 //raton.GotoAndPlay("ctcannon");

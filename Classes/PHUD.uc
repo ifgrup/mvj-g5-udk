@@ -490,7 +490,8 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 	local PPlayerInput pPlayerInput;
 	local Vector2D MousePosition;
 	local Actor HitActor;
-
+	local vector centro;
+	local PPawn gppawn;
 	//Asegurarnos de que tenemos canvas y player owner validos
 	if(Canvas == none || PlayerOwner == none)
 		return false;
@@ -509,6 +510,10 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 	//y guardar los valores del mundo del origen y la direccion
 	Canvas.DeProject(MousePosition, CachedMouseWorldOrigin, CachedMouseWorldDirection);
 
+	//obtenemos el centro del planeta
+
+	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
+	gppawn=PPawn(PlayerOwner.Pawn);
 	//Hacer Trace para saber sobre que esta el raton
 	//Iteramos sobre todo lo que intersecciona la traza para devolver el objeto mas cercano que sea
 	//del tipo TITMouseInterfaceInteractionInterface
@@ -527,15 +532,15 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 		enemigo=PEnemy(HitActor);
 		//MouseInteractionInterface = PTurretCannon(HitActor);
  
-		if(MouseInteractionInterface != none)
+		if(MouseInteractionInterface != none && (vsize(hitlocation-gppawn.location) < vsize(centro-gppawn.location) ))
 		{
 			return false;
 		}
-		if(labase != none)
+		if(labase != none && (vsize(hitlocation-gppawn.location) < vsize(centro-gppawn.location) ))
 		{
 			return false;
 		}
-		if(enemigo != none)
+		if(enemigo != none && (vsize(hitlocation-gppawn.location) < vsize(centro-gppawn.location) ))
 		{
 			return false;
 		}

@@ -15,6 +15,11 @@ var float m_defaultGroundSpeed;
 
 var Texture2D m_portrait;
 
+
+
+function Vector GetPosicionSocketCuerpo();
+
+
 function Texture2D GetPortrait()
 {
 	return m_portrait;

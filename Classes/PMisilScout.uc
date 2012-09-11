@@ -1,4 +1,4 @@
-class PMisilScout extends PMisiles;
+class PMisilScout extends UTProj_ShockBall;
 
 DefaultProperties
 {
