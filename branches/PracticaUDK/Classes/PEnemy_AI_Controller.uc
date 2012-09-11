@@ -153,7 +153,7 @@ function PPathNode AplicarOffsetNodo(PPathNode nodo)
 	}
 
 	r = nodo.location + (normal(v) * maxdist); //(mindist + rand(maxdist-mindist));
-    nodo.SetLocation(r);
+        p.SetLocation(r);
 
 	//Ahora, a colocar el nodo cerquita de la superficie, por si el cálculo ha hecho que esté debajo
 	centro = PGame(Worldinfo.Game).m_CentroPlaneta;
@@ -162,7 +162,7 @@ function PPathNode AplicarOffsetNodo(PPathNode nodo)
 	if (hitlocation != vect(0,0,0))
 	{
 		//Lo colocamos en la superficie, un poco por encima just in case
-		nodo.SetLocation(hitlocation + 10 *normal(r-centro));
+		p.SetLocation(hitlocation + 10 *normal(r-centro));
 	}
 	else
 	{
@@ -175,6 +175,12 @@ function PPathNode AplicarOffsetNodo(PPathNode nodo)
 	DrawDebugSphere(nodo.Location,30,10,0,0,255,true);
     */
 	//`log("OffsetAplicado "@vsize(initlocation-nodo.Location));
+
+	if (vsize(initlocation - p.Location) > 200)
+	{
+		`log("Kagada en offset");
+		return nodo;
+	}
 	return p;
 
 }
@@ -338,12 +344,42 @@ function ReboteRespectoA(Actor Other, vector hitnormal,bool bRandom, float altur
 }
 
 
-/*Desplazamos el pawn en la dirección contraria a la velocidad que llevaba, y punto, y aplicamos toque a la torreta*/
-function ContraTorreta(PAutoTurret torreta)
+
+function vector ProyectarPuntoSuelo(vector punto)
 {
 	local Vector newLocation,vAlCentro,HitLocation,HitNormal,centro;
-	local Actor HitActor;
-	local bool bFound;
+	local bool bfound;
+	local actor HitActor;
+
+	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
+	vAlCentro = Normal(centro - punto); 
+
+	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,punto-(vAlCentro*3000),vect(10,10,10),,TRACEFLAG_Bullet)
+	{
+		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
+		{
+			bfound = true;
+			break;
+		}
+	}		
+
+	if (!bfound)
+	{
+		`log("Kagada... no sé qué hacer...\n");
+		newLocation = punto; //sin clavarlo....
+	}
+	else
+	{
+		newLocation = HitLocation - (vAlCentro*20); //un pelín parriba
+	}
+
+	return newLocation;
+}
+
+/*Desplazamos el pawn en la dirección contraria a la velocidad que llevaba, y punto, y aplicamos toque a la torreta*/
+function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
+{
+	local Vector newLocation;
 
 	if (m_ChocandoContraTorreta)
 	{
@@ -352,11 +388,8 @@ function ContraTorreta(PAutoTurret torreta)
 	m_ChocandoContraTorreta = true;
 
 
-	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
-	newLocation = self.Pawn.Location - (normal(self.Pawn.Velocity) * m_despContraTorreta);
-	vAlCentro = Normal(centro - newLocation);  
-	
-	
+	newLocation = self.Pawn.Location - (normal(self.Pawn.Velocity) * 0.6* dist);
+	newLocation = newLocation + (normal(vrand()) * 0.4*dist); //40% de random, a ver si puede ser...
 
 	self.StopLatentExecution();
 	self.Velocity = vect(0,0,0);
@@ -364,39 +397,23 @@ function ContraTorreta(PAutoTurret torreta)
 	self.pawn.Velocity = vect(0,0,0);
 	self.pawn.Acceleration = vect (0,0,0);
 	
-	
-	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,newLocation-(vAlCentro*300),vect(10,10,10),,TRACEFLAG_Bullet)
-	{
+	m_posContraTorreta = self.ProyectarPuntoSuelo(newLocation);
 
-		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
-		{
-			bfound = true;
-			break;
-		}
-	}		
-
-
-	m_posContraTorreta = newLocation;
-	if (!bfound)
-	{
-		`log("Kagada... no sé qué hacer...\n");
-	}
-	else
-	{
-		m_posContraTorreta = HitLocation - (vAlCentro*2); //un pelín parriba
-	}
-
-	DrawDebugCylinder(self.Pawn.Location,m_posContraTorreta,3,3,200,0,0,true);
-	DrawDebugSphere(m_posContraTorreta,15,4,0,1,0,true);
+	//_DEBUG_DrawDebugCylinder(self.Pawn.Location,m_posContraTorreta,3,3,200,0,0,false);
+	//_DEBUG_DrawDebugSphere(m_posContraTorreta,15,4,0,1,0,false);
 
 	//Aplicamos choque a la torreta!!
-	torreta.Toque();
+	if (PAutoTurret(torreta) != None)
+	{
+		PAutoTurret(torreta).Toque();
+	}
 
 	if (!self.IsInState('TonyaoContraTorreta'))
 	{
 		self.PushState('TonyaoContraTorreta');
 	}
 }
+
 
 
 state TonyaoContraTorreta
@@ -406,17 +423,18 @@ state TonyaoContraTorreta
 		local vector desp;
 
 		super.tick(delta);
-
+		DrawDebugSphere(self.Pawn.Location,40,10,255,117,138,false);
+		self.pawn.setLocation( self.ProyectarPuntoSuelo(self.pawn.location)); //Para fijarlo en tierra
 		if (m_currentDespContraTorreta < m_despContraTorreta)
 		{
 			desp = normal(m_posContraTorreta-self.pawn.location); //de donde estoy hasta el destino del toñazo
 			//desp = (desp * 10* delta) / (1+m_tiempo_tick); //intento de desaceleración
 			//desp = desp * 20 * (1/(1+m_tiempo_tick));
-			desp = desp * 100 * delta ;
+			desp = desp * 50 * delta ;
 	
-			self.pawn.setLocation( self.pawn.location + desp);
+			self.pawn.setLocation( self.ProyectarPuntoSuelo(self.pawn.location + desp));
 			m_currentDespContraTorreta += vsize(desp);
-			`log("current desp "@self.Name @m_currentDespContraTorreta);
+			//_DEBUG `log("current desp "@self.Name @m_currentDespContraTorreta);
 	
 			DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
 		}
@@ -448,7 +466,8 @@ Begin:
 	//Primero lo colocamos 50 unidades alejado del toñazo, para evitar dumps repetitivos
 	//Luego en el tick, lo movemos hasta el nuevo destino
 	m_currentDespContraTorreta = 30;
-	self.pawn.setLocation( self.pawn.location + normal(m_posContraTorreta-self.pawn.location)  * m_currentDespContraTorreta);
+	
+	self.pawn.setLocation(ProyectarPuntoSuelo(self.pawn.location + normal(m_posContraTorreta-self.pawn.location)  * m_currentDespContraTorreta));
 	m_tiempo_tick = 0;
 	
 }
