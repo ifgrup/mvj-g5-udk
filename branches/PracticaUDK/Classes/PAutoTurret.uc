@@ -525,12 +525,11 @@ state Disparando
 			
 			}
 				
-			if (Vsize(enemigoActual.Location-FireLocation)>(RangoDisparo+200) || diparacontraalgo)//|| enemigoActual.life==0)
+			if (Vsize(enemigoActual.Location-FireLocation)>(RangoDisparo+200) || diparacontraalgo || enemigoActual.life <=0 )
 			{
 				enemigoActual=None;
 				//DEBUG ("Estabamos disparando pero está fuera de rango. Volvemos a Idle");
 				GoToState('Idle');
-
 			}
 			else
 			{

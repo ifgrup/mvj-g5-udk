@@ -581,17 +581,12 @@ event Touch(actor other, PrimitiveComponent othercomp,vector HitLocation,vector 
 
 event bool EncroachingOn(Actor Other)
 {
-	if (PEnemy(Other) != none)
-	{
-		salta (true,true);
-		return false;
-	}
-	return true;
+	return false;
 }
 
 event EncroachedBy(Actor other)
 {
-	Encroachingon(Other);
+	return;
 }
 
 
