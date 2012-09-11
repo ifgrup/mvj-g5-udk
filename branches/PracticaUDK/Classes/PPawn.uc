@@ -956,14 +956,22 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 	if(PMisilMinion(DamageCauser) != None)
 	{
 		//_DEBUG_ ("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
-		RecibidoDisparoMisil(HitLocation, Momentum,PMisiles(DamageCauser));
+		RecibidoDisparoMisil(HitLocation, Momentum,Projectile(DamageCauser));
 		return;
 	}
+	if(PMisilScout(DamageCauser) != None)
+		{
+			//_DEBUG_ ("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
+			RecibidoDisparoMisil(HitLocation, Momentum,Projectile(DamageCauser));
+			return;
+		}
+
+
 
 } //TakeDamage
 
 
-function RecibidoDisparoMisil(vector HitLocation, vector Momentum,PMisiles misil)
+function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile misil)
 {
 	self.Life -= misil.Damage;
 	`log("Toñazo recibido en Giru "@self.life);
