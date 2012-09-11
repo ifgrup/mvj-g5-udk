@@ -75,6 +75,7 @@ simulated function PostBeginPlay()
 		SetTimer(1.0, false, 'ActivateSpawners');
 
 	super.PostBeginPlay();
+	CreateVegetationCollision();
 }
 
 function CreaNodosMundo()
@@ -431,6 +432,51 @@ function bool EsPlaneta(Actor a)
 	return a.Tag == 'Planeta';
 }
 
+static final function vector MatrixGetScale(Matrix TM)
+{
+    local Vector s;
+    s.x = sqrt(TM.XPlane.X**2 + TM.XPlane.Y**2 + TM.XPlane.Z**2);
+    s.y = sqrt(TM.YPlane.X**2 + TM.YPlane.Y**2 + TM.YPlane.Z**2);
+    s.z = sqrt(TM.ZPlane.X**2 + TM.ZPlane.Y**2 + TM.ZPlane.Z**2);
+    return s;
+}
+
+function CreateVegetationCollision()
+{
+	local InstancedFoliageActor ac;
+	local InstancedStaticMeshComponent comp;
+	local vector loc, scale;
+	local Rotator rot;
+	local PTree Tree;
+	local int i, j;
+	local name asd;
+
+
+	foreach AllActors(class'InstancedFoliageActor', ac)
+	{
+		if(ac.Layer == 'Vegetacion')
+		{
+			for(i = 0; i < ac.InstancedStaticMeshComponents.Length; ++i)
+			{
+				comp = ac.InstancedStaticMeshComponents[i];
+				if(comp.StaticMesh == StaticMesh'EngineVolumetrics.FogEnvironment.Mesh.S_EV_FogVolume_Cylinder_01')
+				{
+					ac.InstancedStaticMeshComponents[i].SetHidden(true);
+					j = comp.PerInstanceSMData.Length;
+					for(j = 0; j < comp.PerInstanceSMData.Length; ++j)
+					{
+						loc = MatrixGetOrigin(comp.PerInstanceSMData[j].Transform);
+						rot = MatrixGetRotator(comp.PerInstanceSMData[j].Transform);
+						scale = MatrixGetScale(comp.PerInstanceSMData[j].Transform);
+
+						Tree = Spawn(class'PTree',,,loc,rot);
+						Tree.SetDrawScale3D(scale);
+					}
+				}
+			}
+		}
+	}
+}
 
 defaultproperties
 {
