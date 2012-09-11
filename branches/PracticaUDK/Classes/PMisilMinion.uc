@@ -1,4 +1,4 @@
-class PMisilMinion extends PMisiles;
+class PMisilMinion extends UTProj_LinkPowerPlasma;
 DefaultProperties
 {
 	Damage=1

@@ -410,7 +410,7 @@ state Idle
 	event TakeDamage(int Damage, Controller InstigatedBy, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 	{
 		Global.TakeDamage(Damage,InstigatedBy,HitLocation,Momentum,DamageType,HitInfo,DamageCauser);
-
+	
 		if(TurretHealth > 0)
 		{
 			//GotoState('Alert');
@@ -491,7 +491,9 @@ state Disparando
 
 	function Tick(Float Delta)
 	{
-
+		local vector HitLocation,Hitnormal;
+		local Actor obstaculo;
+		local bool diparacontraalgo;
         super.Tick(Delta);
 		TurretMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
         TurretMesh.GetSocketWorldLocationAndRotation('SocketPivote',IniFireLocation,IniFireRotation);
@@ -501,11 +503,32 @@ state Disparando
 
 		if(enemigoActual!=None) 
 		{
+			//trace para controlar que no disparemos al planeta. 
+			
+			obstaculo=trace(HitLocation, Hitnormal,enemigoActual.GetPosicionSocketCuerpo(),FireLocation,false,,,TRACEFLAG_Bullet);
+			
+			if(obstaculo!= None)
+			{
+				diparacontraalgo= PGame(Worldinfo.game).EsPlaneta(obstaculo);
+
+				if(!diparacontraalgo)
+				{
 				
-			if (Vsize(enemigoActual.Location-FireLocation)>(RangoDisparo+200) )//|| enemigoActual.life==0)
+					if(PAutoTurret(obstaculo)!=None)
+					{
+						diparacontraalgo=true;
+					
+					}
+				
+				
+				}
+			
+			}
+				
+			if (Vsize(enemigoActual.Location-FireLocation)>(RangoDisparo+200) || diparacontraalgo)//|| enemigoActual.life==0)
 			{
 				enemigoActual=None;
-				//_DEBUG_ ("Estabamos disparando pero está fuera de rango. Volvemos a Idle");
+				//DEBUG ("Estabamos disparando pero está fuera de rango. Volvemos a Idle");
 				GoToState('Idle');
 
 			}
@@ -525,7 +548,7 @@ state Disparando
 				{
 					
 						m_TiempoDesdeInicioRotacion=0;
-						RotaParaApuntarA(enemigoActual.Location,m_TimeoutEntreRotacionDisparando);
+						RotaParaApuntarA(enemigoActual.GetPosicionSocketCuerpo(),m_TimeoutEntreRotacionDisparando);
 					
 				}
 			}
@@ -580,7 +603,7 @@ state NuevoTarget
 
 
 		dirActual=Normal(FireLocation-IniFireLocation);
-		dirEnemigo=Normal(enemigoActual.location-IniFireLocation);
+		dirEnemigo=Normal(enemigoActual.GetPosicionSocketCuerpo()-IniFireLocation);
 		dotprot=dirActual dot dirEnemigo;
 		if (dotprot>0 && dotprot > 0.95)
 		{
@@ -594,7 +617,7 @@ state NuevoTarget
 			if(m_tiempoApuntando>m_tiempoNecesarioApuntar) //cada medio segundo reapuntamos por si el enemigo se ha ido moviendo 
 			{
 				dirActual=Normal(FireLocation-IniFireLocation);
-				dirEnemigo=Normal(enemigoActual.location-IniFireLocation);
+				dirEnemigo=Normal(enemigoActual.GetPosicionSocketCuerpo()-IniFireLocation);
 
 			    //LOLOFlushPersistentDebugLines();
 		        //DrawDebugCylinder(FireLocation,enemigoActual.Location,3,10,200,0,0,true);
@@ -604,7 +627,7 @@ state NuevoTarget
 			    //_DEBUG_ ("Sin apuntar, reintentamos");
 				m_tiempoNecesarioApuntar=1.3-dotprot;
 				//_DEBUG_ ("DOT PROT REINTENTO ES: "@dotprot);
-				RotaParaApuntarA(enemigoActual.Location,m_tiempoNecesarioApuntar);
+				RotaParaApuntarA(enemigoActual.GetPosicionSocketCuerpo(),m_tiempoNecesarioApuntar);
 				m_tiempoApuntando=0;
 
 			}
@@ -626,14 +649,37 @@ state NuevoTarget
 		local float denemigo;
 		local PEnemyPawn_Minion enemigo,tenemigo;
 		//local PPawn enemigo,tenemigo;
-
+		local bool diparacontraalgo;
+		local Actor obstaculo;
+		local vector HitLocation, Hitnormal;
 		denemigo=RangoDisparo+1;
 		tenemigo=None;
-		
+		diparacontraalgo=false;
 		foreach WorldInfo.AllPawns(class'PEnemyPawn_Minion',enemigo,self.Location,RangoDisparo)
 		//foreach WorldInfo.AllPawns(class'PPawn',enemigo,self.Location,RangoDisparo)
 		{
-			if(vsize(enemigo.Location-self.Location)<denemigo)
+			//control de obstaculos
+			obstaculo=trace(HitLocation, Hitnormal,enemigo.GetPosicionSocketCuerpo(),FireLocation,false,,,TRACEFLAG_Bullet);
+			
+			if(obstaculo!= None)
+			{
+				diparacontraalgo= PGame(Worldinfo.game).EsPlaneta(obstaculo);
+
+				if(!diparacontraalgo)
+				{
+				
+					if(PAutoTurret(obstaculo)!=None)
+					{
+						diparacontraalgo=true;
+					
+					}
+				
+				
+				}
+			
+			}//
+
+			if(vsize(enemigo.Location-self.Location)<denemigo && !diparacontraalgo )
 			{
 				tenemigo=enemigo;
 				denemigo=vsize(enemigo.Location-self.Location);
@@ -1141,7 +1187,7 @@ defaultproperties
 	Components.Add(DMesh)
 
 	//TurretMesh se asigna en cada torreta hija con la mesh que corresponde a la propia torreta
-	RangoDisparo=1300
+	RangoDisparo=800
 	m_TimeoutEntreDisparo=0.33  //3 disparos por segundo
 	m_TimeoutEntreRotacionIdle=3 //Random cada 3 segundos
 	m_TimeoutEntreRotacionDisparando=0.2 //Reapunta al target 5 veces por segundo
