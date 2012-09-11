@@ -127,6 +127,15 @@ event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 
 }
 
+function Vector GetPosicionSocketCuerpo()
+{
+	local vector sLocation;
+	local rotator sRotation;
+
+	//self.Mesh.GetSocketWorldLocationAndRotation('Socket_Cuerpo',sLocation,sRotation);
+	//return sLocation;
+	return self.Location;
+}
 
 defaultproperties
 {

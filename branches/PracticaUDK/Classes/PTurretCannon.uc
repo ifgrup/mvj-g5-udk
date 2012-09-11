@@ -13,7 +13,8 @@ function DisparoTorreta()
 	
 	Proj = Spawn(class'PMisiles',self,,FireLocation,,,True);
 	PMisiles(Proj).disparador = 'PTurretCannon';
-	Proj.Init(Normal(FireLocation-IniFireLocation));
+	Proj.Init(Normal(enemigoActual.GetPosicionSocketCuerpo()-FireLocation));
+	
 }
 
 

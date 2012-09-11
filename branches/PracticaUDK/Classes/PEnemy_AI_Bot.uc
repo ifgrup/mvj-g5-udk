@@ -294,7 +294,7 @@ state GoToNextPath
 				if (abs(distNodo - oldDistNodo)<0.1)
 				{
 					m_segundosQuieto +=1;
-					if (m_segundosQuieto == 2)
+					if (m_segundosQuieto == 10)
 					{
 						m_segundosQuieto = 0;
 						theObjective = PGame(WorldInfo.Game).GetNextPath(id, NodeIndex);
@@ -385,10 +385,10 @@ Begin:
 		// en línea recta. El Pawn se moverá a cualquier punto dentro de las 100 unidades de radio
 		// que le estamos indicando.
 		//`log("Begin de GoToNextNode");
+		 StopLatentExecution();
+		 MoveToward(theObjective,theObjective,10,true,true);
 		
-		//VICTOR MoveToward(theObjective,theObjective,10,true,true);
-		
-		MoveToDirectNonPathPos (theObjective.Location,theObjective,10,true);
+		//VICTOR MoveToDirectNonPathPos (theObjective.Location,theObjective,10,true);
 		
 	}
 }/* ---------------FIN ESTADO IDLE_INICIAL --------------*/
