@@ -449,9 +449,7 @@ function CreateVegetationCollision()
 	local Rotator rot;
 	local PTree Tree;
 	local int i, j;
-	local name asd;
-
-
+	
 	foreach AllActors(class'InstancedFoliageActor', ac)
 	{
 		if(ac.Layer == 'Vegetacion')
@@ -459,7 +457,7 @@ function CreateVegetationCollision()
 			for(i = 0; i < ac.InstancedStaticMeshComponents.Length; ++i)
 			{
 				comp = ac.InstancedStaticMeshComponents[i];
-				if(comp.StaticMesh == StaticMesh'EngineVolumetrics.FogEnvironment.Mesh.S_EV_FogVolume_Cylinder_01')
+				if(comp.StaticMesh == StaticMesh'Miscelanea.caja')
 				{
 					ac.InstancedStaticMeshComponents[i].SetHidden(true);
 					j = comp.PerInstanceSMData.Length;
