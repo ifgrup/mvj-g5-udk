@@ -217,7 +217,7 @@ state GoToNextPath
 		super.Tick(DeltaTime);
 		if (m_b_breakpoint)
 		{
-			DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
+			//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
 		}
 
 
@@ -279,7 +279,7 @@ state GoToNextPath
 					//Podríamos no hacer nada y esto se ejecutaría de nuevo al segundo.
 					//Pero lo suyo es ir al estado Idle
 					//`log("Idle al llegar al nodo");
-					DrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
+					//_DEBUGDrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
 					`log("Idle por no tener nodo after GetNextNode");
 					GoToState('Idle_Inicial');
 
@@ -321,7 +321,7 @@ state GoToNextPath
 						else
 						{
 							//No tiene nodo destino, y no hemos llegado a la base. Nos vamos a Idle
-							DrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
+							//_DEBUGDrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
 							`log("Idle por no tener nodo after quieto");
 							GoToState('Idle_Inicial');
 						}
@@ -451,7 +451,7 @@ Begin:
 	pawn.Acceleration = vect(0,0,0);
 
 	//pawn.bCollideActors = false; //Para que el sistema de partículas
-	DrawDebugSphere(pawn.Location,80.0,20,255,255,255,true);
+	//DEBUG_DrawDebugSphere(pawn.Location,80.0,20,255,255,255,true);
 	//No modificamos sus variables de destino ni nada, así al volver al estado de GoToNextPath si es del que viene, seguirá
 	//moviéndose hacia donde iba
 
