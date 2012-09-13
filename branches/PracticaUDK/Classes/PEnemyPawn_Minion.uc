@@ -131,10 +131,12 @@ function Vector GetPosicionSocketCuerpo()
 {
 	local vector sLocation;
 	local rotator sRotation;
+	local SkeletalMeshSocket derp;
 
-	//self.Mesh.GetSocketWorldLocationAndRotation('Socket_Cuerpo',sLocation,sRotation);
-	//return sLocation;
-	return self.Location;
+	derp = self.Mesh.GetSocketByName('Socket_Cuerpo');
+	self.ColorMesh.GetSocketWorldLocationAndRotation('Socket_Cuerpo',sLocation,sRotation);
+	return sLocation;
+
 }
 
 defaultproperties
