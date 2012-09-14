@@ -748,6 +748,19 @@ exec function mirillatierrapos(float x, float y)
 	//`log("Nueva Posicion mirilla "@DI.X @DI.Y);
 }
 
+//para configurar transparencia del hud
+exec function alphaHUD(float a)
+{
+	local ASDisplayInfo DI;
+		
+	DI=pGFx.hudMC.GetDisplayInfo();
+	DI.Alpha=a;
+	
+	pGFx.hudMC.SetDisplayInfo(DI);
+	//`log("Nueva Posicion mirilla "@DI.X @DI.Y);
+}
+
+
 
 function ADbotonesporCredito()
 {
