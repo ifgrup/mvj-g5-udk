@@ -32,6 +32,7 @@ var GFxObject hvidaMC;
 var GFxObject pelicula;
 var GFxObject raton;// _clip pelicula que controla el ratón
 var GFxObject pmiratierraMC;//  _clip pelicula que controla el ratón punto de mira en la tierra
+var GFxObject hudMC;
 
 enum Hbt
 {
@@ -143,6 +144,7 @@ function Init(optional LocalPlayer LocalPlayer)
 	raton= GetVariableObject("_root._clip");
 	bcursor= GetVariableObject("_root.bcursor");
 	creditoMC= GetVariableObject("_root.nhud.credito");
+	hudMC=GetVariableObject("_root.nhud");
 	//Hud nuevo
 
 //demo
@@ -543,23 +545,23 @@ function SetCredito(int c)
 function AUIVuela(bool val)
 {
 
-if(!val)
-{
-	raton.GotoAndPlay("mirilla");
-	HbtActive=0;
+	if(!val)
+	{
+		raton.GotoAndPlay("mirilla");
+		HbtActive=0;
 	
-}else{
-//raton.GotoAndPlay("ctcannon");
+	}else{
+	//raton.GotoAndPlay("ctcannon");
 
-}
+	}
 
-hbt1icotoMC.SetBool("_visible", val);
-	//hbt1icotrMC.SetBool("_visible", val);
-hbt2icotoMC.SetBool("_visible", val);
+	hbt1icotoMC.SetBool("_visible", val);
+		//hbt1icotrMC.SetBool("_visible", val);
+	hbt2icotoMC.SetBool("_visible", val);
 	hbt2icotrMC.SetBool("_visible", !val);
-hbt3icotoMC.SetBool("_visible", val);
+	hbt3icotoMC.SetBool("_visible", val);
 	hbt3icotrMC.SetBool("_visible", !val);
-hbt4icotoMC.SetBool("_visible", val);
+	hbt4icotoMC.SetBool("_visible", val);
 	hbt4icotrMC.SetBool("_visible", !val);
 
 	raton.SetBool("_visible", val);
@@ -718,6 +720,7 @@ function SetAnimLog(bool val)
 {
 	animLog=val;
 }
+
 
 
 
