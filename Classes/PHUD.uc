@@ -205,7 +205,10 @@ iconosapantalla();
 			area.SetLocation(HitLocation+HitNormal*100);
 			area.SetRotation(rTorreta);
 			pct=PuedocolocarTorreta(HitLocation,HitNormal);
-			area.ColorEstado(pct);
+			area.ColorEstado(pGFx.HbtActive);
+			pGFx.nottorretaMC.SetVisible(!pct);
+
+
 		}
 
 		//Si se presiona el boton izquierdo del mouse 
@@ -236,7 +239,7 @@ iconosapantalla();
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
 					`log ( "la torreta activa es:"	@pGFx.HbtActive);		
-		
+					
 					switch (pGFx.HbtActive)
 					{
 						case hbt1:
@@ -728,6 +731,7 @@ simulated event Tick(float DeltaTime)
 */
 	//comprueba que tengamos dinero para tener las torretas activas, sino las desactiva 
 	ADbotonesporCredito();
+	vidaGiru();
 	pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
 
 	
@@ -760,6 +764,27 @@ exec function alphaHUD(float a)
 	//`log("Nueva Posicion mirilla "@DI.X @DI.Y);
 }
 
+exec function interferenciapantalla()
+{
+
+	pGFx.marcadorMC.GotoAndPlayI(2);
+	
+
+}
+exec function pupitaenpantalla()
+{
+	local  MaterialInstanceConstant Mater;
+	Mater = new () class'MaterialInstanceConstant';
+
+	if (Mater != None)
+	{
+		Mater.SetParent(Material'PGameHudIco.PointerMaterial');
+		
+	}
+
+	Canvas.SetPos(SizeX-Rand(SizeX), SizeY-Rand(SizeY));
+		Canvas.DrawMaterialTile(Mater ,1.0, 1.0);
+}
 
 
 function ADbotonesporCredito()
@@ -841,8 +866,8 @@ function iconosapantalla()
 	local vector cabeza_pawn_location;
 	local rotator cabeza_pawn_rotation;
 	local Texture2D portrait;
-
-	if (PlayerOwner == None || PlayerOwner.Pawn == None)
+	
+	if (PlayerOwner == None || PlayerOwner.Pawn == None ||PlayerOwner.Pawn.IsInState('PawnFallingSky')||PlayerOwner.Pawn.IsInState('PawnRecienCaido'))
 	{
 		return;
 	}
@@ -1137,6 +1162,16 @@ exec function fineee(string frase)
 delegate bool gover()
 {
 	return false;
+}
+
+
+//función para mostrar la vida de Giru, se actualiza a cada tick
+function vidaGiru()
+{
+	local PPawn gppawn;
+	gppawn=PPawn(PlayerOwner.Pawn);
+	pGFx.hvidaMC.GotoAndStopI(gppawn.life);
+
 }
 
 

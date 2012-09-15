@@ -31,8 +31,10 @@ var GFxObject creditoMC;
 var GFxObject hvidaMC;
 var GFxObject pelicula;
 var GFxObject raton;// _clip pelicula que controla el ratón
+var GFxObject nottorretaMC;// símbolo de prohibido para el ratón 
 var GFxObject pmiratierraMC;//  _clip pelicula que controla el ratón punto de mira en la tierra
 var GFxObject hudMC;
+var GFxObject marcadorMC;
 
 enum Hbt
 {
@@ -142,9 +144,11 @@ function Init(optional LocalPlayer LocalPlayer)
 	pmiratierraMC=GetVariableObject("_root.pmiratierra");
 	pelicula=GetVariableObject("_root");
 	raton= GetVariableObject("_root._clip");
+	nottorretaMC= GetVariableObject("_root._clip.nottorreta");
 	bcursor= GetVariableObject("_root.bcursor");
 	creditoMC= GetVariableObject("_root.nhud.credito");
 	hudMC=GetVariableObject("_root.nhud");
+	marcadorMC=GetVariableObject("_root.nhud.marcador");
 	//Hud nuevo
 
 //demo

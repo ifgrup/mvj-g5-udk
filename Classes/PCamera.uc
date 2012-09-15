@@ -227,7 +227,11 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
 
 	pc = PPlayerController(PCOwner);
 	elhud = PHud(pc.myHUD);
-
+	
+	if(elhud==None)
+	{
+		return; //Durante el load es nulo, lo protegemos... 
+	}
 	ratio = (m_anguloUpDown-m_min_anguloUD)/(m_max_anguloUD - m_min_anguloUD);
 
 	deltamirilla = elhud.m_min_offset_mirilla_y + ratio * (elhud.m_max_offset_mirilla_y - elhud.m_min_offset_mirilla_y);

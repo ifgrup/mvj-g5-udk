@@ -5,7 +5,7 @@ class PHUD_Area extends pawn;
 var PointLightComponent m_luz;
 var ParticleSystem m_ParticleSystem;
 var EmitterSpawnable m_Emitter;
-var Color c,c2;
+var Color c,c1,c2,c3;
 
 event PostBeginPlay()
 {
@@ -25,9 +25,9 @@ function interruptor(bool encendido)
 	m_luz.SetEnabled(encendido);
 }
 
-function ColorEstado(bool estado)
+function ColorEstado(Hbt HbtActive)
 {
-	if(estado)
+	/*if(estado)
 	{
 		m_luz.SetLightProperties(500.0,c,);
 	}
@@ -35,8 +35,61 @@ function ColorEstado(bool estado)
 	{
 		m_luz.SetLightProperties(150.0,c2,);
 	}
+*/
+
+
+
+
+	switch (HbtActive)
+					{
+						case hbt1:
+								m_luz.SetLightProperties(100.0,c,);
+							break;
+
+						case hbt2:
+								m_luz.SetLightProperties(100.0,c1,);
+					
+							break;
+
+						case hbt3:
+								m_luz.SetLightProperties(100.0,c2,);
+							break;
+
+						case hbt4:
+								m_luz.SetLightProperties(100.0,c3,);
+							break;
+					}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
 DefaultProperties
 {
 	
@@ -53,7 +106,9 @@ DefaultProperties
 	Components.Add(LaLuz);
 
 	m_ParticleSystem=ParticleSystem'PGameParticles.Particles.CristalesCuarzo'
-	c=(r=0,g=255,b=0)
-	c2=(r=255,g=0,b=0)
+	c=(r=233,g=66,b=12)
+	c1=(r=33,g=171,b=236)
+	c2=(r=179,g=61,b=233)
+	c3=(r=120,g=224,b=30)
 	
 }
