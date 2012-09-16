@@ -33,8 +33,10 @@ var bool UsingScaleform;
 var PGFx pGFx;
 var PGame game;
 
-
-
+var bool m_pupita;
+var MaterialInstanceTimeVarying m_Mater;
+var int m_x,m_y;
+var float m_tickLefazo;
 
 //rr new PauseMenu
 var bool pauseMenu;
@@ -773,19 +775,41 @@ exec function interferenciapantalla()
 	
 
 }
- function pupitaenpantalla()
-{
-	local  MaterialInstanceConstant Mater;
-	Mater = new () class'MaterialInstanceConstant';
 
-	if (Mater != None)
+function pupitaenpantalla()
+{
+	
+	local float puta;
+
+	if (!m_pupita)
 	{
-		Mater.SetParent(Material'PGameHudIco.PointerMaterial');
+		m_Mater = new () class'MaterialInstanceTimeVarying';
+	
+		if (m_Mater != None)
+		{
+			//Mater.SetParent(Material'PGameHudIco.PointerMaterial');
+			m_Mater.SetParent(Material'PGameParticles.Materials.M_Lefazo');
+			m_Mater.SetScalarParameterValue('TickLefazo',0);
+			m_Mater.bAutoActivateAll = true;
+			m_Mater.SetDuration(4);
+		}
+	
+		m_x=300;//Rand(SizeX);
+		m_y=300;//;Rand(SizeY);
+		m_pupita = true;
+		m_Mater.SetParent(Material'PGameHudIco.PointerMaterial');
 	
 	}
+
+	m_tickLefazo=(m_tickLefazo+0.01)%3.0;
 	
-		Canvas.SetPos(300, 300);
-		Canvas.DrawMaterialTile(Mater ,100, 100);
+	
+	m_Mater.SetScalarParameterValue('TickLefazo',m_tickLefazo);
+	m_Mater.GetScalarParameterValue('TickLefazo',puta);
+	
+	//`log("tick lefazo" @m_tickLefazo @puta);
+	Canvas.SetPos(300, 300);
+	Canvas.DrawMaterialTile(m_Mater ,100, 100);
 }
 
 
@@ -873,6 +897,8 @@ function iconosapantalla()
 	{
 		return;
 	}
+
+	pupitaenpantalla();
 
 	// Set up the render delta
 	RenderDelta = WorldInfo.TimeSeconds - LastHUDRenderTime;

@@ -12,7 +12,7 @@ var int ira, max_ira;
 simulated function PostBeginPlay()
 {
 	local int yes;
-	local StaticMeshComponent mesh;
+	local StaticMeshComponent lmesh;
 	//super.PostBeginPlay();
 	Col1 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 	Col2 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
@@ -42,9 +42,9 @@ simulated function PostBeginPlay()
 	{
 		if(ColorMesh.GetSocketByName('Barriga') != none)
 		{
-			mesh = new class'StaticMeshComponent';
-			mesh.SetStaticMesh(StaticMesh'Ogro.ArmaduraBarriga');
-			ColorMesh.AttachComponentToSocket(mesh, 'Barriga');
+			lmesh = new class'StaticMeshComponent';
+			lmesh.SetStaticMesh(StaticMesh'Ogro.ArmaduraBarriga');
+			ColorMesh.AttachComponentToSocket(lmesh, 'Barriga');
 		}
 	}
 
@@ -54,9 +54,9 @@ simulated function PostBeginPlay()
 	{
 		if(ColorMesh.GetSocketByName('Cuernos') != none)
 		{
-			mesh = new class'StaticMeshComponent';
-			mesh.SetStaticMesh(StaticMesh'Ogro.Cuernos');
-			ColorMesh.AttachComponentToSocket(mesh, 'Cuernos');
+			lmesh = new class'StaticMeshComponent';
+			lmesh.SetStaticMesh(StaticMesh'Ogro.Cuernos');
+			ColorMesh.AttachComponentToSocket(lmesh, 'Cuernos');
 		}
 	}
 
@@ -66,9 +66,9 @@ simulated function PostBeginPlay()
 	{
 		if(ColorMesh.GetSocketByName('HombroDerecho') != none)
 		{
-			mesh = new class'StaticMeshComponent';
-			mesh.SetStaticMesh(StaticMesh'Ogro.Hombrera_Derecha');
-			ColorMesh.AttachComponentToSocket(mesh, 'HombroDerecho');
+			lmesh = new class'StaticMeshComponent';
+			lmesh.SetStaticMesh(StaticMesh'Ogro.Hombrera_Derecha');
+			ColorMesh.AttachComponentToSocket(lmesh, 'HombroDerecho');
 		}
 	}
 
@@ -78,9 +78,9 @@ simulated function PostBeginPlay()
 	{
 		if(ColorMesh.GetSocketByName('HombroIzquierdo') != none)
 		{
-			mesh = new class'StaticMeshComponent';
-			mesh.SetStaticMesh(StaticMesh'Ogro.Hombrera_Izquierda');
-			ColorMesh.AttachComponentToSocket(mesh, 'HombroIzquierdo');
+			lmesh = new class'StaticMeshComponent';
+			lmesh.SetStaticMesh(StaticMesh'Ogro.Hombrera_Izquierda');
+			ColorMesh.AttachComponentToSocket(lmesh, 'HombroIzquierdo');
 		}
 	}
 
@@ -90,9 +90,9 @@ simulated function PostBeginPlay()
 	{
 		if(ColorMesh.GetSocketByName('ManoDerecha') != none)
 		{
-			mesh = new class'StaticMeshComponent';
-			mesh.SetStaticMesh(StaticMesh'Ogro.ManoDerecha');
-			ColorMesh.AttachComponentToSocket(mesh, 'ManoDerecha');
+			lmesh = new class'StaticMeshComponent';
+			lmesh.SetStaticMesh(StaticMesh'Ogro.ManoDerecha');
+			ColorMesh.AttachComponentToSocket(lmesh, 'ManoDerecha');
 		}
 	}
 
@@ -102,9 +102,9 @@ simulated function PostBeginPlay()
 	{
 		if(ColorMesh.GetSocketByName('Pelvis') != none)
 		{
-			mesh = new class'StaticMeshComponent';
-			mesh.SetStaticMesh(StaticMesh'Ogro.Cinturon');
-			ColorMesh.AttachComponentToSocket(mesh, 'Pelvis');
+			lmesh = new class'StaticMeshComponent';
+			lmesh.SetStaticMesh(StaticMesh'Ogro.Cinturon');
+			ColorMesh.AttachComponentToSocket(lmesh, 'Pelvis');
 		}
 	}
 }
