@@ -787,25 +787,25 @@ function pupitaenpantalla()
 	
 		if (m_Mater != None)
 		{
-			//Mater.SetParent(Material'PGameHudIco.PointerMaterial');
+			//m_Mater.SetParent(Material'PGameHudIco.PointerMaterial');
 			m_Mater.SetParent(Material'PGameParticles.Materials.M_Lefazo');
-			m_Mater.SetScalarParameterValue('TickLefazo',0);
-			m_Mater.bAutoActivateAll = true;
-			m_Mater.SetDuration(4);
+			//m_Mater.SetScalarParameterValue('TickLefazo',0);
+			//m_Mater.bAutoActivateAll = true;
+			//m_Mater.SetDuration(4);
 		}
 	
 		m_x=300;//Rand(SizeX);
 		m_y=300;//;Rand(SizeY);
 		m_pupita = true;
-		m_Mater.SetParent(Material'PGameHudIco.PointerMaterial');
+		//m_Mater.SetParent(Material'PGameParticles.Materials.M_Lefazo');
 	
 	}
 
 	m_tickLefazo=(m_tickLefazo+0.01)%3.0;
 	
 	
-	m_Mater.SetScalarParameterValue('TickLefazo',m_tickLefazo);
-	m_Mater.GetScalarParameterValue('TickLefazo',puta);
+	//m_Mater.SetScalarParameterValue('TickLefazo',m_tickLefazo);
+	//m_Mater.GetScalarParameterValue('TickLefazo',puta);
 	
 	//`log("tick lefazo" @m_tickLefazo @puta);
 	Canvas.SetPos(300, 300);

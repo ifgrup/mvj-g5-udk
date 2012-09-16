@@ -149,9 +149,6 @@ function Vector GetPosicionSocketCuerpo()
 {
 	local vector sLocation;
 	local rotator sRotation;
-	local SkeletalMeshSocket derp;
-
-	derp = self.Mesh.GetSocketByName('Socket_Cuerpo');
 	self.ColorMesh.GetSocketWorldLocationAndRotation('Socket_Cuerpo',sLocation,sRotation);
 	return sLocation;
 
