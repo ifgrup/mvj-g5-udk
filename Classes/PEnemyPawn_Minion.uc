@@ -12,6 +12,8 @@ var Array<AnimSet> minionAnimSet0, minionAnimSet1;
 var PhysicsAsset minionPhysicsAsset0, minionPhysicsAsset1;
 var Texture2D minionPortrait0, minionPortrait1;
 
+var EmitterSpawnable ParticulasEscudo; //Partículas de escudo hacia el Scout
+
 var int minionId;
 
 function CambiaBicho()
@@ -71,6 +73,16 @@ simulated function PostBeginPlay()
 
 	//ColorMesh.SetMaterial(0, mat);
 
+	//Preparamos las partículas para el escudo hacia el scout
+	ParticulasEscudo = Spawn(class'EmitterSpawnable',Self);
+	ParticulasEscudo.SetTemplate(ParticleSystem'PGameParticles.Particles.FuerzaEscudo');
+	ParticulasEscudo.ParticleSystemComponent.bAutoActivate = false;
+	ParticulasEscudo.ParticleSystemComponent.SetActive(false);
+	
+
+	self.ColorMesh.AttachComponentToSocket(ParticulasEscudo.ParticleSystemComponent,'Socket_Cuerpo');
+
+
 	
 }
 
@@ -108,15 +120,21 @@ function PararEsperar()
 	self.Salta(true);
 }
 
-function activarEscudoScout(PEnemyPawn_Scout scout)
+function activarEscudoScout(PEnemyPawn_Scout scout, float radio)
 {
 	self.GroundSpeed = scout.GroundSpeed; //Igualamos velocidad al scout
-	DrawDebugCylinder(self.Location,scout.Location,5,5,0,0,200,false);
+	//_DEBUG_DrawDebugCylinder(self.Location,scout.Location,10,10,0,0,200,false);
+	ParticulasEscudo.ParticleSystemComponent.SetActive(true);
+	ParticulasEscudo.SetFloatParameter('RangoAtraccion',radio);
+	ParticulasEscudo.SetVectorParameter('Destino',scout.Location);
+
+	
 }
 
 function desactivarEscudoScout()
 {
 	self.GroundSpeed = self.m_defaultGroundSpeed; //Restauramos velocidad
+	ParticulasEscudo.ParticleSystemComponent.SetActive(false);
 	`log("Desactivo");
 }
 
@@ -185,7 +203,7 @@ defaultproperties
 
 		
 
-	GroundSpeed=30.0
+	GroundSpeed=80.0
 	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 100
 }
