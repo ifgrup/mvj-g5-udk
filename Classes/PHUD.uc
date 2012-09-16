@@ -129,7 +129,7 @@ return HitLocation;
 
 function PreCalcValues()
 {
-	//local ASDisplayInfo DI;
+	local ASDisplayInfo DI;
 //	local int margenBotones;
 
 	super.PreCalcValues();
@@ -141,8 +141,10 @@ function PreCalcValues()
 		pGFx.SetViewport(0, 0, SizeX, SizeY);
 		pGFx.SetViewScaleMode(SM_NoScale);
 		pGFx.SetAlignment(Align_TopRight);
-
-
+		DI=pGFx.pmiratierraMC.GetDisplayInfo();
+		DI.X=CenterX;
+		DI.Y=CenterY;
+		pGFx.pmiratierraMC.SetDisplayInfo(DI);
 	}
 }
 
@@ -771,7 +773,7 @@ exec function interferenciapantalla()
 	
 
 }
-exec function pupitaenpantalla()
+ function pupitaenpantalla()
 {
 	local  MaterialInstanceConstant Mater;
 	Mater = new () class'MaterialInstanceConstant';
@@ -779,11 +781,11 @@ exec function pupitaenpantalla()
 	if (Mater != None)
 	{
 		Mater.SetParent(Material'PGameHudIco.PointerMaterial');
-		
+	
 	}
-
-	Canvas.SetPos(SizeX-Rand(SizeX), SizeY-Rand(SizeY));
-		Canvas.DrawMaterialTile(Mater ,1.0, 1.0);
+	
+		Canvas.SetPos(300, 300);
+		Canvas.DrawMaterialTile(Mater ,100, 100);
 }
 
 
