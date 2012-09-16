@@ -492,8 +492,11 @@ function DisparaAPPawn(PPawn giru)
 	//Mesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
 
 	Proj = Projectile (Spawn( m_ClaseMisil ,self,,minionpos,,,True));
-	Proj.Init(Normal(ppawnpos-minionpos));
-	self.m_disparo_posible = false ; //Debe pasar otro intervalo para que vuelva a disparar
+	if (Proj!= None)
+	{
+		Proj.Init(Normal(ppawnpos-minionpos));
+		self.m_disparo_posible = false ; //Debe pasar otro intervalo para que vuelva a disparar
+	}
 }
 
 DefaultProperties
