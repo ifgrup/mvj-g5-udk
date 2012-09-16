@@ -83,7 +83,7 @@ function GestionEscudo()
 			if (Penemy_AI_Bot(helper.Owner).id == self.id)
 			{
 			
-				helper.activarEscudoScout(PEnemyPawn_Scout(self.Pawn));
+				helper.activarEscudoScout(PEnemyPawn_Scout(self.Pawn),m_radio_escudo);
 			
 				Index = m_escudo_info.Find('Pawn', helper);
 				if (Index == INDEX_NONE && helper.life> 0)

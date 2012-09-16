@@ -14,6 +14,7 @@ struct DisparoHielo
 var array<DisparoHielo> m_array_disparos_hielo;
 var float m_radioinicial;
 var float m_alturainicial;
+var float m_MaxTimeParticles; //Tiempo que dura el sistema de partículas
 
 //Funcion definida en PAutoTurret, redefinida en cada hija
 function DisparoTorreta()
@@ -39,7 +40,9 @@ function GeneraNuevaOndaHielo()
 	if (PSC != None)
 	{
 		//PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.PruebaEsferaHielo');
-		PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.ToroideAzul');
+		//PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.ToroideAzul');
+		PSC.SetTemplate(ParticleSystem'PGameParticles.Particles.DonutVictor');
+
 				
 		disparo.ParticulasNieblaHielo = PSC;
 		disparo.Tiempo = 0;
@@ -97,9 +100,30 @@ state Disparando
 {
 	event BeginState(name PreviousStateName)
 	{
+		local rotator r;
+		local quat qat,qy;
+		local vector rx,ry,rz;
+		local int i;
+
 		super.BeginState(PreviousStateName);
 		m_tiempoDesdeAntDisparo = m_TimeoutEntreDisparo -0.2; //Para que nada más empezar dispare
 
+		for (i=0;i<m_array_disparos_hielo.Length;i++)
+		{
+
+			//hay que orientar en la perpendicular
+			//r=rotator(-m_NormalSuelo);
+			/*
+			qat = QuatFromRotator(r);
+			GetAxes(r,rx,ry,rz);
+			qy  = QuatFromAxisAndAngle(ry,-90*DegToRad);
+			qat = QuatProduct(qy,qat);
+			r= QuatToRotator(qat);
+			*/
+			r=self.Rotation;
+			m_array_disparos_hielo[i].ParticulasNieblaHielo.SetRotation(r);
+
+		}
 	}
 
 	function Tick(float DeltaTime)
@@ -118,10 +142,13 @@ state Disparando
 
 		super.Tick(DeltaTime);
 
+
+
+
 		for (i=0;i<m_array_disparos_hielo.Length;i++)
 		{
 			m_array_disparos_hielo[i].Tiempo += DeltaTime;
-			if (m_array_disparos_hielo[i].Tiempo > 6)
+			if (m_array_disparos_hielo[i].Tiempo > m_MaxTimeParticles)
 			{
 				//Si ha pasado el tiempo, la eliminamos. Primero marcamos como borrable, y luego borramos
 				m_array_disparos_hielo[i].borrar = true;
@@ -130,31 +157,10 @@ state Disparando
 			{
 				//Incrementamos radio, aplicamos damage, y movemos la partícula sinusoidalmente (toma palabrita ;) 
 				tiempo_i = m_array_disparos_hielo[i].Tiempo;
-				radio_i = m_radioinicial + tiempo_i * 70; 
-				radio_v.X = radio_i;
-				radio_v.y = radio_i;
-				radio_v.z = 500;
-				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('RadioToroide',radio_i); 
-				
-				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetVectorParameter('RadioToroide',radio_v); 
+				radio_i = m_radioinicial + tiempo_i * 45; 
 				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('RadioCilindro',radio_i); 
-				parasin = 200 + sin (tiempo_i*2) * 150;
-				`log ("Altura "@parasin);
-				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('AlturaCilindro',parasin); 
-				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('AlturaCilindro',100); 
 				
-				
-				//hay que orientar en la perpendicular
-				r=rotator(-m_NormalSuelo);
-				qat = QuatFromRotator(r);
-				GetAxes(r,rx,ry,rz);
-				qy  = QuatFromAxisAndAngle(ry,-90*DegToRad);
-				qat = QuatProduct(qy,qat);
-				r= QuatToRotator(qat);
-				m_array_disparos_hielo[i].ParticulasNieblaHielo.SetRotation(r);
-
-
-				DrawDebugSphere(self.Location,radio_i,5,255,255,255,false);
+				//DrawDebugSphere(self.Location,radio_i,30,255,255,255,false);
 
 				//Sólo recalculamos damage cada medio segundo, no vale la pena cargar a cada tick
 				if ((tiempo_i - m_array_disparos_hielo[i].tiempo_anterior_hurt)>0.5)
@@ -168,11 +174,13 @@ state Disparando
 				//m_array_disparos_hielo[i].ParticulasNieblaHielo.SetFloatParameter('ParamAltura',sin(tiempo_i)); //Al principio abajo del todo
 			}
 		}
+		//Eliminamos las que ya se han acabado
 		for (i=0;i<m_array_disparos_hielo.Length;i++)
 		{
 			if(m_array_disparos_hielo[i].borrar)
 			{
 				m_array_disparos_hielo[i].ParticulasNieblaHielo.Destroy();
+				m_array_disparos_hielo[i].ParticulasNieblaHielo = None;
 				m_array_disparos_hielo.Remove(i,1);
 			}
 		}
@@ -287,7 +295,8 @@ defaultproperties
 	TurretHealth=500
 	RoundsPerSec=50
 	m_TimeoutEntreDisparo=10 //Disparo de hielo cada 3 segundos
-	m_radioinicial = 300;
+	m_radioinicial = 200;
 	m_alturainicial = 300;
+	m_MaxTimeParticles = 11;
 
 }

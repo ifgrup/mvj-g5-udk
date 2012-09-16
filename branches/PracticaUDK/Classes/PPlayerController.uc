@@ -1431,15 +1431,8 @@ exec function MiddleMouseScrollDown()
   HandleMouseInput(ScrollWheelDown, IE_Pressed);
 }
 
-exec function ice()
-{
-	
-	m_donde_victor = pawn.Location;
-	m_floor_victor = pawn.Floor;
-	settimer(2,false,'pontorretahielo');
-}
 
-function pontorretahielo ()
+exec function ice (int i=0)
 {
 	local pturretice ti;
 	local rotator r;
@@ -1455,7 +1448,10 @@ function pontorretahielo ()
 	pHUD.Canvas.DeProject(p2,wp2,wp);
 	newfloor = wp2-wp1;
 */
-	if (m_torreta_victor != None)
+	m_donde_victor = pawn.Location;
+	m_floor_victor = pawn.Floor;
+
+	if (i!=0 && m_torreta_victor != None)
 	{
 		m_torreta_victor.Destroy();
 		m_torreta_victor = None;
@@ -1468,16 +1464,19 @@ function pontorretahielo ()
 		ti=spawn(class'PTurretIce', ,,m_donde_victor,r);
 		ti.m_TiempoEnConstruccion = 0.1;
 		ti.setNormalSuelo(m_floor_victor);
+		DrawDebugCylinder(pawn.Location,pawn.Location+ pawn.Floor*300,10,30,200,200,0,true);
 		m_torreta_victor = ti;
 		//m_torreta_victor.SetCollision(false,false,true);
 		//m_torreta_victor.SetCollisionType(COLLIDE_NoCollision);
-		//m_torreta_victor.DisparoTorreta();
-		//m_torreta_victor.GotoState('Disparando');
 	}
+	
+	m_torreta_victor.DisparoTorreta();
+	m_torreta_victor.GotoState('Disparando');
+	
 
 }
 
-exec function icer(int radio, int altura)
+exec function iceradio(int radio, int altura)
 {
 	m_torreta_victor.m_radioinicial = radio;
 	m_torreta_victor.m_alturainicial = altura;
