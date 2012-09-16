@@ -491,6 +491,6 @@ defaultproperties
 	//m_CentroPlaneta=(X=528,Y=144,Z=8752)
 	m_CentroPlaneta=(X=0.000000,Y=0.000000,Z=0.000000)
 	NodosCreados=false
-	m_max_radiorandom = 100;
-	m_min_radiorandom = 400;
+	m_max_radiorandom=100;
+	m_min_radiorandom=400;
 }
