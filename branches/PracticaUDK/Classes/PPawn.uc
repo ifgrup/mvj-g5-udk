@@ -204,6 +204,11 @@ singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
 		//_DEBUG_ ("Bump contra Noseque"@Other.Name);
 		ReboteRespectoA(Other,200);
 	}
+
+	if(PTree(other) != None)
+	{
+		PTree(other).Toque();
+	}
 	
 }
 
@@ -682,7 +687,7 @@ state PawnFalling
 
 		GotoState('');
 		PC = PPlayerController(Instigator.Controller);
-		PC.ClientMessage("HitWallPawn");
+		//_DEBUG_PC.ClientMessage("HitWallPawn");
 
 		if (PGame(Worldinfo.game).EsPlaneta(Wall))
 		{
@@ -785,7 +790,7 @@ state PawnFallingSky
 			return; //Lo ignoramos, para que siga cayendo
 		}
 		PC = PPlayerController(Instigator.Controller);
-		PC.ClientMessage("HitWallPawn al caer del cielo_________________________________________");
+		//_DEBUG_PC.ClientMessage("HitWallPawn al caer del cielo_________________________________________");
 		
 		if (  PGame(Worldinfo.game).EsPlaneta(Wall))
 		{
