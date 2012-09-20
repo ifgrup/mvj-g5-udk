@@ -484,6 +484,7 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 
 	local PEnemy Pbump;
 	local PAutoTurret ptorreta;
+	local PTree parbol;
 
 	if ( (Other == None) || Other.bStatic )
 		return;
@@ -511,6 +512,13 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	{
 		`log("Bump torreta!");
 		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
+	}
+
+	parbol = PTree(Other);
+	if ( parbol != None )  //Si nos chocamos contra un arbol
+	{
+		`log("S'ha comio un árbol neng!" @self.Name @Other.Name);
+		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
 
 	
@@ -571,6 +579,7 @@ singular event BaseChange()
 	}
 	
 }//BaseChange
+
 
 event Touch(actor other, PrimitiveComponent othercomp,vector HitLocation,vector HitNormal)
 {

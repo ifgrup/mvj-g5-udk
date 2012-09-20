@@ -56,7 +56,7 @@ function Tick(Float Deltatime)
 	}
 	if (m_Floor != vect(0,0,0))
 	{
-		DrawDebugCylinder(self.Pawn.Location,self.Pawn.Location+m_Floor*100,4,4,0,0,1,false);
+		//DrawDebugCylinder(self.Pawn.Location,self.Pawn.Location+m_Floor*100,4,4,0,0,1,false);
 	}
 	
 	//Control de timing entre disparos
@@ -317,7 +317,7 @@ function ReboteRespectoA(Actor Other, vector hitnormal,bool bRandom, float altur
 		v = vector(QuatToRotator(ernion));
 
 		v = normal (v) * Vsize(self.Pawn.Velocity)*30; //Nueva velocidad
-		DrawDebugCylinder(self.Pawn.Location,self.Pawn.Location+normal (self.Pawn.Velocity) * 100,5,5,0,200,0,false);
+		//DrawDebugCylinder(self.Pawn.Location,self.Pawn.Location+normal (self.Pawn.Velocity) * 100,5,5,0,200,0,false);
 	}
 	else
 	{
@@ -334,7 +334,7 @@ function ReboteRespectoA(Actor Other, vector hitnormal,bool bRandom, float altur
 	self.pawn.SetLocation(newLocation);
 
 	m_velocidadRebote = v;
-	DrawDebugSphere(m_nodo_para_rebote.Location,25,5,200,0,0,false);
+	//DrawDebugSphere(m_nodo_para_rebote.Location,25,5,200,0,0,false);
 	
 	if (!self.IsInState('Rebotando'))
 	{
@@ -376,44 +376,7 @@ function vector ProyectarPuntoSuelo(vector punto)
 	return newLocation;
 }
 
-/*Desplazamos el pawn en la dirección contraria a la velocidad que llevaba, y punto, y aplicamos toque a la torreta*/
-function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
-{
-	local Vector newLocation;
-
-	if (m_ChocandoContraTorreta)
-	{
-		return;
-	}
-	m_ChocandoContraTorreta = true;
-
-
-	newLocation = self.Pawn.Location - (normal(self.Pawn.Velocity) * 0.6* dist);
-	newLocation = newLocation + (normal(vrand()) * 0.4*dist); //40% de random, a ver si puede ser...
-
-	self.StopLatentExecution();
-	self.Velocity = vect(0,0,0);
-	self.Acceleration = vect (0,0,0);
-	self.pawn.Velocity = vect(0,0,0);
-	self.pawn.Acceleration = vect (0,0,0);
-	
-	m_posContraTorreta = self.ProyectarPuntoSuelo(newLocation);
-
-	//_DEBUG_DrawDebugCylinder(self.Pawn.Location,m_posContraTorreta,3,3,200,0,0,false);
-	//_DEBUG_DrawDebugSphere(m_posContraTorreta,15,4,0,1,0,false);
-
-	//Aplicamos choque a la torreta!!
-	if (PAutoTurret(torreta) != None)
-	{
-		PAutoTurret(torreta).Toque();
-	}
-
-	if (!self.IsInState('TonyaoContraTorreta'))
-	{
-		self.PushState('TonyaoContraTorreta');
-	}
-}
-
+function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta);
 
 
 state TonyaoContraTorreta
@@ -436,7 +399,7 @@ state TonyaoContraTorreta
 			m_currentDespContraTorreta += vsize(desp);
 			//_DEBUG `log("current desp "@self.Name @m_currentDespContraTorreta);
 	
-			DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
+			//DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
 		}
 
 		if (m_currentDespContraTorreta >= m_despContraTorreta && !m_bPausaContraTorreta)

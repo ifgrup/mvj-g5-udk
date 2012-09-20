@@ -200,8 +200,16 @@ function Toque()
 	self.m_toques++;
 	if (m_toques >= m_toquesToDestroy)
 	{
-		self.Destroy();
+		Destruccion();
 	}
+}
+
+function Destruccion()
+{
+	//Partículas y demás, y Destroy
+	`log("Destruccion torreta "@self.Name);
+	//DrawDebugSphere(self.Location,200,100,200,0,0,true);
+	self.Destroy();
 }
 
  //Para sistema de partículas en construccion

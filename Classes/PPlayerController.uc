@@ -109,7 +109,7 @@ exec function ActivateDecals()
 {
 	PGame(WorldInfo.Game).bActivateDecalsOnWalk = !PGame(WorldInfo.Game).bActivateDecalsOnWalk;
 
-	ClientMessage("Estado de las decals"@PGame(WorldInfo.Game).bActivateDecalsOnWalk);
+	//_DEBUG_ClientMessage("Estado de las decals"@PGame(WorldInfo.Game).bActivateDecalsOnWalk);
 }
 
 
@@ -161,7 +161,7 @@ state PlayerWalking
 {
 	event BeginState(Name PreviousStateName)
 	{
-		ClientMessage("Vamos al estado Spidering");
+		//_DEBUG_ClientMessage("Vamos al estado Spidering");
 		//_DEBUG_ ("******************************Inicio de PlayerControler en PlayerWalking********************");
 		GotoState('PlayerSpidering');
 	}
@@ -394,7 +394,7 @@ state PlayerSpidering
 
 			if ( bPressedJump )
 			{
-				ClientMessage("Va a saltar");
+				//_DEBUG_ClientMessage("Va a saltar");
 				PPawn(Pawn).DoJump(bUpdating);
 			}
 
@@ -1355,6 +1355,7 @@ exec function vuela()
 	local PHUD pHUD;
 
 	pHUD = PHUD(myHUD);
+	
 	//Si estamos en el suelo, pasamos al estado de preparar el salto, pero no actualizamos el booleano
 	//de bEarthNotFlying hasta que realmente estemos en el aire. 
 
@@ -1372,6 +1373,10 @@ exec function vuela()
 	}
 }
 
+exec function pantallazo()
+{
+	consolecommand("shot");
+}
 // Called when the left mouse button is pressed
 exec function LeftMousePressed()
 {
@@ -1464,7 +1469,7 @@ exec function ice (int i=0)
 		ti=spawn(class'PTurretIce', ,,m_donde_victor,r);
 		ti.m_TiempoEnConstruccion = 0.1;
 		ti.setNormalSuelo(m_floor_victor);
-		DrawDebugCylinder(pawn.Location,pawn.Location+ pawn.Floor*300,10,30,200,200,0,true);
+		//DrawDebugCylinder(pawn.Location,pawn.Location+ pawn.Floor*300,10,30,200,200,0,true);
 		m_torreta_victor = ti;
 		//m_torreta_victor.SetCollision(false,false,true);
 		//m_torreta_victor.SetCollisionType(COLLIDE_NoCollision);

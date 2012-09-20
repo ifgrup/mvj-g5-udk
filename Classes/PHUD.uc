@@ -898,7 +898,7 @@ function iconosapantalla()
 		return;
 	}
 
-	pupitaenpantalla();
+	//pupitaenpantalla();
 
 	// Set up the render delta
 	RenderDelta = WorldInfo.TimeSeconds - LastHUDRenderTime;
