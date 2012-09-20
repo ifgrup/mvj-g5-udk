@@ -485,7 +485,7 @@ defaultproperties
     	bScoreDeaths=false
 	fDecalSize=256.0f
 	bActivateDecalsOnWalk=false
-	creditos=1000000
+	creditos=100000
 	bEarthNotFlying=true
 	bDelayedStart=false
 	//m_CentroPlaneta=(X=528,Y=144,Z=8752)

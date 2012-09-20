@@ -139,6 +139,36 @@ function GestionEscudo()
 }
 
 
+function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
+{
+
+	if (m_ChocandoContraTorreta)
+	{
+		`log("Evito Recursividad "@self.Name @torreta.Name);
+		return;
+	}
+	m_ChocandoContraTorreta = true;
+
+	//Se supone que llega aquí sólo si se ha comido un árbol o una torreta. Y lo que tiene que hacer en ambos
+	//casos es cicutriñárselo... so..
+
+	if(PAutoTurret(torreta)!=None)
+	{
+		`log("Scout se come torreta" @self.Name);
+		PAutoTurret(torreta).Destruccion();
+	}
+
+	if(PTree(torreta)!=None)
+	{
+		`log("Scout se come arbol" @self.Name);
+		PTree(torreta).Destruccion();
+	}
+	
+	m_ChocandoContraTorreta = false;
+}
+
+
+
 function SetColor(LinearColor Col)
 {
 	ColorDecal = Col;
@@ -176,7 +206,7 @@ function  NextPath()
 	}
 
 	// me lo asigno
-	PGame(WorldInfo.Game).Broadcast(self, "Voy hacia el nodo "@pWNodos[j].Name);
+	//_DEBUG_ PGame(WorldInfo.Game).Broadcast(self, "Voy hacia el nodo "@pWNodos[j].Name);
 	//DrawDebugSphere(pWNodos[j].Location, 500, 10, 0, 255, 0, true);
 	m_Destination = pWNodos[j];
 	m_CurrentDestination = m_Destination.Location;

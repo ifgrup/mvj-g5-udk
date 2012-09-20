@@ -87,22 +87,12 @@ state NuevoTarget
 	}
 }
 
-state Idle //ÑAPAAAAAAAAAAAA TEMPORALLLLLLLLL
-{
-	event BeginState(Name PreviousStateName)
-	{
-		
-		GoToState('Disparando');
-	}
-}
 
 state Disparando
 {
 	event BeginState(name PreviousStateName)
 	{
 		local rotator r;
-		local quat qat,qy;
-		local vector rx,ry,rz;
 		local int i;
 
 		super.BeginState(PreviousStateName);
@@ -110,16 +100,6 @@ state Disparando
 
 		for (i=0;i<m_array_disparos_hielo.Length;i++)
 		{
-
-			//hay que orientar en la perpendicular
-			//r=rotator(-m_NormalSuelo);
-			/*
-			qat = QuatFromRotator(r);
-			GetAxes(r,rx,ry,rz);
-			qy  = QuatFromAxisAndAngle(ry,-90*DegToRad);
-			qat = QuatProduct(qy,qat);
-			r= QuatToRotator(qat);
-			*/
 			r=self.Rotation;
 			m_array_disparos_hielo[i].ParticulasNieblaHielo.SetRotation(r);
 
@@ -134,16 +114,8 @@ state Disparando
 		local int i;
 		local float tiempo_i;
 		local float radio_i;
-		local vector radio_v;
-		local rotator r;
-		local quat qat,qy;
-		local vector rx,ry,rz;
-		local float parasin;
 
 		super.Tick(DeltaTime);
-
-
-
 
 		for (i=0;i<m_array_disparos_hielo.Length;i++)
 		{

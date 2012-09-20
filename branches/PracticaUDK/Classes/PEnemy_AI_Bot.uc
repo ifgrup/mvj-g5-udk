@@ -53,7 +53,14 @@ function EstanLosColegasCercaNeng()
 	local float distscout,distcolega,distscoutmio,distscoutcolega;
 
 	PGame(Worldinfo.Game).GetVectorEnemigos(self.id, colegas,elscout);
+
+	if(elscout == None)
+	{
+		return;
+	}
+
 	distscout = vsize(self.Pawn.Location-elscout.Pawn.Location);
+
 	if (distscout < m_dist_choque_Scout)
 	{
 		Parar();
@@ -82,6 +89,52 @@ function EstanLosColegasCercaNeng()
 			}
 
 		}
+	}
+}
+
+
+/*Desplazamos el pawn en la dirección contraria a la velocidad que llevaba, y punto, y aplicamos toque a la torreta*/
+function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
+{
+	local Vector newLocation;
+
+	if (m_ChocandoContraTorreta)
+	{
+		return;
+	}
+	m_ChocandoContraTorreta = true;
+
+
+	newLocation = self.Pawn.Location - (normal(self.Pawn.Velocity) * 0.6* dist);
+	newLocation = newLocation + (normal(vrand()) * 0.4*dist); //40% de random, a ver si puede ser...
+
+	self.StopLatentExecution();
+	self.Velocity = vect(0,0,0);
+	self.Acceleration = vect (0,0,0);
+	self.pawn.Velocity = vect(0,0,0);
+	self.pawn.Acceleration = vect (0,0,0);
+	
+	m_posContraTorreta = self.ProyectarPuntoSuelo(newLocation);
+
+	//_DEBUG_DrawDebugCylinder(self.Pawn.Location,m_posContraTorreta,3,3,200,0,0,false);
+	//_DEBUG_DrawDebugSphere(m_posContraTorreta,15,4,0,1,0,false);
+
+	//Aplicamos choque a la torreta!!
+	if (PAutoTurret(torreta) != None)
+	{
+		PAutoTurret(torreta).Toque();
+	}
+
+	//Y al árbol (SI, lo se. Tendríamos que haber hecho que torretas y árboles heredaran de lo mismo...
+	if (PTree(torreta) != None)
+	{
+		`log("Minion contra arbol" @self.Name);
+		PTree(torreta).Toque();
+	}
+
+	if (!self.IsInState('TonyaoContraTorreta'))
+	{
+		self.PushState('TonyaoContraTorreta');
 	}
 }
 
@@ -585,7 +638,7 @@ state TowerAttack
 		super.Tick(delta);
 		if (m_tiempo_tick < 10 )
 		{
-			DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,false);
+			//DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,false);
 			self.Pawn.Acceleration = vect (0,0,0);
 			self.Pawn.Velocity = vect(0,0,0);
 		}
