@@ -214,6 +214,8 @@ state Rebotando
 
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
+		local rotator rot;
+
 		if (m_ya_en_suelo)
 		{
 			return;
@@ -223,9 +225,10 @@ state Rebotando
 
 		if (PGame(Worldinfo.game).EsPlaneta(Wall))
 		{
-			//OrientarPawnPorNormal(HitNormal,routPawn);
 			self.SetBase(Wall,hitnormal);
 			pawn.SetBase(Wall, HitNormal);
+			PEnemy(pawn).OrientarPEnemyPorNormal(HitNormal, rot);
+			pawn.SetRotation(rot);
 			`log("Pop 1");
 			self.PopState();
 		}
@@ -237,6 +240,8 @@ state Rebotando
 	
 	function BumpContraSuelo(Actor suelo, vector HitNormal)
 	{
+		local rotator rot;
+
 		if (m_ya_en_suelo)
 		{
 			return;
@@ -245,6 +250,9 @@ state Rebotando
 		m_ya_en_suelo = true;
 		self.SetBase(suelo, HitNormal);
 		pawn.SetBase(suelo, HitNormal);
+		PEnemy(pawn).OrientarPEnemyPorNormal(HitNormal, rot);
+		pawn.SetRotation(rot);
+
 		`log("Pop 2");
 		self.PopState();
 		

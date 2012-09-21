@@ -30,6 +30,23 @@ function SetColor(LinearColor Col)
 	
 }
 
+function OrientarPEnemyPorNormal ( Vector normalsuelo, out Rotator pawnRotation)
+{
+	local Rotator rPawn;
+	local Vector rX,rY,rZ;
+	local Quat quatRZ,quatNormal;
+
+	rPawn=Rotator(-normalsuelo);
+
+	quatNormal=QuatFromRotator(rPawn);
+	GetAxes(rPawn,rX,rY,rZ);
+	quatRZ=QuatFromAxisAndAngle(rY,-90*DegToRad);
+	quatRZ=QuatProduct(quatRZ,quatNormal);
+	rPawn=QuatToRotator(quatRZ);
+	pawnRotation=rPawn;
+}
+
+
 function ApplyGravity(float DeltaTime)
 {
 		local Vector Gravity;

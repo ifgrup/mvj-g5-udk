@@ -494,6 +494,11 @@ singular event BaseChange()
 		 else
 		 {
 			//Por si nos subimos a un extremo de un objeto y el spyder trepa...
+			if(PTree(Base) != None)
+			{
+				PTree(Base).Toque();
+			}
+
 			ReboteRespectoA(Base, 200);
 			/* Esto era la opción de simplemente alejarlo un pelín, pero daba problemas
 			 * No lo borro just in case, aunque si se demuestra que lo del rebote funciona, a eliminarlo ;)
@@ -772,6 +777,13 @@ state PawnFallingSky
 			//_DEBUG_ ("Bump contra el escudo, lo ignoramos");
 			return; //lo ignoramos, para que siga cayendo
 		}
+		else if (PTree(Other)!=None)
+		{
+			//_DEBUG_ ("Bump contra el escudo, lo ignoramos");
+			PTree(Other).Destruccion(); //Nos cargamos el árbol y punto
+			return; //lo ignoramos, para que siga cayendo
+		}
+
 		else
 		{
 			//_DEBUG_ ("Bump contra NO SE QUÉ!!! CUIDADOOOOOOO!!!");
@@ -806,6 +818,10 @@ state PawnFallingSky
 			//Guardamos la normal del piñazo para luego orientar el Pawn más tade
 			m_NormalAlCaerSuelo=HitNormal;
 			GoToState('PawnRecienCaido'); 
+		}
+		else if (PTree(Wall)!=None)
+		{
+			PTree(Wall).Destruccion();
 		}
 		else
 		{
