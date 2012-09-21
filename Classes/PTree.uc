@@ -14,26 +14,32 @@ var MaterialInstanceConstant mat;
 var int m_toques; //toques que lleva recibido de los minions
 var int m_toquesToDestroy; //máximo de toques que soporta antes de destruirse
 
-var bool m_caer; //Está el árbol cayendo?
+var bool m_temblar_arbol; //Está el árbol temblando?
 var Quat m_QuatInicial; //Para la caída
-var vector m_ejeCaida;
-var float m_anguloCaida;
+var vector m_ejeTemblor;
+var float m_anguloTemblor;
+var float m_tiempoTemblor;
+var array<float> m_angulos_temblor; //Array de angulos del tembleque. Debe tener 8 posiciones, una para cada medio segundo
+var int m_idx_temblor; //para acceder al vector anterior
+var float m_tiempoLastTemblor;
+var rotator m_rotInicial;
+var vector m_pos_inicial;
 
 event Bump(Actor Other, PrimitiveComponent OtherComp,vector VectorHitNormal)
 {
-	local int kk;
-	kk=0;
-	kk=kk+1;
+	self.SetLocation(m_pos_inicial);
 }
 
 event Touch(Actor Other, PrimitiveComponent OtherComp,Vector HitLocation,Vector HitNormal)
 {
-	local int kk;
-	kk=0;
-	kk=kk+1;
-
+	self.SetLocation(m_pos_inicial);
 }
 
+event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
+{
+	self.SetLocation(m_pos_inicial);
+	return;
+}
 
 
 simulated function PostBeginPlay()
@@ -42,6 +48,8 @@ simulated function PostBeginPlay()
 	local SkeletalMesh sk;
 	local PhysicsAsset pa;
 	local array<MaterialInstanceConstant> m;
+	local vector rx,ry,rz;
+
 
 	i=Rand(3);
 	switch(i)
@@ -77,72 +85,107 @@ simulated function PostBeginPlay()
 
 	j = Rand(m.Length);
 	TreeMesh.SetMaterial(0, m[j]);
+	
+	//Guardo la posición inicial
+	m_pos_inicial = self.Location;
+
+	m_angulos_temblor.AddItem(-4);
+	m_angulos_temblor.AddItem(4);
+	m_angulos_temblor.AddItem(-3);
+	m_angulos_temblor.AddItem(3);
+	m_angulos_temblor.AddItem(-2);
+	m_angulos_temblor.AddItem(2);
+	m_angulos_temblor.AddItem(-1);
+	m_angulos_temblor.AddItem(1);
+
+	//Posicion inicial. para tenerla siempre guardada
+	m_QuatInicial = QuatFromRotator(self.treemesh.Rotation);
+	GetAxes(self.treemesh.Rotation,rx,ry,rz);
+	m_rotInicial = self.treemesh.Rotation;
+	m_ejeTemblor = ry;
 }
 
 function Toque()
 {
 	m_toques ++;
+	TemblarArbol();
+
 	if (m_toques >= m_toquesToDestroy )
 	{
 		Destruccion();
 	}
+}
+function TemblarArbol()
+{
+	`log("Tembleque " @self.Name);
+
+	if (m_temblar_arbol)
+	{
+		return; //intento de evitar toques recursivos
+	}
+	m_temblar_arbol = true;
+	m_tiempoTemblor = 0;
+	//Restauramos la posición inicial, por si llega un toque en medio de otro toque.
+	self.treemesh.SetRotation(m_rotInicial);
 }
 
 function Destruccion()
 {
 	//Se llama cuando se llega a los n toques de los minions, o bien cuando se la come un ogro.
 	//Debemos mostrar el sistema de partículas de las hojas y dejar el troncho del árbol
-	local vector rx,ry,rz;
-    if (m_caer)
-    {
-		return;
-    }
-
-	GetAxes(self.Rotation,rx,ry,rz);
+	self.bWorldGeometry = false;
+	self.SetCollision(false,false,false);
 	`log("Destruccion arbol "@self.Name);
-
-	m_QuatInicial = QuatFromRotator(self.Rotation);
-	m_ejeCaida = ry;
-	m_caer = true; //Para que en el tick se tire pabajo
-	//self.SetCollision(false,false,false);
+	self.Destroy();
 }
 
 event Tick(float delta)
 {
-	local rotator r1,r2;
 	local Quat qActual,ernion;
 
-	if (!m_caer)
+	if (!m_temblar_arbol)
 	{
 		return;
 	}
-	Destroy();
-	return;
+	
+	m_tiempoTemblor += delta;
+	if (m_idx_temblor >=  m_angulos_temblor.Length)
+	{
+		m_tiempoTemblor = 0;
+		m_tiempoLastTemblor = 0;
+		m_temblar_arbol = false;
+		m_idx_temblor = 0;
+		//Restauramos la posición inicial porsiaca
+		`log("restauro "@self.Name);
+		self.treemesh.SetRotation(m_rotInicial);
+		//self.SetRotation(m_rotInicial);
+		return;
+	}
 
+	if ( (m_tiempoTemblor - m_tiempoLastTemblor) > 0.1)
+	{
+		//tembleque cada 0.2 segundos
+		m_tiempoLastTemblor = m_tiempoTemblor;
+	}
+	else
+	{
+		return;
+	}
 
-	m_anguloCaida += delta*10;
+	
+	m_anguloTemblor = m_angulos_temblor[m_idx_temblor];
+	m_idx_temblor = m_idx_temblor +1; //Inc después para que cuente el cero
+	`log("angulo temblor "@m_anguloTemblor);
 
-	`log("Angulo caida " @m_anguloCaida);
-
-	ernion =  QuatFromAxisAndAngle(m_ejeCaida,-m_anguloCaida*DegToRad); 
+	ernion =  QuatFromAxisAndAngle(m_ejeTemblor,m_anguloTemblor*DegToRad); 
 	qActual =  QuatProduct(ernion,m_QuatInicial);
 
 	//DrawDebugCylinder(self.Location,self.Location+vector(QuatToRotator(qActual))*100,14,14,200,0,0,false); //origen rojo
 	//DrawDebugCylinder(self.Location,self.Location+vector(r2)*100,10,10,0,0,200,true); //destino azul
 		
 	self.treemesh.SetRotation(QuatToRotator(qActual));
-	self.SetRotation(QuatToRotator(qActual));
-	
-	self.TreeMesh.ForceUpdate(true);
-	self.ForceUpdateComponents();
+	//self.SetRotation(QuatToRotator(qActual));
 
-	if (m_anguloCaida > 80 )
-	{
-		//Ya ha llegado a la orientación final
-		//DrawDebugSphere(self.Location,120,20,0,200,0,true);
-		Destroy();
-	}
-	
 }
 
 defaultproperties
@@ -181,6 +224,7 @@ defaultproperties
 	bCollideWorld=true
 	//CollisionType=COLLIDE_BlockAll
 	Components.Add(tree) 
-	m_toquesToDestroy = 10
+	m_toquesToDestroy = 20
 	Physics=PHYS_None
+	bWorldGeometry=true
 }
