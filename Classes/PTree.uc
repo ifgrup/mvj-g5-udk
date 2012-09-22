@@ -9,6 +9,11 @@ var PhysicsAsset physAsset1;
 var SkeletalMesh skMesh2;
 var PhysicsAsset physAsset2;
 
+var StaticMesh stMesh0;
+var StaticMesh stMesh1;
+var StaticMesh stMesh2;
+var StaticMesh meshTocon;
+
 var MaterialInstanceConstant mat;
 
 var int m_toques; //toques que lleva recibido de los minions
@@ -57,6 +62,7 @@ simulated function PostBeginPlay()
 	case 0:
 		sk=skMesh0;
 		pa=physAsset0;
+		meshTocon=stMesh0;
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol01_MAT_01');
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol01_MAT_02');
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol01_MAT_03');
@@ -65,6 +71,7 @@ simulated function PostBeginPlay()
 	case 1:
 		sk=skMesh1;
 		pa=physAsset1;
+		meshTocon=stMesh1;
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol03_MAT_01');
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol03_MAT_02');
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol03_MAT_03');
@@ -73,6 +80,7 @@ simulated function PostBeginPlay()
 	case 2:
 		sk=skMesh2;
 		pa=physAsset2;
+		meshTocon=stMesh2;
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol04_MAT_01');
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol04_MAT_02');
 		m.AddItem(MaterialInstanceConstant'Vegetacion.Materials.Arbol04_MAT_03');
@@ -105,6 +113,26 @@ simulated function PostBeginPlay()
 	m_ejeTemblor = ry;
 }
 
+static final function vector MatrixGetScale(Matrix TM)
+{
+    local Vector s;
+    s.x = sqrt(TM.XPlane.X**2 + TM.XPlane.Y**2 + TM.XPlane.Z**2);
+    s.y = sqrt(TM.YPlane.X**2 + TM.YPlane.Y**2 + TM.YPlane.Z**2);
+    s.z = sqrt(TM.ZPlane.X**2 + TM.ZPlane.Y**2 + TM.ZPlane.Z**2);
+    return s;
+}
+
+event Destroyed()
+{
+	local PTreeDestruido tocon;
+	
+	//PGame(WorldInfo.Game).Broadcast(self, Other.Name @ " me ha bumpeado!");
+	tocon = Spawn(class'PTreeDestruido',,,self.Location,self.Rotation);
+	tocon.SetDrawScale3D(self.DrawScale3D);
+	tocon.SetStaticMesh(meshTocon);
+	WorldInfo.ForceGarbageCollection();
+}
+
 function Toque()
 {
 	m_toques ++;
@@ -115,6 +143,7 @@ function Toque()
 		Destruccion();
 	}
 }
+
 function TemblarArbol()
 {
 	`log("Tembleque " @self.Name);
@@ -209,10 +238,13 @@ defaultproperties
 
 	TreeMesh=tree
 	skMesh0=SkeletalMesh'Vegetacion.Arbol01'
+	stMesh0=StaticMesh'Vegetacion.Arbol01_Tocon'
 	physAsset0=PhysicsAsset'Vegetacion.Arbol01_Physics'
 	skMesh1=SkeletalMesh'Vegetacion.Arbol03'
+	stMesh1=StaticMesh'Vegetacion.Arbol03_Tocon'
 	physAsset1=PhysicsAsset'Vegetacion.Arbol03_Physics'
 	skMesh2=SkeletalMesh'Vegetacion.Arbol04'
+	stMesh2=StaticMesh'Vegetacion.Arbol04_Tocon'
 	physAsset2=PhysicsAsset'Vegetacion.Arbol04_Physics'
 
 	CollisionComponent=tree
@@ -223,7 +255,7 @@ defaultproperties
 	bCollideWorld=true
 	//CollisionType=COLLIDE_BlockAll
 	Components.Add(tree) 
-	m_toquesToDestroy = 20
+	m_toquesToDestroy=5
 	Physics=PHYS_None
 	bWorldGeometry=true
 }

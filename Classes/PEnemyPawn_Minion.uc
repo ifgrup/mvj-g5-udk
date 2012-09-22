@@ -24,12 +24,12 @@ function CambiaBicho()
 	{
 		case 0: //Murciégalo
 			ColorMesh.SetSkeletalMesh(minionMesh0,true);
-			//ColorMesh.SetMaterial(0,minionMaterial0);
+			ColorMesh.SetMaterial(0,minionMaterial0);
 			ColorMesh.SetPhysicsAsset(minionPhysicsAsset0);
-			//ColorMesh.AnimSets=minionAnimSet0;
-			//ColorMesh.SetAnimTreeTemplate(minionAnimTree0);
-			translation.Z = 3;
-			ColorMesh.SetTranslation(translation);
+			ColorMesh.AnimSets=minionAnimSet0;
+			ColorMesh.SetAnimTreeTemplate(minionAnimTree0);
+			//translation.Z = 3;
+			//ColorMesh.SetTranslation(translation);
 		break;
 		case 1: //topota
 			ColorMesh.SetSkeletalMesh(minionMesh1,true);
@@ -154,8 +154,6 @@ function Vector GetPosicionSocketCuerpo()
 
 defaultproperties
 {
-
-
 	Begin Object Name=PEnemySkeletalMeshComponent
 	//Begin Object Name=WPawnSkeletalMeshComponent
 		SkeletalMesh=SkeletalMesh'Enemigos.Minion.Topota'
@@ -164,26 +162,14 @@ defaultproperties
 		AnimSets(0)=AnimSet'Enemigos.Minion.Topota_Animset'
 
 		Translation=(Z=-90.0)
-		//Scale=3.7
-		//demo
-		/*****************
-		SkeletalMesh=SkeletalMesh'CH_LIAM_Cathode.Mesh.SK_CH_LIAM_Cathode'
-		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
-		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
-		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
-		Scale=3
-        **************************/
-		//Translation=(Z=-1670.0)
-		//demo
 	End Object
 
-	minionMesh0=SkeletalMesh'enemigos.Minion.Murciegalo'
-	minionMaterial0=Material'enemigos.Material_Enemigos'
-	//minionAnimTree0=AnimTree'enemigos.Minion.Murciegalo_AnimTree'
-	//minionAnimSet0(0)=AnimSet'enemigos.Minion.Murciegalo_Animset'
-	minionPhysicsAsset0=PhysicsAsset'enemigos.Minion.Murciegalo_Physics'
+	minionMesh0=SkeletalMesh'enemigos.Slime'
+	minionMaterial0=Material'enemigos.TexturaMoco_Mat'
+	minionAnimTree0=AnimTree'enemigos.Slime_AnimTree'
+	minionAnimSet0(0)=AnimSet'enemigos.Slime_Anims'
+	minionPhysicsAsset0=PhysicsAsset'enemigos.Slime_Physics'
 	minionPortrait0=Texture2D'PGameHudIco.Murciegalo_Portrait'
-
 
 	minionMesh1=SkeletalMesh'enemigos.Minion.Topota'
 	minionMaterial1=Material'enemigos.Material_Enemigos'
@@ -192,11 +178,7 @@ defaultproperties
 	minionPhysicsAsset1=PhysicsAsset'enemigos.Minion.Topota_Physics'
 	minionPortrait1=Texture2D'PGameHudIco.Topota_Icono'
 
-
 	ColorMesh=PEnemySkeletalMeshComponent
-
-
-		
 
 	GroundSpeed=80.0
 	m_defaultGroundSpeed=GroundSpeed
