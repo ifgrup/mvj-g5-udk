@@ -551,6 +551,7 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 singular event BaseChange()
 {
 	local PAutoTurret ptorreta;
+	local PTree pArbol;
 
 	if( Base == None)
 	{
@@ -593,6 +594,13 @@ singular event BaseChange()
 	{
 		`log("BaseChange torreta!");
 		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
+	}
+	
+	parbol = PTree(Base);
+	if ( parbol != None )  //Si nos chocamos contra una torreta
+	{
+		`log("BaseChange arbol!");
+		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
 	
 }//BaseChange
