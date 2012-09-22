@@ -869,7 +869,7 @@ state PlayerFallingSky
         local PPawn  elPaun;
 		local Actor  ActorTrace;
 		local Vector HitActorTrace,HitActorNormal;
-		local float  dist, min_dist_actual;
+		local float  dist, min_dist_actual,min_dist_planeta_actual;
 
 		
         //_DEBUG_ ("PC Falling Sky");
@@ -899,6 +899,8 @@ state PlayerFallingSky
 
 		//Calculamos la posición en la que caerá el pawn, contando con actores
 		min_dist_actual = float(MaxInt);
+		min_dist_planeta_actual = float(MaxInt);
+
 		foreach	TraceActors(class 'Actor',ActorTrace,HitActorTrace,HitActorNormal,PGame(WorldInfo.Game).GetCentroPlaneta(),elPaun.Location,vect(10,10,10))
 		{
 			//no sé si podemos garantizar que el que escoja es el primero contra el que impactaríamos. Me aseguro cogiendo el que está
@@ -906,23 +908,23 @@ state PlayerFallingSky
 			dist = vsize (HitActorTrace - elPaun.Location);
 			//_DEBUG_  ("TraceActors me devuelve el actor "@ActorTrace.Name);
 			//_DEBUG_if(PEnemy(ActorTrace) != None) `log("Lo puedo convertir a pawn");
-			if (dist < min_dist_actual && PEnemy(ActorTrace) == none && PNoSpawnVolume(ActorTrace)==none) //pasamos de los pawns y volúmenes
+			if (dist < min_dist_actual && PEnemy(ActorTrace) == none && PNoSpawnVolume(ActorTrace)==none &&
+				PTree(ActorTrace) == none ) //pasamos de los pawns,árboles y volúmenes
 			{
 				//_DEBUG_  ("Candidato TraceActors"@ActorTrace.Name);
 				m_ActorContraElQueCaemos = ActorTrace;
 				m_PosicionCaidaContraActor = HitActorTrace;
 				m_NormalCaidaActor = HitActorNormal;
 				min_dist_actual = dist;
-
 			}
-		}
-
-		//Calculamos posición de choque contra el planeta y nada más, para lo que hacemos el trace de dentro del planeta pa fuera ;)
-		Trace(m_PosicionCaidaPlaneta,m_NormalCaidaPlaneta,elPaun.Location,PGame(WorldInfo.Game).GetCentroPlaneta(),false,vect(1,1,1));
-
-		if (m_PosicionCaidaPlaneta == vect(0,0,0))
-		{
-			//_DEBUG_ ("Kagada en el trace coleguita....");
+			//Guardamos también posición de caída en el PLANETA
+			if (PGame(Worldinfo.game).EsPlaneta(ActorTrace))
+			{
+				if (dist < min_dist_planeta_actual)
+				{
+					m_PosicionCaidaPlaneta = HitActorTrace;
+				}
+			}
 		}
 
 		//_DEBUG_DrawDebugSphere(m_PosicionCaidaPlaneta,30,40,0,1,200,true);
@@ -935,7 +937,7 @@ state PlayerFallingSky
 			m_posicionRealCaidaSuelo = m_PosicionCaidaContraActor;
 			m_bContraSuelo = false;
 		}
-		else //Si el traceactors no ha encontrado nada, o bien el planeta o u PEnemy, pues eso, caemos contra el planeta
+		else //Si el traceactors no ha encontrado nada, o bien el planeta o un PEnemy o Arbol, pues eso, caemos contra el planeta
 		{
 			//_DEBUG_ ("Caemos contra el suelo");
 			m_posicionRealCaidaSuelo = m_PosicionCaidaPlaneta ;
@@ -1040,7 +1042,7 @@ state PlayerFallingSky
 			distActual = vsize(m_posicionRealCaidaSuelo - (pPosition+step));
 			distCentroActual = vsize ((pPosition+step) - PGame(WorldInfo.Game).GetCentroPlaneta());
 			
-			////_DEBUG_ ("Distancia al suelo ____" @distActual);
+			//_DEBUG`log("Distancia al suelo ____" @distActual);
 			//Si nos hemos pasao de 10 (estamos más cerca del centro que el punto de caída)
 			if (distCentroActual < m_distCentroCaida+10)
 			{
