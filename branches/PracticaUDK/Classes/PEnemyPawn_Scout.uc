@@ -60,6 +60,26 @@ simulated function PostBeginPlay()
 		}
 	}
 
+	// Mascara
+	yes = Rand(10);
+	if(yes > 5)
+	{
+		if(ColorMesh.GetSocketByName('Mascara') != none)
+		{
+			lmesh = new class'StaticMeshComponent';
+			yes = Rand(10);
+			if(yes > 5)
+			{
+				lmesh.SetStaticMesh(StaticMesh'Ogro.Mascara001');
+			}
+			else
+			{
+				lmesh.SetStaticMesh(StaticMesh'Ogro.Mascara002');
+			}
+			ColorMesh.AttachComponentToSocket(lmesh, 'Mascara');
+		}
+	}
+
 	// Hombrera Derecha
 	yes = Rand(10);
 	if(yes > 5)
