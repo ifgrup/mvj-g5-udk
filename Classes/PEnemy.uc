@@ -1,4 +1,4 @@
-class PEnemy extends UTPawn//GamePawn
+class PEnemy extends GamePawn
 Placeable;
 
 var PPawn P; // variable to hold the pawn we bump into
@@ -627,12 +627,18 @@ event EncroachedBy(Actor other)
 
 defaultproperties 
 {
-	
+	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
+		bSynthesizeSHLight=TRUE
+		bIsCharacterLightEnvironment=TRUE
+		bUseBooleanEnvironmentShadowing=FALSE
+		InvisibleUpdateTime=1
+		MinTimeBetweenFullUpdates=.2
+	End Object
+	Components.Add(MyLightEnvironment)
+	LightEnvironment=MyLightEnvironment
+
+
 	Begin Object Class=SkeletalMeshComponent Name=PEnemySkeletalMeshComponent
-		AnimTreeTemplate=AnimTree'CH_AnimHuman_Tree.AT_CH_Human'
-		SkeletalMesh=SkeletalMesh'CH_IronGuard_Male.Mesh.SK_CH_IronGuard_MaleA'
-		AnimSets(0)=AnimSet'CH_AnimHuman.Anims.K_AnimHuman_BaseMale'
-		PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
 		bCacheAnimSequenceNodes=FALSE
 		AlwaysLoadOnClient=true
 		AlwaysLoadOnServer=true
