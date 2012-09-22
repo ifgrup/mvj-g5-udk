@@ -126,9 +126,7 @@ function activarEscudoScout(PEnemyPawn_Scout scout, float radio)
 	//_DEBUG_DrawDebugCylinder(self.Location,scout.Location,10,10,0,0,200,false);
 	ParticulasEscudo.ParticleSystemComponent.SetActive(true);
 	ParticulasEscudo.SetFloatParameter('RangoAtraccion',radio);
-	ParticulasEscudo.SetVectorParameter('Destino',scout.Location);
-
-	
+	ParticulasEscudo.SetVectorParameter('Destino',scout.GetPosicionCuerno());
 }
 
 function desactivarEscudoScout()
@@ -165,7 +163,7 @@ defaultproperties
 		AnimTreeTemplate=AnimTree'Enemigos.Minion.Topota_AnimTree'
 		AnimSets(0)=AnimSet'Enemigos.Minion.Topota_Animset'
 
-		Translation=(Z=-40.0)
+		Translation=(Z=-90.0)
 		//Scale=3.7
 		//demo
 		/*****************

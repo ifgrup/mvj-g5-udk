@@ -207,7 +207,7 @@ state Rebotando
 	function ApplyGravity(float delta)
 	{
 		local Vector Gravity;   
-		Gravity = m_FallDirection * WorldInfo.WorldGravityZ * -1 * delta;
+		Gravity = m_FallDirection * (WorldInfo.WorldGravityZ/1.5) * -1 * delta;
 		self.Pawn.Velocity += Gravity;
 		self.Velocity = self.Pawn.Velocity;
 	}
@@ -330,19 +330,19 @@ function ReboteRespectoA(Actor Other, vector hitnormal,bool bRandom, float altur
 	else
 	{
 		//Queremos que haga un saltito hacia arriba simplemente, sin alterar su velocidad, por ejemplo al dispararle
-		v=self.pawn.Velocity += vFloor * 100; 
+		v=self.pawn.Velocity += vFloor * 250; 
 	}
 	
 	self.m_FallDirection = -vFloor;
 	
 	//y para que vaya, creo la puta zanahoria de los cojones...
 	
-	self.m_nodo_para_rebote = spawn(class'PPathNode',,,self.Pawn.Location + normal (v) * 120);
+	self.m_nodo_para_rebote = spawn(class'PPathNode',,,self.Pawn.Location + normal (v) * 150);
 	newLocation = self.Pawn.Location + normal (v) * 10;
 	self.pawn.SetLocation(newLocation);
 
 	m_velocidadRebote = v;
-	//DrawDebugSphere(m_nodo_para_rebote.Location,25,5,200,0,0,false);
+	//_DEBUG_DrawDebugSphere(m_nodo_para_rebote.Location,25,5,200,0,0,true);
 	
 	if (!self.IsInState('Rebotando'))
 	{

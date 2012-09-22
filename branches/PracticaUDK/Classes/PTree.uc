@@ -156,7 +156,6 @@ event Tick(float delta)
 		m_temblar_arbol = false;
 		m_idx_temblor = 0;
 		//Restauramos la posición inicial porsiaca
-		`log("restauro "@self.Name);
 		self.treemesh.SetRotation(m_rotInicial);
 		//self.SetRotation(m_rotInicial);
 		return;
@@ -175,7 +174,7 @@ event Tick(float delta)
 	
 	m_anguloTemblor = m_angulos_temblor[m_idx_temblor];
 	m_idx_temblor = m_idx_temblor +1; //Inc después para que cuente el cero
-	`log("angulo temblor "@m_anguloTemblor);
+	//_DEBUG `log("angulo temblor "@m_anguloTemblor);
 
 	ernion =  QuatFromAxisAndAngle(m_ejeTemblor,m_anguloTemblor*DegToRad); 
 	qActual =  QuatProduct(ernion,m_QuatInicial);

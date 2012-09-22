@@ -120,6 +120,7 @@ event Tick(float DeltaTime)
 	mesh.SetTranslation(-vz);
 	m_TranslateZ = -vz;
 	//DrawDebugSphere(posActual,5,50,200,0,0,true);
+	NubeDeIra(0);
 }
 
 
@@ -1001,6 +1002,17 @@ function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile mis
 	{
 		self.GotoState('GiruMuerto');
 	}
+}
+
+function NubeDeIra(float nivel_ira)
+{
+	local vector rx,ry,rz;
+	local vector posNube;
+
+	GetAxes (Self.Rotation,rx,ry,rz);
+	posNube = self.GetPosicionSocketCabeza() + rz*85;
+	DrawDebugSphere(posNube,50,20,0,200,0,false);
+	DrawDebugCylinder(self.GetPosicionSocketCabeza(),posNube,6,5,200,0,0,false);
 }
 
 defaultproperties
