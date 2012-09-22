@@ -107,6 +107,18 @@ simulated function PostBeginPlay()
 			ColorMesh.AttachComponentToSocket(lmesh, 'Pelvis');
 		}
 	}
+
+	ColorMesh.SetActorCollision(true, true);
+	ColorMesh.SetTraceBlocking(true, true);
+	
+}
+
+function Vector GetPosicionCuerno()
+{
+	local vector sLocation;
+	local rotator sRotation;
+	self.ColorMesh.GetSocketWorldLocationAndRotation('SocketCuerno',sLocation,sRotation);
+	return sLocation;
 }
 
 function SetColor(LinearColor Col)
@@ -143,7 +155,7 @@ defaultproperties
 		PhysicsAsset=PhysicsAsset'Ogro.Ogre_Physics_V2'
 		AnimTreeTemplate=AnimTree'Ogro.Ogro_AnimTree'
 		AnimSets(0)=AnimSet'Ogro.Ogro_Anim'
-		Translation=(Z=-50.0)
+		Translation=(Z=-90.0)
 		Scale=3
 	End Object
 
