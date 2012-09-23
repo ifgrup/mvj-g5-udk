@@ -117,6 +117,8 @@ function BumpContraSuelo(Actor suelo, vector HitNormal)
 
 }
 
+function ContraBase(); //Sobreescrita por cada hijo
+
 function PPathNode AplicarOffsetNodo(PPathNode nodo)
 {
 	local PPathnode p;
