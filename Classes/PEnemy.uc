@@ -392,6 +392,7 @@ state PawnFalling
 		else
 		{
 			SetBase(Wall, HitNormal);
+
 			self.PopState();
 		}
 
@@ -496,12 +497,56 @@ simulated function SetCharacterClassFromInfo(class<UTFamilyInfo> Info)
 }
 
 
+
+simulated event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
+{
+
+	local PAutoTurret ptorreta;
+	local PTree parbol;
+	local PPlayerBase pbase;
+
+
+	if (PGame(Worldinfo.Game).EsPlaneta(Wall))
+	{
+		//Toñazo contra el suelo? pos interesa principalmente para el controler por si al caer de un rebote no se cosca
+		//y no desapila el estado.
+		`log("HitWall gral suelo!");
+		PEnemy_AI_Controller(Owner).BumpContraSuelo(Wall,HitNormal);
+		return;
+	}
+
+
+	ptorreta = PAutoTurret(Wall);
+	if ( ptorreta != None )  //Si nos chocamos contra una torreta
+	{
+		`log("HitWall gral torreta!");
+		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
+	}
+
+	parbol = PTree(Wall);
+	if ( parbol != None )  //Si nos chocamos contra un arbol
+	{
+		`log("Hitwall gral  árbol neng!" @self.Name @Wall.Name);
+		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
+	}
+
+	pbase = PPlayerBase(Wall);
+	if (pbase != None)
+	{
+		`log("HitWall gral casa!");
+		PEnemy_AI_Controller(Owner).ContraBase();
+	}
+}
+
+
+
 simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNormal )
 {
 
 	local PEnemy Pbump;
 	local PAutoTurret ptorreta;
 	local PTree parbol;
+	local PPlayerBase pbase;
 
 	if ( (Other == None) || Other.bStatic )
 		return;
@@ -538,7 +583,12 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
 
-	
+	pbase = PPlayerBase(Other);
+	if (pbase != None)
+	{
+		`log("Bump casa!");
+		PEnemy_AI_Controller(Owner).ContraBase();
+	}
 	//super.Bump( Other, OtherComp, HitNormal );
 }
 
@@ -552,6 +602,7 @@ singular event BaseChange()
 {
 	local PAutoTurret ptorreta;
 	local PTree pArbol;
+	local PPlayerBase pbase;
 
 	if( Base == None)
 	{
@@ -602,6 +653,14 @@ singular event BaseChange()
 		`log("BaseChange arbol!");
 		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
+
+	pbase = PPlayerBase(Base);
+	if (pbase != None)
+	{
+		`log("BaseChange casa!" @self.Name);
+		PEnemy_AI_Controller(Owner).ContraBase();
+	}
+
 	
 }//BaseChange
 
@@ -622,7 +681,6 @@ event EncroachedBy(Actor other)
 {
 	return;
 }
-
 
 
 defaultproperties 

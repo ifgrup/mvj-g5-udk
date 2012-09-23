@@ -25,7 +25,7 @@ var float oldDistNodo;
 var int m_segundosQuieto;
 var float m_radio_escudo; //Radio de acción del escudo de los minions
 var float m_escudo; //cantidad de escudo proporcionada por los minions
-
+var float m_DistanciaAtaqueBase; //Distancia a la que considera que ha llegado a la base
 
 struct EscudoInfo
 {
@@ -352,7 +352,7 @@ state MoveToDestination
 				//`log("Ta kieto!!");
 			}
 			distanciaBase_antes = distanciaBase;
-			if(distanciaBase < Step)
+			if(distanciaBase < m_DistanciaAtaqueBase)
 			{
 				Pawn.Velocity = vect(0,0,0);
 				GotoState('ArrivedDestination');
@@ -462,4 +462,5 @@ defaultproperties
 	m_max_dist_disparo_ppawn=500
 	m_timout_entre_disparos = 0.2
 	m_ClaseMisil=class 'PMisilScout'
+	m_DistanciaAtaqueBase=2000
 }
