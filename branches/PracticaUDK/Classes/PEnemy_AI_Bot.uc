@@ -167,6 +167,13 @@ auto state Idle_Inicial
 				m_b_breakpoint = true;
 			}
 			m_tiempo_tick = 0; //para el siguiente 'timer'
+ 
+			if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+            {
+				 GoToState('TowerAttack');
+				 return;
+            }
+
 			if (!Penemy(Pawn).IsInState('Cayendo'))
 			{
 				//ya ha llegado al suelo
@@ -288,7 +295,7 @@ state GoToNextPath
 		{
 			m_tiempo_tick = m_tiempo_tick - 1.0; //Por intentar autoajustar un poco y que no siempre sea 1s y pico
 			// Comprobamos si hemos llegado al destino
-			if(VSize(theBase.Location - Pawn.Location) < Step)
+			if(VSize(theBase.Location - Pawn.Location) < m_distancia_Base_kamikaze)
 			{
 				//Lo paramos, y lo enviamos al estado de ataque a la torre (TowerAttack)
 				Velocity = vect(0,0,0);
@@ -622,6 +629,7 @@ Begin:
 state TowerAttack
 {
 
+
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
@@ -632,15 +640,36 @@ state TowerAttack
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
 	}
 
+	function ContraBase()
+	{
+		`log ("Minion estonyao contra base "@self.Name);
+		self.pawn.Destroy();
+		self.Destroy();
+	}
+
+	function  ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
+	{
+		if (PTree(torreta)!=None)
+		{
+			PTree(torreta).Destruccion();
+		}
+
+		if (PAutoTurret(torreta) != None)
+		{
+			PAutoTurret(torreta).Destruccion();
+		}
+
+	}
+
 	event Tick(float delta)
 	{
 
 		super.Tick(delta);
+
 		if (m_tiempo_tick < 10 )
 		{
-			//DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,false);
-			self.Pawn.Acceleration = vect (0,0,0);
-			self.Pawn.Velocity = vect(0,0,0);
+			DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,false);
+			//`log("Location kamikaze "@self.pawn.Name @self.pawn.Location); 
 		}
 		else
 		{
@@ -655,8 +684,8 @@ Begin:
     self.Acceleration = vect(0,0,0);
 	self.Pawn.Velocity = vect(0,0,0);
 	self.Pawn.Acceleration = vect(0,0,0);
-
-	
+	StopLatentExecution();
+	self.pawn.GoToState('');
 
 }/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
 //____________________________________________________________________________________________________________________________________
@@ -670,7 +699,7 @@ defaultproperties
 	bMovable=false
 	m_dist_choque_Minion=250
 	m_dist_choque_Scout=125
-	m_distancia_Base_kamikaze=150
+	m_distancia_Base_kamikaze=2000
 	m_max_dist_disparo_ppawn=400
 	m_timout_entre_disparos = 3
 	m_ClaseMisil=class 'PMisilMinion'
