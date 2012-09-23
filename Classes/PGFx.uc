@@ -75,6 +75,7 @@ var GFxObject	tloghudMC;
 var GFxClikWidget Btn_menu, Btn_salir;
 var bool animLog;
 var GFxObject textofinMC;
+var GFxObject tutoMC;
 
 
 function Init(optional LocalPlayer LocalPlayer)
@@ -157,9 +158,11 @@ function Init(optional LocalPlayer LocalPlayer)
  gameoverMC=GetVariableObject("_root.gameover");
  textofinMC=GetVariableObject("_root.gameover.textofin");
  loghudMC=GetVariableObject("_root.loghud");
+ tutoMC=GetVariableObject("_root.tuto");
 	tloghudMC=GetVariableObject("_root.loghud.conlog.tloghud");
 
 loghudMC.SetBool("_visible", false);
+tutoMC.SetBool("_visible", false);
 animLog=true;
 
 
@@ -717,6 +720,7 @@ function MensajitoPotPantalla(string texto)
 	loghudMC.SetBool("_visible", true);
 	loghudMC.GotoAndPlay("reload");
 	tloghudMC.SetText(texto);
+	tutoMC.SetBool("_visible", true);
 
 
 }
