@@ -143,18 +143,38 @@ simulated function PostBeginPlay()
 	
 	}
 
-
-
-	ColorMesh.SetActorCollision(true, true);
+	//Toma colisiones güenas...
+	CylinderComponent.SetActorCollision(false,false); //Desactivamos cilindro de colisión
+	ColorMesh.SetActorCollision(true, true,true);
 	ColorMesh.SetTraceBlocking(true, true);
-	
+	ColorMesh.SetBlockRigidBody(true);
+	ColorMesh.SetActorCollision(true, true);
 }
 
 function Vector GetPosicionCuerno()
 {
 	local vector sLocation;
 	local rotator sRotation;
-	self.ColorMesh.GetSocketWorldLocationAndRotation('SocketCuerno',sLocation,sRotation);
+	local vector rx,ry,rz;
+	local vector centro;
+	local float dist1,dist2;
+
+	GetAxes(self.Rotation,rx,ry,rz);
+	
+	centro = PGame(Worldinfo.Game).GetCentroPlaneta();
+	dist1 = vsize(centro-(self.location + ( rz * 200)));
+	dist2 = vsize(centro-(self.location - (rz * 200)));
+
+	if (dist1 > dist2)
+	{
+		return (self.location + (rz * 200));
+	}
+	else
+	{
+		return (self.location - (rz * 200));
+	}
+
+	//self.ColorMesh.GetSocketWorldLocationAndRotation('SocketCuerno',sLocation,sRotation);
 	return sLocation;
 }
 
@@ -199,9 +219,25 @@ defaultproperties
 		PhysicsAsset=PhysicsAsset'Ogro.Ogre_Physics_V2'
 		AnimTreeTemplate=AnimTree'Ogro.Ogro_AnimTree'
 		AnimSets(0)=AnimSet'Ogro.Ogro_Anim'
-		Translation=(Z=-90.0)
+		Translation=(Z=-90)
 		Scale=3
 	End Object
+
+/******************
+ * **************** PUEDE QUE NOS HAGA FALTA REACTIVARLO ...
+ * Cómo me gustan las colisiones de UDK ....
+ * 
+ * 
+	Begin Object Name=CollisionCylinder
+		CollisionRadius=+0092.000000
+		CollisionHeight=+0120.000000
+	End Object
+
+	// Lo añadimos al motor
+	CylinderComponent=CollisionCylinder
+	CollisionComponent=CollisionCylinder
+	Components.Add(CollisionCylinder)
+*****************************/
 
 	ColorMesh=PEnemySkeletalMeshComponent
 

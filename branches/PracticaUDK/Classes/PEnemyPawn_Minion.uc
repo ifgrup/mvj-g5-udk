@@ -82,8 +82,12 @@ simulated function PostBeginPlay()
 
 	self.ColorMesh.AttachComponentToSocket(ParticulasEscudo.ParticleSystemComponent,'Socket_Cuerpo');
 
-
-	
+	//Toma colisiones güenas...
+	CylinderComponent.SetActorCollision(false, false); //Desactivamos cilindro de colisión
+	ColorMesh.SetActorCollision(true, true,true);
+	ColorMesh.SetTraceBlocking(true, true);
+	ColorMesh.SetBlockRigidBody(true);
+	ColorMesh.SetTraceBlocking(true,true);
 }
 
 function SetColor(LinearColor Col)
@@ -154,8 +158,19 @@ defaultproperties
 		AnimTreeTemplate=AnimTree'Enemigos.Minion.Topota_AnimTree'
 		AnimSets(0)=AnimSet'Enemigos.Minion.Topota_Animset'
 
-		Translation=(Z=-90.0)
+		
+		Translation=(Z=-20.0)
 	End Object
+
+	Begin Object Name=CollisionCylinder
+		CollisionRadius=+0015.000000
+		CollisionHeight=+0028.000000
+	End Object
+
+	// Lo añadimos al motor
+	CylinderComponent=CollisionCylinder
+	CollisionComponent=CollisionCylinder
+	Components.Add(CollisionCylinder)
 
 	minionMesh0=SkeletalMesh'enemigos.Slime'
 	minionMaterial0=Material'enemigos.TexturaMoco_Mat'
