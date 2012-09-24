@@ -122,7 +122,7 @@ static final function vector MatrixGetScale(Matrix TM)
     return s;
 }
 
-event Destroyed()
+simulated event Destroyed()
 {
 	local PTreeDestruido tocon;
 	

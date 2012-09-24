@@ -136,13 +136,6 @@ function desactivarEscudoScout()
 	`log("Desactivo");
 }
 
-event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
-{
-
-	PEnemy_AI_Controller(Owner).HitWall(HitNormal,Wall,WallComp);
-
-}
-
 function Vector GetPosicionSocketCuerpo()
 {
 	local vector sLocation;
