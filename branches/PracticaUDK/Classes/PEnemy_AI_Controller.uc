@@ -393,7 +393,10 @@ function vector ProyectarPuntoSuelo(vector punto)
 	return newLocation;
 }
 
-function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta);
+function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
+{
+	`log("ContraTorreta no tratado" @self.name);
+}
 
 
 state TonyaoContraTorreta

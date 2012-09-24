@@ -114,7 +114,9 @@ function ActualizaRotacion(float DeltaTime)
 {
 	local rotator ViewRotation;
 	local vector MyFloor;//, CrossDir, FwdDir, OldFwdDir, RealFloor;
-		
+	local vector rx,ry,rz;
+
+
 	MyFloor = self.Floor;
 	if(OldFloor == vect(0,0,1))
 	{
@@ -181,12 +183,10 @@ function ActualizaRotacion(float DeltaTime)
 	DrawDebugCylinder(self.Location,self.Location+normal(self.Velocity)*100,5,5,0,0,255,false);
 	DrawDebugCylinder(self.Location,self.Location+ViewZ*100,5,5,0,255,0,false);
     */
-	if (PEnemyPawn_Minion(self) != none)
+	if (PEnemyPawn_Scout(self) != none)
 	{
-		//DrawDebugSphere(self.Location+ViewZ*300,90,25,255,255,0,false);
+		DrawDebugSphere(PEnemyPawn_Scout(self).GetPosicionCuerno(),50,10,200,200,0,false);
 	}
-	//GetAxes(self.Rotation,viewx,viewy,viewz);
-
 }
 
 function PawnCaidoEncima()
@@ -672,12 +672,21 @@ event Touch(actor other, PrimitiveComponent othercomp,vector HitLocation,vector 
 	
 }
 
-event bool EncroachingOn(Actor Other)
+singular event bool EncroachingOn(Actor Other)
 {
+
+	//Si es un ogro, no hace nada, como hasta ahora (espero)
+	//Si es un minion, que pegue el saltito
+	if (PEnemyPawn_Scout(self) != None)
+	{
+		return true;
+	}
+
 	if (PEnemy_AI_Controller(Owner) != None)
 	{
 		PEnemy_AI_Controller(Owner).ReboteRespectoA( None,vect(0,0,0),false,300);
 	}
+
 	return true;
 }
 
