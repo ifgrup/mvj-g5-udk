@@ -65,7 +65,9 @@ function GestionEscudo()
 	local int i,Index;
 	local EscudoInfo escudo;
 	local bool ira;
+	local LinearColor colorescudo; 
 	escudo_actual = 0;
+	colorescudo=MakeLinearColor(0, 0, 0, 1.0);
 	ira=false;
 	//Marco todos como borrables inicialmente
 	for (i = 0; i < self.m_escudo_info.Length; i++)
@@ -136,7 +138,28 @@ function GestionEscudo()
 	//_DEBUG_`log("Escudo del scout "@self.Name @m_escudo);
 	
 	PEnemyPawn_Scout(self.Pawn).GestionIra(ira);
-	if(m_escudo>0)PEnemyPawn_Scout(self.Pawn).escudo.Mesh.SetScale(m_escudo);
+	if(m_escudo>0)
+	{
+		colorescudo.R=PEnemyPawn_Scout(self.Pawn).Col2.R;
+		colorescudo.G=PEnemyPawn_Scout(self.Pawn).Col2.G;
+		colorescudo.B=PEnemyPawn_Scout(self.Pawn).Col2.B;
+		colorescudo.A=1*m_escudo;
+
+		PEnemyPawn_Scout(self.Pawn).escudo.Mesh.SetScale(CLAMP(m_escudo,6,10));
+		PEnemyPawn_Scout(self.Pawn).escudo.ShieldMIC.SetVectorParameterValue('Color',colorescudo);
+
+		
+	}
+	else
+	{
+		colorescudo.R=0;
+		colorescudo.G=0;
+		colorescudo.B=0;
+		colorescudo.A=0;
+		PEnemyPawn_Scout(self.Pawn).escudo.ShieldMIC.SetVectorParameterValue('Color',colorescudo);
+	
+	}
+	
 	
 }
 
