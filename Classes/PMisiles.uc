@@ -2,7 +2,7 @@ class PMisiles extends UTProj_LoadedRocket;
 var name disparador; //Quién dispara el projectile. Para control de TakeDamage ñaposillo...
 DefaultProperties
 {
-
+/*
 	ProjFlightTemplate=ParticleSystem'PGameMisilakos.MisilakoPawn'
 	DamageRadius=220.0
 	Damage=1
@@ -15,5 +15,5 @@ DefaultProperties
 	FlockStiffness=-40
 	FlockMaxForce=800
 	FlockCurlForce=650
-	
+	*/
 }
