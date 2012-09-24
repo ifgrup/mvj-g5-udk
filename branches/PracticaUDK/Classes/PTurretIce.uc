@@ -23,7 +23,7 @@ function DisparoTorreta()
 		//lo convierte en hielo.
 		//local PEmiter pem;
 		//_DEBUG_ ("DIsparo Ice");
-		//_VICTOR ************* GeneraNuevaOndaHielo();
+		GeneraNuevaOndaHielo();
 		//pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
 		//pem.SpawnEmitter();
 }
