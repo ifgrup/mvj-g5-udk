@@ -168,9 +168,10 @@ function GestionIra(bool mecabreo)
 	}
 }
 
-simulated event NuevoPaso()
+event NuevoPaso()
 {
 	//EL ogro ha empezado otro paso. Ruido y sistema de partículas
+	//_DEBUG_`log("Nuevo Paso Ogro!");
 }
 
 
