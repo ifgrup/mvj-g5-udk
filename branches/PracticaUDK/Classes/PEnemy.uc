@@ -498,7 +498,7 @@ simulated function SetCharacterClassFromInfo(class<UTFamilyInfo> Info)
 
 
 
-simulated event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
+event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
 {
 
 	local PAutoTurret ptorreta;
@@ -650,7 +650,7 @@ singular event BaseChange()
 	parbol = PTree(Base);
 	if ( parbol != None )  //Si nos chocamos contra una torreta
 	{
-		`log("BaseChange arbol!");
+		`log("BaseChange arbol!" @self.Name @PEnemy_AI_Controller(Owner).GetStateName() ) ;
 		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
 
@@ -674,7 +674,11 @@ event Touch(actor other, PrimitiveComponent othercomp,vector HitLocation,vector 
 
 event bool EncroachingOn(Actor Other)
 {
-	return false;
+	if (PEnemy_AI_Controller(Owner) != None)
+	{
+		PEnemy_AI_Controller(Owner).ReboteRespectoA( None,vect(0,0,0),false,300);
+	}
+	return true;
 }
 
 event EncroachedBy(Actor other)

@@ -1355,6 +1355,14 @@ exec function vuela()
 {
 	local bool bTierraAire;
 	local PHUD pHUD;
+	local name estadoActualGiru;
+
+	//Si no estamos o andando o bien volando, no dejamos que se ejecute ni salto ni caída
+	if (GetStateName() != 'PlayerSpidering' && GetStateName() != 'PlayerFlaying')
+	{
+		`log("_____________Ahora no coleguita....");
+		return;
+	}
 
 	pHUD = PHUD(myHUD);
 	
@@ -1477,10 +1485,8 @@ exec function ice (int i=0)
 		//m_torreta_victor.SetCollisionType(COLLIDE_NoCollision);
 	}
 	
-	m_torreta_victor.DisparoTorreta();
-	m_torreta_victor.GotoState('Disparando');
-	
-
+	//m_torreta_victor.DisparoTorreta();
+	//m_torreta_victor.GotoState('Disparando');
 }
 
 exec function iceradio(int radio, int altura)
@@ -1489,6 +1495,8 @@ exec function iceradio(int radio, int altura)
 	m_torreta_victor.m_alturainicial = altura;
 	ice();
 }
+
+
 defaultproperties
 {
 	

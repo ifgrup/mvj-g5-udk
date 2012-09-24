@@ -195,6 +195,12 @@ state Rebotando
 
 		super.tick(delta);
 		m_fTiempoDeSalto += delta;
+
+		if (m_fTiempoDeSalto < 0.5)
+		{
+			return; //Lo dejamos subir libremente hacia la zanahoria medio segundo
+		}
+
 		ApplyGravity(delta);
 
 		if (m_fTiempoDeSalto > 2.0)
@@ -216,6 +222,7 @@ state Rebotando
 
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
+		//Este evento no debería ejecutarse NUNCA!!!.... lo dejo por miedito....
 		local rotator rot;
 
 		if (m_ya_en_suelo)
@@ -380,7 +387,7 @@ function vector ProyectarPuntoSuelo(vector punto)
 	}
 	else
 	{
-		newLocation = HitLocation - (vAlCentro*20); //un pelín parriba
+		newLocation = HitLocation - (vAlCentro*12); //un pelín parriba
 	}
 
 	return newLocation;
@@ -424,6 +431,25 @@ state TonyaoContraTorreta
 				m_ChocandoContraTorreta = false;
 				self.PopState();
 		}
+
+		//Para evitar rebote infinito:
+		if (m_tiempo_tick > 5)
+		{
+			m_ChocandoContraTorreta = false;
+			self.PopState();
+		}
+	}
+
+	function BumpContraSuelo(Actor suelo,vector HitNormal)
+	{
+		//Si durante el rebote, antes de alejarse a la distancia dicha, toca el suelo, se parará, y jamás
+		//legará a esa distancia, por lo que se quedará parado in eternum
+		//Así que si toca el suelo, finalizamos el rebote
+		`log("_Contra suelo after rebote "@self.Name);
+		m_tiempo_tick = 0;
+		m_ChocandoContraTorreta = false;
+		m_bPausaContraTorreta = false;
+		self.PopState();
 	}
 
 Begin:
@@ -438,7 +464,7 @@ Begin:
 	self.Acceleration = vect(0,0,0);
 	//Primero lo colocamos 50 unidades alejado del toñazo, para evitar dumps repetitivos
 	//Luego en el tick, lo movemos hasta el nuevo destino
-	m_currentDespContraTorreta = 30;
+	m_currentDespContraTorreta = 20;
 	
 	self.pawn.setLocation(ProyectarPuntoSuelo(self.pawn.location + normal(m_posContraTorreta-self.pawn.location)  * m_currentDespContraTorreta));
 	m_tiempo_tick = 0;
@@ -476,5 +502,5 @@ DefaultProperties
 {
 	
 	m_tiempo_tick=0
-	m_despContraTorreta = 100;
+	m_despContraTorreta = 40;
 }
