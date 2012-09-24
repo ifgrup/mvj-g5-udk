@@ -136,6 +136,8 @@ function GestionEscudo()
 	//_DEBUG_`log("Escudo del scout "@self.Name @m_escudo);
 	
 	PEnemyPawn_Scout(self.Pawn).GestionIra(ira);
+	if(m_escudo>0)PEnemyPawn_Scout(self.Pawn).escudo.Mesh.SetScale(m_escudo);
+	
 }
 
 

@@ -8,6 +8,7 @@ var StaticMeshComponent Bandera;
 var LinearColor Col1, Col2;
 
 var int ira, max_ira;
+var PShield escudo;
 
 simulated function PostBeginPlay()
 {
@@ -21,7 +22,7 @@ simulated function PostBeginPlay()
 	mat.SetParent(Material'Ogro.Materials.Ogro_Mat');
 	mat.SetVectorParameterValue('BaseColor', Col1);
 	mat.SetVectorParameterValue('EmissiveColor', Col2);
-
+	
 	// Bandera
 	if(ColorMesh.GetSocketByName('Espalda') != none)
 	{
@@ -127,6 +128,22 @@ simulated function PostBeginPlay()
 			ColorMesh.AttachComponentToSocket(lmesh, 'Pelvis');
 		}
 	}
+	
+
+
+	//Escudo
+	if(ColorMesh.GetSocketByName('SocketEscudo') != none)
+	{
+		`log("encuentra socket escudo");
+		escudo= Spawn(class 'PShield');
+		self.ColorMesh.AttachComponentToSocket(escudo.Mesh,'SocketEscudo');
+		escudo.ShieldMIC.SetVectorParameterValue('Color',col1);
+		escudo.Mesh.SetScale(7);
+
+	
+	}
+
+
 
 	ColorMesh.SetActorCollision(true, true);
 	ColorMesh.SetTraceBlocking(true, true);
