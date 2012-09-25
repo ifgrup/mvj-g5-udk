@@ -12,6 +12,9 @@ var int creditos;
 var PPlayerBase PlayerBase;
 var bool NodosCreados;
 var int EScoutLeft;
+var int m_ticks_spawn_enemigos; //control de ticks spawneando enemigos
+var int m_intervalo_spawn_enemies; //tiempo entre spawn de cualquier huevo
+
 struct Spawner
 {
 	var int id;
@@ -173,6 +176,7 @@ function CreatePathNodes()
 	}
 }
 
+/************ REDUCCION TICKS ************
 event Tick(float DeltaTime)
 {
 	local int i;
@@ -200,6 +204,8 @@ event Tick(float DeltaTime)
 		}
 	}
 }
+**************** FIN REDUCCION TICKS ********/
+
 
 function DrawWorldNodes()
 {
@@ -315,7 +321,14 @@ function ActivateSpawners()
     
     EnemySpawners[Rand(EnemySpawners.length)].SpawnPoint.SpawnEnemy();
 	// Con esto controlamos que sólo haya un spawn activo a la vez y que no spawneen todos los enemigos a la vez
-    SetTimer(7, false, 'ActivateSpawners');
+	m_ticks_spawn_enemigos = (m_ticks_spawn_enemigos + 1) % 10;
+	if (m_ticks_spawn_enemigos == 0)
+	{
+		m_intervalo_spawn_enemies = fclamp (m_intervalo_spawn_enemies-1,4,10);
+		`log ("Nuevo intervalo spawn"@m_intervalo_spawn_enemies);
+	}
+
+    SetTimer(m_intervalo_spawn_enemies, false, 'ActivateSpawners');
 }
 
 function SetCredito(int credito)
@@ -493,4 +506,5 @@ defaultproperties
 	NodosCreados=false
 	m_max_radiorandom=100;
 	m_min_radiorandom=400;
+	m_intervalo_spawn_enemies = 10 //Iniciamente, cada 10 segundos
 }

@@ -289,6 +289,8 @@ state MoveToDestination
 {
 	event SeePlayer(Pawn seen)
 	{
+		//_DEBUG `log ("Soy el scout, hE visto a este pawn "@seen.Name);
+
 		if (PPawn(seen) != None)
 		{
 			if (m_disparo_posible && vsize(self.Pawn.Location - seen.Location) < m_max_dist_disparo_ppawn )
