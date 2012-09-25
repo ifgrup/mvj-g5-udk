@@ -72,7 +72,7 @@ event Tick(float DeltaTime)
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
-	/*
+	
     `log("me tan dando");
 	life--;
 	if(life == 0)
@@ -83,7 +83,7 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 			PGame(WorldInfo.Game).basedestrozada();
 		}
 	}
-  */
+  
 }
 
 function pupitabase()
@@ -136,5 +136,5 @@ DefaultProperties
 	CantidadColor=0
 	bumped=false
 
-	life=3
+	life=50
 }
