@@ -159,6 +159,7 @@ function Vector GetPosicionCuerno()
 	local vector centro;
 	local float dist1,dist2;
 
+	/**************
 	GetAxes(self.Rotation,rx,ry,rz);
 	
 	centro = PGame(Worldinfo.Game).GetCentroPlaneta();
@@ -173,8 +174,10 @@ function Vector GetPosicionCuerno()
 	{
 		return (self.location - (rz * 200));
 	}
+   **************/
 
-	//self.ColorMesh.GetSocketWorldLocationAndRotation('SocketCuerno',sLocation,sRotation);
+
+	self.ColorMesh.GetSocketWorldLocationAndRotation('SocketCuerno',sLocation,sRotation);
 	return sLocation;
 }
 
