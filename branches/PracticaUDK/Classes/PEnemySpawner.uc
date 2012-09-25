@@ -18,6 +18,8 @@ var(SpawnConfig) int MaxEnemies;
 var float m_distDelHuevoAlNacer;
 var vector m_location_primer_nodo;
 
+var int m_num_minions_por_spawn; //cuantos minions se crean cada vez
+
 struct OffsetNodo
 {
 	var vector posicion;
@@ -40,6 +42,15 @@ function PostBeginPlay()
 
 	ColorMesh.SetMaterial(0, mat);
 	//_DEBUG_DrawDebugCylinder(self.Location, self.location + (self.Location - (PGame(Worldinfo.Game)).m_CentroPlaneta),10,10,200,0,0,true);
+
+	//Timer que cada 30 segundos incrementa el número de minions a salir de cada spawn
+	SetTimer(30,true,'IncSpawnCount');
+}
+
+function IncSpawnCount()
+{
+	m_num_minions_por_spawn = clamp (m_num_minions_por_spawn+1,3,7);
+	`log ("__Nuevo num de minions por scout "@m_num_minions_por_spawn);
 }
 
 /**
@@ -47,14 +58,7 @@ function PostBeginPlay()
  * */
 function SpawnEnemy()
 {
-	local PEnemy EN;
-	local Penemy_AI_Bot AIB;
-	local vector vector_hacia_primer_nodo;
-	local int i;
-	local array<OffsetNodo> posiciones;
-	local int cuantos;
-
-
+	//Si no hay Scout, lo creamos
     if(EnemyScout == none)
     {
         EnemyScout = spawn(class'PEnemyPawn_Scout',,,Location);
@@ -69,52 +73,67 @@ function SpawnEnemy()
 		AI.SetColor(Col2);
 		AI.SetID(Group);
 		AI.Possess(EnemyScout, false);
+
+		//Y ahora necesitamos que además genere una primera oleada de minions para que tenga escudo.
+		//Le generamos 2 oleadas de 5 minions, en intervalos de 5 segundos:
+		SetTimer( 5.0,false,'PrimeraOleada');
     }
-	else
+	else //Ya hay scout, generamos minions
 	{
-		if(CanSpawnEnemy())
+		GeneraMinions(m_num_minions_por_spawn);
+	}
+}
+
+function GeneraMinions(int cuantos)
+{
+	local PEnemy EN;
+	local Penemy_AI_Bot AIB;
+	local vector vector_hacia_primer_nodo;
+	local array<OffsetNodo> posiciones;
+	local int i;
+
+	if(CanSpawnEnemy())
+	{
+	    //Sacamos tantos como la orda que toque.
+		//Simplemente guardaría en las estructuras que tenemos, el id de orda que llevamos,
+		//Y vamos haciendo que incremente el número de minions por orda.
+		//Ahora para probar, hacemos 3.
+		if (m_location_primer_nodo == vect(0,0,0))
 		{
-		    //Sacamos tantos como la orda que toque.
-			//Simplemente guardaría en las estructuras que tenemos, el id de orda que llevamos,
-			//Y vamos haciendo que incremente el número de minions por orda.
-			//Ahora para probar, hacemos 3.
-			if (m_location_primer_nodo == vect(0,0,0))
-			{
-				m_location_primer_nodo = PGame(Worldinfo.game).GetFirstNodeLocation(Group);
-			}
-			if (m_location_primer_nodo == vect(0,0,0))
-			{
-				//Aún no existe el primer nodo. Puede pasar si los minions salen enseguida después del scout y éste aún
-				//no lo ha creado
-				//así que le damos más tiempo, y esperamos al siguiente timer
-				return;
-			}
+			m_location_primer_nodo = PGame(Worldinfo.game).GetFirstNodeLocation(Group);
+		}
+		if (m_location_primer_nodo == vect(0,0,0))
+		{
+			//Aún no existe el primer nodo. Puede pasar si los minions salen enseguida después del scout y éste aún
+			//no lo ha creado
+			//así que le damos más tiempo, y esperamos al siguiente timer
+			return;
+		}
 
-			//_DEBUG_DrawDebugCylinder(self.Location,m_location_primer_nodo,10,10,0,255,0,true);
-			//_DEBUG_DrawDebugSphere(self.Location,120,20,255,0,0,true);
-			vector_hacia_primer_nodo  = m_location_primer_nodo - self.Location;
-			
-			cuantos = 5;
+		//_DEBUG_DrawDebugCylinder(self.Location,m_location_primer_nodo,10,10,0,255,0,true);
+		//_DEBUG_DrawDebugSphere(self.Location,120,20,255,0,0,true);
+		vector_hacia_primer_nodo  = m_location_primer_nodo - self.Location;
 
-			generarPosicionSpawn(vector_hacia_primer_nodo,cuantos,posiciones);
-			for (i=0;i<cuantos;i++)
-			{
+		generarPosicionSpawn(vector_hacia_primer_nodo,cuantos,posiciones);
+		for (i=0;i<cuantos;i++)
+		{
 				
-				EN = spawn(class'PEnemyPawn_Minion',,, posiciones[i].posicion);
-				if (EN!=None) //Proteccion Víctor
-				{
-					EN.SetColor(Col2);
-					AIB = spawn(class'PEnemy_AI_Bot',,, posiciones[i].posicion);
-					AIB.SetID(Group);
-					AIB.m_AnguloOffsetInicial = posiciones[i].giro_angulo;
-					Enemy.AddItem(EN);
-					AIBot.AddItem(AIB);
-					AIB.Possess(EN, false);
-				}
+			EN = spawn(class'PEnemyPawn_Minion',,, posiciones[i].posicion);
+			if (EN!=None) //Proteccion Víctor
+			{
+				EN.SetColor(Col2);
+				AIB = spawn(class'PEnemy_AI_Bot',,, posiciones[i].posicion);
+				AIB.SetID(Group);
+				AIB.m_AnguloOffsetInicial = posiciones[i].giro_angulo;
+				Enemy.AddItem(EN);
+				AIBot.AddItem(AIB);
+				AIB.Possess(EN, false);
 			}
 		}
 	}
+
 }
+
 
 function  generarPosicionSpawn(vector v_haciaprimernodo, int num_bichos, out array<OffsetNodo> posiciones)
 {
@@ -196,7 +215,7 @@ function bool CanSpawnEnemy()
 	indice =  PGame(Worldinfo.game).GroupNodos.Find('id', self.Group);
 	if (indice != -1)
 	{
-		res = Enemy.Length <= MaxEnemies;
+		res = (Enemy.Length <= MaxEnemies);
 	}
 	else
 	{
@@ -205,6 +224,32 @@ function bool CanSpawnEnemy()
    
 	return res;
 }
+
+function PrimeraOleada()
+{
+	GeneraMinions(5); //Genera 5 enemigos , y a los 5 segundos, otros 5. Con el mismo timer me daba problemas...
+	//Puede ser que el ogro aún no haya generado un primer nodo, por lo que los minions no sabrían dónde ir, y no se
+	//pueden generar. Así que si no los ha podido generar, relanzamos el timer un segundo más tarde
+	if (Enemy.Length ==0)
+	{
+		`log ("Primera Oleada, reintento en 1 s "@self.name);
+		SetTimer(1.0,false,'PrimeraOleada');
+		return;
+	}
+	else
+	{
+		`log ("Primera Oleada creada "@self.name);
+		SetTimer(5.0,false,'SegundaOleada');
+		return;
+	}
+}
+
+function SegundaOleada()
+{
+	`log ("Segunda Oleada "@self.name);
+	GeneraMinions(5); //Genera 5 enemigos , y a los 5 segundos, otros 5. Con el mismo timer me daba problemas...
+}
+
 
 defaultproperties
 {
@@ -224,6 +269,7 @@ defaultproperties
 	ColorMesh=BaseMesh
 	Components.Add(BaseMesh)
 
-	MaxEnemies=12;
-	m_distDelHuevoAlNacer = 300
+	MaxEnemies=80;
+	m_distDelHuevoAlNacer=300
+	m_num_minions_por_spawn=2 //Inicialmente, que sólo genere 2 cada vez.
 }

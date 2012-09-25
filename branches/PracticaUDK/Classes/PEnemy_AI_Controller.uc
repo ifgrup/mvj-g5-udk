@@ -401,12 +401,17 @@ function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 
 state TonyaoContraTorreta
 {
+	function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
+	{
+		//_DEBUG_`log("ContraTorreta ignorado, ya estonyao" @self.name);
+	}
+
 	event Tick(float delta)
 	{
 		local vector desp;
 
 		super.tick(delta);
-		DrawDebugSphere(self.Pawn.Location,40,10,255,117,138,false);
+		//_DEBUG_ DrawDebugSphere(self.Pawn.Location,40,10,255,117,138,false);
 		self.pawn.setLocation( self.ProyectarPuntoSuelo(self.pawn.location)); //Para fijarlo en tierra
 		if (m_currentDespContraTorreta < m_despContraTorreta)
 		{
