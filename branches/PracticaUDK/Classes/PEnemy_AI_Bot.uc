@@ -663,20 +663,82 @@ state TowerAttack
 
 	}
 
+	function kamikaze ()
+	{
+		//local PPawn gppawn;
+		local PAutoTurret torreta;
+		local vector posenemigo;
+		local Projectile Proj;
+		local vector rx,ry,rz;
+		//gppawn=PPawn(PlayerOwner.Pawn);
+	/*	posenemigo.X=RAND(55545);
+		posenemigo.Y=RAND(55545);
+		posenemigo.Z=RAND(55545);*/
+		
+	/*	foreach VisibleCollidingActors(class'PAutoTurret', torreta,2000.f,self.Pawn.Location,,vect(100,100,100),true)
+		{
+			
+			if(torreta!=none)
+			{
+				posenemigo=torreta.Location;
+			}
+			
+		}*/
+/*
+		if (vsize(gppawn.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+        {
+			posenemigo=gppawn.Location; 
+        }
+*/
+		/*if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+        {
+			posenemigo=self.theBase.Location;
+        }
+*/
+		//lanzamos toñazo kamikaze
+		
+
+
+	
+
+	GetAxes (self.theBase.Rotation,rx,ry,rz);
+	posenemigo = self.theBase.Location + rz*450;
+	
+
+
+
+		Proj = Spawn(class'PMisiles',self,,self.Pawn.Location,,,True);
+		if (Proj!= None)
+		{
+			Proj.Init(Normal(posenemigo-self.Pawn.Location));
+		
+		}	
+
+	}
+
 	event Tick(float delta)
 	{
-
 		super.Tick(delta);
+		self.Velocity = vect(0,0,0);
+		self.Acceleration = vect(0,0,0);
+		self.Pawn.Velocity = vect(0,0,0);
+		self.Pawn.Acceleration = vect(0,0,0);
 
-		if (m_tiempo_tick < 10 )
-		{
-			DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,false);
+	
+		if (m_tiempo_tick < 15 )
+		{   
+			kamikaze();
+			self.Destroy();
+			self.Pawn.Destroy();
+			DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,true);
 			//`log("Location kamikaze "@self.pawn.Name @self.pawn.Location); 
 		}
 		else
 		{
 			m_tiempo_tick = 0;
+				
 		}
+
 	}
    
 Begin:
@@ -687,7 +749,10 @@ Begin:
 	self.Pawn.Velocity = vect(0,0,0);
 	self.Pawn.Acceleration = vect(0,0,0);
 	StopLatentExecution();
+	PEnemyPawn_Minion(self.Pawn).activarParticulasKamikaze();
+	DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,true);
 	self.pawn.GoToState('');
+		
 
 }/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
 //____________________________________________________________________________________________________________________________________
@@ -701,7 +766,7 @@ defaultproperties
 	bMovable=false
 	m_dist_choque_Minion=250
 	m_dist_choque_Scout=125
-	m_distancia_Base_kamikaze=2000
+	m_distancia_Base_kamikaze=800
 	m_max_dist_disparo_ppawn=400
 	m_timout_entre_disparos = 3
 	m_ClaseMisil=class 'PMisilMinion'

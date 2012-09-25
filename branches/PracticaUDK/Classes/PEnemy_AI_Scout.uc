@@ -476,6 +476,17 @@ state ArrivedDestination
 		Pawn.Velocity = vect(0,0,0);
 		StopLatentExecution();
 	}
+
+
+	event Tick(float delta)
+	{
+		super.Tick(delta);
+		self.Velocity = vect(0,0,0);
+		self.Acceleration = vect(0,0,0);
+		self.Pawn.Velocity = vect(0,0,0);
+		self.Pawn.Acceleration = vect(0,0,0);
+	}
+
 }/* --------------- FIN ESTADO ArrivedDestination --------------*/
 //____________________________________________________________________________________________________________________________________
 
@@ -489,5 +500,5 @@ defaultproperties
 	m_max_dist_disparo_ppawn=500
 	m_timout_entre_disparos = 0.2
 	m_ClaseMisil=class 'PMisilScout'
-	m_DistanciaAtaqueBase=2000
+	m_DistanciaAtaqueBase=1700
 }
