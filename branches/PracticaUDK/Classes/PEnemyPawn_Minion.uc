@@ -149,6 +149,13 @@ function Vector GetPosicionSocketCuerpo()
 
 }
 
+function activarParticulasKamikaze(optional vector locaenemigo)
+{
+	ParticulasEscudo.SetFloatParameter('RangoAtraccion',200);
+	ParticulasEscudo.SetVectorParameter('Destino',locaenemigo);
+
+}
+
 defaultproperties
 {
 	Begin Object Name=PEnemySkeletalMeshComponent
