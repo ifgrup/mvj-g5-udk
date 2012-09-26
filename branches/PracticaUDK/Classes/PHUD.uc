@@ -55,7 +55,7 @@ var int Pixel_X_Mirilla;
 var int Pixel_Y_Mirilla;
 var int m_min_offset_mirilla_y, m_max_offset_mirilla_y; //OFFSET de la mirilla al subir/bajar cámara
 
-
+var int  m_ticks_update_igu; //control de ticks para no refrescar igu a cada tick
 
 //gestion de iconos en pantalla 
 
@@ -167,6 +167,8 @@ event PostRender()
 	local int bEsPlaneta;
 	
 	Super.PostRender();
+	
+
 	//Casting
 	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput); 
 
@@ -191,8 +193,9 @@ event PostRender()
 		}
 	}
 
-//renderizar iconos en  pantalla 
-iconosapantalla();
+	//renderizar iconos en  pantalla 
+	iconosapantalla();
+
 
 
 	area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
@@ -734,9 +737,14 @@ simulated event Tick(float DeltaTime)
 	}
 */
 	//comprueba que tengamos dinero para tener las torretas activas, sino las desactiva 
-	ADbotonesporCredito();
-	vidaGiru();
-	pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
+	//Lo hacemos sólo cada 3 ticks por optimizar
+	m_ticks_update_igu = (m_ticks_update_igu+1) %3;
+	if (m_ticks_update_igu == 0)
+	{
+		ADbotonesporCredito();
+		vidaGiru();
+		pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
+	}
 
 	
 }

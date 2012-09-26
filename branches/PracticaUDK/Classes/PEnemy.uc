@@ -468,6 +468,8 @@ auto state Cayendo
 			GotoState(''); //estado default
 		}
 	}
+
+	/********
 	// cuando llegue al suelo:
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
@@ -480,7 +482,8 @@ auto state Cayendo
 		GotoState(''); //estado default
 		GetAxes(Rotation,ViewX,ViewY,ViewZ);
 	}
-   
+    **********/
+
 	event EndState(Name NextState)
 	{
 		
@@ -489,6 +492,17 @@ auto state Cayendo
 
 }//state Cayendo
 
+function AterrizadoAfterSpawn()
+{
+	//De recién creado, he llegado al suelo
+	bDirectHitWall = false; 
+	SetPhysics(PHYS_None);
+	SetPhysics(PHYS_Spider); // "Glue" back to surface
+		
+	GotoState(''); //estado default
+	GetAxes(Rotation,ViewX,ViewY,ViewZ);
+	`log("__Aterrizado " @self.Name);
+}
 
 //over-ride epics silly character stuff
 simulated function SetCharacterClassFromInfo(class<UTFamilyInfo> Info)
