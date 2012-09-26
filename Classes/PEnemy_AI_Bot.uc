@@ -24,6 +24,7 @@ var float distNodo,oldDistNodo;
 var int m_segundosQuieto;
 var float m_distancia_Base_kamikaze; //Distancia a la base en la que se considera que ha llegao
 
+var int m_ticks_colegas_cerca; //Intento de optimizar llamadas en ticks
 
 simulated event PostBeginPlay()
 {
@@ -240,6 +241,17 @@ auto state Idle_Inicial
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
 	}
 
+	function BumpContraSuelo(Actor suelo,Vector HitNormal)
+	{
+		PEnemy(self.Pawn).AterrizadoAfterSpawn();
+	}
+
+	function ContraTorreta(Actor torreta, optional float dist)
+	{
+		`log("_ignorado toñazo mientras cayendo "@self.Name);
+	}
+
+
 Begin:
 	self.stoplatentexecution();
 	self.velocity = vect (0,0,0);
@@ -259,6 +271,7 @@ Begin:
 
 state GoToNextPath
 {
+
 	event SeePlayer(Pawn seen)
 	{
 		//_DEBUG `log ("HE visto a este pawn "@seen.Name);
@@ -394,7 +407,12 @@ state GoToNextPath
 			}
 
 		} 
-		EstanLosColegasCercaNeng();
+		//El control de proximidad para que se paren si chocan, no tenemos por qué hacerlo a cada tick:
+		m_ticks_colegas_cerca = (m_ticks_colegas_cerca+1) %3 ;
+		if (m_ticks_colegas_cerca == 0)
+		{
+			EstanLosColegasCercaNeng();
+		}
 	}//Tick
 
 
@@ -568,6 +586,11 @@ state StopColision
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser){}
 	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser){}
 	
+	function ContraTorreta(Actor torreta,optional float dist)
+	{
+		//Lo ignoramos también. Si está quieto, sólo chocaría si algún otro le empujara...
+		//y en breves instantes saldrá de este estado o sea que...
+	}
 	/*
 	event Tick(float delta)
 	{
@@ -666,46 +689,13 @@ state TowerAttack
 	function kamikaze ()
 	{
 		//local PPawn gppawn;
-		local PAutoTurret torreta;
 		local vector posenemigo;
 		local Projectile Proj;
 		local vector rx,ry,rz;
-		//gppawn=PPawn(PlayerOwner.Pawn);
-	/*	posenemigo.X=RAND(55545);
-		posenemigo.Y=RAND(55545);
-		posenemigo.Z=RAND(55545);*/
-		
-	/*	foreach VisibleCollidingActors(class'PAutoTurret', torreta,2000.f,self.Pawn.Location,,vect(100,100,100),true)
-		{
-			
-			if(torreta!=none)
-			{
-				posenemigo=torreta.Location;
-			}
-			
-		}*/
-/*
-		if (vsize(gppawn.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
-        {
-			posenemigo=gppawn.Location; 
-        }
-*/
-		/*if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
-        {
-			posenemigo=self.theBase.Location;
-        }
-*/
 		//lanzamos toñazo kamikaze
 		
-
-
-	
-
-	GetAxes (self.theBase.Rotation,rx,ry,rz);
-	posenemigo = self.theBase.Location + rz*450;
-	
-
-
+		GetAxes (self.theBase.Rotation,rx,ry,rz);
+		posenemigo = self.theBase.Location + rz*450; //Por no poner un socket en la casa
 
 		Proj = Spawn(class'PMisiles',self,,self.Pawn.Location,,,True);
 		if (Proj!= None)
@@ -728,9 +718,10 @@ state TowerAttack
 		if (m_tiempo_tick < 15 )
 		{   
 			kamikaze();
+			DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,true);
 			self.Destroy();
 			self.Pawn.Destroy();
-			DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,true);
+
 			//`log("Location kamikaze "@self.pawn.Name @self.pawn.Location); 
 		}
 		else

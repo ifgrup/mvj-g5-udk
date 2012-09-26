@@ -273,6 +273,11 @@ auto state Idle_Inicial
 		}//if >1 segundo
 	}//Tick
 
+	function BumpContraSuelo(Actor suelo,Vector HitNormal)
+	{
+		PEnemy(self.Pawn).AterrizadoAfterSpawn();
+	}
+
 
 	event EndState(name NextStateName)
 	{
