@@ -393,6 +393,41 @@ function vector ProyectarPuntoSuelo(vector punto)
 	return newLocation;
 }
 
+
+
+function vector ProyectarPuntoKamikaze(vector punto)
+{
+	local Vector newLocation,vAlCentro,HitLocation,HitNormal,centro;
+	local bool bfound;
+	local actor HitActor;
+
+	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
+	vAlCentro = Normal(centro - punto); 
+
+	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,punto-(vAlCentro*3000),vect(10,10,10),,TRACEFLAG_Bullet)
+	{
+		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
+		{
+			bfound = true;
+			break;
+		}
+	}		
+
+	if (!bfound)
+	{
+		`log("Kagada... no sé qué hacer...\n");
+		newLocation = punto; //sin clavarlo....
+	}
+	else
+	{
+		newLocation = HitLocation - (vAlCentro*800); //altura kamikaze
+	}
+
+	return newLocation;
+}
+
+
+
 function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 {
 	`log("ContraTorreta no tratado" @self.name);
