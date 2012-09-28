@@ -520,6 +520,11 @@ event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
 	local PPlayerBase pbase;
 
 
+	if (PEnemy_AI_Controller(Owner).GetStateName() == 'TowerAttack')
+	{
+		return;
+	}
+
 	if (PGame(Worldinfo.Game).EsPlaneta(Wall))
 	{
 		//Toñazo contra el suelo? pos interesa principalmente para el controler por si al caer de un rebote no se cosca
@@ -561,6 +566,11 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	local PAutoTurret ptorreta;
 	local PTree parbol;
 	local PPlayerBase pbase;
+
+	if (PEnemy_AI_Controller(Owner).GetStateName() == 'TowerAttack')
+	{
+		return;
+	}
 
 	if ( (Other == None) || Other.bStatic )
 		return;
@@ -617,6 +627,17 @@ singular event BaseChange()
 	local PAutoTurret ptorreta;
 	local PTree pArbol;
 	local PPlayerBase pbase;
+
+	if (Owner == None)
+	{
+		return;
+	}
+
+	if (PEnemy_AI_Controller(Owner).GetStateName() == 'TowerAttack')
+	{
+		return;
+	}
+
 
 	if( Base == None)
 	{
