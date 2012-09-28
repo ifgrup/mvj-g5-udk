@@ -204,6 +204,13 @@ state PlayerSpidering
 		return;
 		*/
 
+		//Si acabo de recibir un toñazo de rayo, no actualizamos la posición ni nada, lo hará el Giru en su tick ;)
+		if (PPawn(self.Pawn).m_rayazo_recibido)
+		{
+			return;
+		}
+
+
 		//Mientras salta, Pawn.Base vale None
 		//Si tiene que saltar, saltará en la vertical que YA tiene al estar caminando sobre el planeta
 		//por lo que no hay que cambiar ninguna rotación
@@ -1494,6 +1501,13 @@ exec function iceradio(int radio, int altura)
 	m_torreta_victor.m_radioinicial = radio;
 	m_torreta_victor.m_alturainicial = altura;
 	ice();
+}
+
+exec function kk()
+{
+	PPawn(self.Pawn).ActualizaPosicionDeseadaNube();
+	PPawn(self.Pawn).m_particulas_Rayo_Ira.SetLocation(PPawn(self.Pawn).m_pos_deseada_nube);
+	PPawn(self.Pawn).RayazoNubeIra();
 }
 
 
