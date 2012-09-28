@@ -31,6 +31,7 @@ var float m_currentDespkamikaze;
 var int repeti;
 var float dpqpi;
 
+var int m_tiempo_max_kamikaze;
 
 simulated event PostBeginPlay()
 {
@@ -383,21 +384,19 @@ state GoToNextPath
 			GoToState('TowerAttack');
 		}
 
-		if(m_tiempo_tickp >25)
+		if(m_tiempo_tickp >1)
 		{
 			minionpqpipos1=self.Pawn.Location;
-			
-			
 		}
 
-		if(m_tiempo_tickp >150)
+		if(m_tiempo_tickp >30)
 		{
 			minionpqpipos2=self.Pawn.Location;
   			dpqpi=vsize(minionpqpipos1-minionpqpipos2);
 
 			if(dpqpi==0)
 			{
-				DrawDebugSphere(self.Pawn.Location,35,20,250,0,0,true);
+				DrawDebugSphere(self.Pawn.Location,35,20,250,0,0,false);
 				
 				Velocity = vect(0,0,0);
 				Acceleration = vect(0,0,0);
@@ -406,17 +405,11 @@ state GoToNextPath
 
 				StopLatentExecution();
 				GoToState('TowerAttack');
-				
-
 			}
 
 			m_tiempo_tickp=0;
 		}
 		
-		
-
-		
-
 
 
 		//Cada segundo, hacemos el control que hacía inicialmente la función BrainTimer
@@ -534,7 +527,7 @@ state GoToNextPath
 		m_ticks_colegas_cerca = (m_ticks_colegas_cerca+1) %3 ;
 		if (m_ticks_colegas_cerca == 0)
 		{
-			//EstanLosColegasCercaNeng();
+			EstanLosColegasCercaNeng();
 		}
 	}//Tick
 
@@ -825,13 +818,18 @@ state TowerAttack
 		Pawn.Acceleration = vect(0,0,0);
 		
 
-		
-		if (m_currentDespkamikaze < vsize(locaKamikaze-locaKamikazeini))
+		if 	(m_currentDespkamikaze >= vsize(locaKamikaze-locaKamikazeini)
+			|| (m_tiempo_tick > m_tiempo_max_kamikaze) 	)
+		{
+			DrawDebugSphere(self.Pawn.Location,40,10,0,100,0,false);
+			kamikaze();
+		}
+		else
 		{
 			desp = normal(locaKamikaze-self.pawn.location); //de donde estoy hasta el destino del toñazo
 			//desp = (desp * 10* delta) / (1+m_tiempo_tick); //intento de desaceleración
 			//desp = desp * 20 * (1/(1+m_tiempo_tick));
-			desp = desp * 50 * delta ;
+			desp = desp * 100 * delta ;
 	
 			self.pawn.setLocation( self.Pawn.Location+ desp);
 			m_currentDespkamikaze += vsize(desp);
@@ -839,16 +837,6 @@ state TowerAttack
 	
 			DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
 		}
-
-		if(m_tiempo_tick>8)
-		{
-
-			DrawDebugSphere(self.Pawn.Location,40,10,0,100,0,true);
-			kamikaze();
-		
-		}
-		
-
 		
 	}
 
@@ -871,7 +859,7 @@ Begin:
 	Pawn.Velocity = vect(0,0,0);
 	Pawn.Acceleration = vect(0,0,0);
 	StopLatentExecution();
-	DrawDebugSphere(pawn.Location,80,60,100,0,100,true);
+	DrawDebugSphere(pawn.Location,80,60,100,0,100,false);
 	//PEnemyPawn_Minion(self.Pawn).activarParticulasKamikaze();
 	locaKamikaze=ProyectarPuntoKamikaze();
 	locaKamikazeini=pawn.Location;
@@ -884,6 +872,7 @@ Begin:
 	DrawDebugSphere(locaKamikaze,80,20,0,50,100,true);
 	m_tiempo_tick=0;
 	//self.pawn.GoToState('');
+	m_currentDespkamikaze=0;
 		
 
 }/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
@@ -902,4 +891,5 @@ defaultproperties
 	m_max_dist_disparo_ppawn=400
 	m_timout_entre_disparos = 3
 	m_ClaseMisil=class 'PMisilMinion'
+	m_tiempo_max_kamikaze = 10
 }
