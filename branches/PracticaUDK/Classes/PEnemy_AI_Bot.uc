@@ -26,8 +26,10 @@ var float m_distancia_Base_kamikaze; //Distancia a la base en la que se consider
 
 var int m_ticks_colegas_cerca; //Intento de optimizar llamadas en ticks
 
-var vector locaKamikaze;  //punto para hacer el kamikaze
-
+var vector locaKamikaze,locaKamikazeini;  //punto para hacer el kamikaze
+var float m_currentDespkamikaze;
+var int repeti;
+var float dpqpi;
 
 
 simulated event PostBeginPlay()
@@ -37,6 +39,8 @@ simulated event PostBeginPlay()
 	self.bCanStepUpOn =false;
 	//self.bMovable = false;
 	self.bPushedByEncroachers = false;
+	
+
 	
 
 }
@@ -147,6 +151,58 @@ function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 
 
 
+function kamikaze ()
+	{
+		//local PPawn gppawn;
+		local PAutoTurret torreta;
+		local vector posenemigo;
+		local Projectile Proj;
+		local vector rx,ry,rz;
+	
+
+		if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+        {
+			
+			GetAxes (self.theBase.Rotation,rx,ry,rz);
+			posenemigo = self.theBase.Location + rz*450; //Por no poner un socket en la casa
+        }
+		else
+		{
+			if (vsize(PGame(WorldInfo.Game).GetALocalPlayerController().Pawn.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+			{
+				posenemigo=	PPAwn(PGame(WorldInfo.Game).GetALocalPlayerController().Pawn).GetPosicionSocketCuerpo();
+			}
+			else
+			{
+				posenemigo=self.pawn.location+vrand()*500;
+			
+				foreach VisibleCollidingActors(class'PAutoTurret', torreta,2000.f,self.Pawn.Location,,vect(100,100,100),true)
+				{
+					posenemigo=torreta.Location;
+					break;
+			
+				}
+			}
+		}
+
+
+
+		//lanzamos toñazo kamikaze
+
+		Proj = Spawn(class'PMisiles',self,,self.Pawn.Location,,,True);
+		if (Proj!= None)
+		{
+			Proj.Init(Normal(posenemigo-self.Pawn.Location));
+			self.Pawn.Destroy();
+			self.Destroy();
+		
+		}	
+
+	}
+
+
+
+
 /* --------------- ESTADO IDLE_INICIAL --------------
  * --- Empieza en este estado, y cuando el Pawn recién creado llega al suelo, pasamos al estado inicial
  */
@@ -166,6 +222,21 @@ auto state Idle_Inicial
 		local vector antes,despues;
 
 		super.Tick(Deltatime);
+
+		
+			if(VSize(theBase.Location - Pawn.Location) < m_distancia_Base_kamikaze)
+			{
+				//Lo paramos, y lo enviamos al estado de ataque a la torre (TowerAttack)
+				Velocity = vect(0,0,0);
+				Acceleration = vect(0,0,0);
+				self.pawn.Velocity = vect(0,0,0);
+				self.pawn.Acceleration = vect(0,0,0);
+
+				StopLatentExecution();
+				GoToState('TowerAttack');
+			}
+
+
 		if (m_tiempo_tick >= 1.0)
 		{
 			m_intentos_nuevo_nodo++;
@@ -300,6 +371,52 @@ state GoToNextPath
 		{
 			//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
 		}
+		if(VSize(theBase.Location - Pawn.Location) < m_distancia_Base_kamikaze)
+		{
+			//Lo paramos, y lo enviamos al estado de ataque a la torre (TowerAttack)
+			Velocity = vect(0,0,0);
+			Acceleration = vect(0,0,0);
+			self.pawn.Velocity = vect(0,0,0);
+			self.pawn.Acceleration = vect(0,0,0);
+
+			StopLatentExecution();
+			GoToState('TowerAttack');
+		}
+
+		if(m_tiempo_tickp >25)
+		{
+			minionpqpipos1=self.Pawn.Location;
+			
+			
+		}
+
+		if(m_tiempo_tickp >150)
+		{
+			minionpqpipos2=self.Pawn.Location;
+  			dpqpi=vsize(minionpqpipos1-minionpqpipos2);
+
+			if(dpqpi==0)
+			{
+				DrawDebugSphere(self.Pawn.Location,35,20,250,0,0,true);
+				
+				Velocity = vect(0,0,0);
+				Acceleration = vect(0,0,0);
+				self.pawn.Velocity = vect(0,0,0);
+				self.pawn.Acceleration = vect(0,0,0);
+
+				StopLatentExecution();
+				GoToState('TowerAttack');
+				
+
+			}
+
+			m_tiempo_tickp=0;
+		}
+		
+		
+
+		
+
 
 
 		//Cada segundo, hacemos el control que hacía inicialmente la función BrainTimer
@@ -417,7 +534,7 @@ state GoToNextPath
 		m_ticks_colegas_cerca = (m_ticks_colegas_cerca+1) %3 ;
 		if (m_ticks_colegas_cerca == 0)
 		{
-			EstanLosColegasCercaNeng();
+			//EstanLosColegasCercaNeng();
 		}
 	}//Tick
 
@@ -433,7 +550,7 @@ state GoToNextPath
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH"@self.Name);
+		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH REPETICIONES "@self.Name @repeti);
 		//self.PushState('StopColision');
 		ReboteRespectoA( None,vect(0,0,0),false,300);
 		self.m_b_breakpoint = true;
@@ -463,6 +580,7 @@ state GoToNextPath
 
 Begin:
 	m_tiempo_tick = 0;
+	repeti++;
 	if (theObjective != None)
 	{
 		//DBG WorldInfo.Game.Broadcast(self,Name$" va hacia el path"@theObjective.Name);
@@ -692,104 +810,80 @@ state TowerAttack
 
 	}
 
-	function kamikaze ()
-	{
-		//local PPawn gppawn;
-		local PAutoTurret torreta;
-		local vector posenemigo;
-		local Projectile Proj;
-		local vector rx,ry,rz;
-		posenemigo=vrand();
-
-		if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
-        {
-			
-			GetAxes (self.theBase.Rotation,rx,ry,rz);
-			posenemigo = self.theBase.Location + rz*450; //Por no poner un socket en la casa
-        }
-		else
-		{
-			if (vsize(PGame(WorldInfo.Game).GetALocalPlayerController().Pawn.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
-			{
-				posenemigo=	PPAwn(PGame(WorldInfo.Game).GetALocalPlayerController().Pawn).GetPosicionSocketCuerpo();
-			}
-			else
-			{
-			
-				foreach VisibleCollidingActors(class'PAutoTurret', torreta,2000.f,self.Pawn.Location,,vect(100,100,100),true)
-				{
-			
-					if(torreta!=none)
-					{
-						posenemigo=torreta.Location;
-					}
-					else
-					{
-						posenemigo=vrand();
-					}
-			
-				}
-			}
-		}
-
-
-
-		//lanzamos toñazo kamikaze
-
-		Proj = Spawn(class'PMisiles',self,,self.Pawn.Location,,,True);
-		if (Proj!= None)
-		{
-			Proj.Init(Normal(posenemigo-self.Pawn.Location));
-			self.Destroy();
-			self.Pawn.Destroy();
-		}	
-
-	}
-/*
+	
+	
 	event Tick(float delta)
 	{
-		super.Tick(delta);
-		//self.Velocity = vect(0,0,0);
-		//self.Acceleration = vect(0,0,0);
-		//self.Pawn.Velocity = vect(0,0,0);
-	//	self.Pawn.Acceleration = vect(0,0,0);
+		local vector desp;
 		
-		
-/*
-		if (m_tiempo_tick < 15 )
-		{   
-			//kamikaze();
-			//DrawDebugSphere(self.Pawn.Location,m_tiempo_tick*10,20,0,50,100,true);
-			//self.Destroy();
-			//self.Pawn.Destroy();
 
-			//`log("Location kamikaze "@self.pawn.Name @self.pawn.Location); 
-		}
-		else
+		super.tick(delta);
+		
+		Velocity = vect(0,0,0);
+		Acceleration = vect(0,0,0);
+		Pawn.Velocity = vect(0,0,0);
+		Pawn.Acceleration = vect(0,0,0);
+		
+
+		
+		if (m_currentDespkamikaze < vsize(locaKamikaze-locaKamikazeini))
 		{
-			m_tiempo_tick = 0;
-				
+			desp = normal(locaKamikaze-self.pawn.location); //de donde estoy hasta el destino del toñazo
+			//desp = (desp * 10* delta) / (1+m_tiempo_tick); //intento de desaceleración
+			//desp = desp * 20 * (1/(1+m_tiempo_tick));
+			desp = desp * 50 * delta ;
+	
+			self.pawn.setLocation( self.Pawn.Location+ desp);
+			m_currentDespkamikaze += vsize(desp);
+			//_DEBUG `log("current desp "@self.Name @m_currentDespContraTorreta);
+	
+			DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
 		}
-*/
+
+		if(m_tiempo_tick>8)
+		{
+
+			DrawDebugSphere(self.Pawn.Location,40,10,0,100,0,true);
+			kamikaze();
+		
+		}
+		
+
+		
 	}
-   */
+
+/*
+event EndState(name NextStateName)
+	{
+		`log ("_**********************_____EEEE_____ saliendo de kamikaze");
+	}
+	event PoppedState()
+	{
+			`log("_____******************__PPPPPPPPPPPP___ saliendo de kamikaze");
+	}
+
+*/
 Begin:
 	StopLatentExecution();
 	m_tiempo_tick = 0;
-	//self.Velocity = vect(0,0,0);
-   // self.Acceleration = vect(0,0,0);
-	//self.Pawn.Velocity = vect(0,0,0);
-	//self.Pawn.Acceleration = vect(0,0,0);
+	Velocity = vect(0,0,0);
+   	Acceleration = vect(0,0,0);
+	Pawn.Velocity = vect(0,0,0);
+	Pawn.Acceleration = vect(0,0,0);
 	StopLatentExecution();
+	DrawDebugSphere(pawn.Location,80,60,100,0,100,true);
 	//PEnemyPawn_Minion(self.Pawn).activarParticulasKamikaze();
-	locaKamikaze=ProyectarPuntoKamikaze(Pawn.Location);
-	self.pawn.SetPhysics(PHYS_None);
-	self.pawn.SetPhysics(PHYS_Flying);
-	MoveToDirectNonPathPos(locaKamikaze);
-	SetTimer(3,false,'kamikaze');
+	locaKamikaze=ProyectarPuntoKamikaze();
+	locaKamikazeini=pawn.Location;
+	pawn.SetPhysics(PHYS_None);
+	//pawn.SetPhysics(PHYS_Flying);
+//	pawn.SetLocation(locaKamikaze);
+	
+	//MoveToDirectNonPathPos(locaKamikaze);
+//	SetTimer(8,false,'kamikaze');
 	DrawDebugSphere(locaKamikaze,80,20,0,50,100,true);
-
-	self.pawn.GoToState('');
+	m_tiempo_tick=0;
+	//self.pawn.GoToState('');
 		
 
 }/* ---------------FIN ESTADO TOWER_ATTACK --------------*/
@@ -804,7 +898,7 @@ defaultproperties
 	bMovable=false
 	m_dist_choque_Minion=250
 	m_dist_choque_Scout=125
-	m_distancia_Base_kamikaze=800
+	m_distancia_Base_kamikaze=1700
 	m_max_dist_disparo_ppawn=400
 	m_timout_entre_disparos = 3
 	m_ClaseMisil=class 'PMisilMinion'
