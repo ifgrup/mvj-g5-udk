@@ -64,11 +64,11 @@ function GestionEscudo()
 	local int escudo_actual;
 	local int i,Index;
 	local EscudoInfo escudo;
-	local bool ira;
+	local bool bira; //Hay que activar ira o no, es decir, está cerca o no el PPawn
 	local LinearColor colorescudo; 
 	escudo_actual = 0;
 	colorescudo=MakeLinearColor(0, 0, 0, 1.0);
-	ira=false;
+	bira=false;
 	//Marco todos como borrables inicialmente
 	for (i = 0; i < self.m_escudo_info.Length; i++)
 	{
@@ -111,7 +111,7 @@ function GestionEscudo()
 		//Gestión de ira de Scout utilizando el foreach del escudo
 		if(PPawn(GP)!=none)
 		{
-			ira=true;
+			bira=true;
 		
 		}
 		
@@ -123,7 +123,10 @@ function GestionEscudo()
 	{
 		if (m_escudo_info[i].DeleteMe)
 		{
-			m_escudo_info[i].Pawn.desactivarEscudoScout();
+			if (m_escudo_info[i].Pawn != none) //Puede haber muerto
+			{
+				m_escudo_info[i].Pawn.desactivarEscudoScout();
+			}
 			m_escudo_info[i].Pawn = none; //GC
 			m_escudo_info.Remove(i,1);
 			i--; //ÑAAAAAAAAAPAAAAAAAAAAAAAAAAAAA!!!
@@ -137,7 +140,10 @@ function GestionEscudo()
 	m_escudo = escudo_actual;
 	//_DEBUG_`log("Escudo del scout "@self.Name @m_escudo);
 	
-	PEnemyPawn_Scout(self.Pawn).GestionIra(ira);
+	PEnemyPawn_Scout(self.Pawn).GestionIra(bira); //SI ira es true, aumentará, si es false, disminuirá
+
+	NubeDeIraSobrePawn(); //Activar Nube encima de Giru en función del tamaño de la ira.
+
 	if(m_escudo>0)
 	{
 		colorescudo.R=PEnemyPawn_Scout(self.Pawn).Col2.R;
@@ -161,6 +167,25 @@ function GestionEscudo()
 	}
 	
 	
+}
+
+function NubeDeIraSobrePawn()
+{
+	local PEnemyPawn_Scout scoutpawn;
+	local PPawn giru;
+
+	giru = PPawn( PGame(WorldInfo.Game).GetALocalPlayerController().Pawn);
+	scoutpawn = PEnemyPawn_Scout(self.Pawn);
+	
+	giru.EstadoNubeIra(scoutpawn.ValorIra());
+
+	//Si está en el nivel máximo, rayazo contra el giru
+	if (3 == scoutpawn.NivelIra())
+	{
+		giru.RayazoNubeIra();
+		scoutpawn.ResetIra();
+	}
+
 }
 
 
