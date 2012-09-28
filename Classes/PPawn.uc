@@ -369,16 +369,15 @@ simulated function PostBeginPlay()
 		}
 	}
 
+	EstadoPropulsores(true);
+
 	//Inicialización del sistema de partículas de la Nube de Ira
 	m_particulas_Nube_Ira = Spawn(class'EmitterSpawnable',Self);
 	if (m_particulas_Nube_Ira != None)
 	{
 		m_particulas_Nube_Ira.SetTemplate(ParticleSystem'PGameParticles.Particles.NubeIra');
-		//self.Mesh.AttachComponentToSocket(m_particulas_Nube_Ira.ParticleSystemComponent, 'Socket_Cabeza');
 		m_particulas_Nube_Ira.SetFloatParameter('ParamAlpha',0.3);		
 		m_particulas_Nube_Ira.ParticleSystemComponent.SetActive(false);
-		//m_particulas_Nube_Ira.SetFloatParameter('NumRayitos',30);
-		//m_particulas_Nube_Ira.ParticleSystemComponent.DeactivateSystem();
 	}
 
 	//Inicialización del sistema de partículas del rayaco de la Nube de Ira
@@ -505,14 +504,7 @@ function EstadoPropulsores(bool bEstado)
 
 	for (i=0;i<m_ParticulasPropulsoresRobot.Length;i++)
 	{
-		if(bEstado)
-		{
-			m_ParticulasPropulsoresRobot[i].ParticleSystemComponent.ActivateSystem();
-		}
-		else
-		{
-			m_ParticulasPropulsoresRobot[i].ParticleSystemComponent.DeactivateSystem();
-		}
+		m_ParticulasPropulsoresRobot[i].ParticleSystemComponent.SetActive(bEstado);
 	}
 }
 
