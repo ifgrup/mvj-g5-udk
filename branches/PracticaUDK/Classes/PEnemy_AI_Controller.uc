@@ -1,7 +1,7 @@
 class PEnemy_AI_Controller extends AIController;
 
 var PPlayerBase theBase;    //Base objetivo de juego
-var float m_tiempo_tick;    //Para control de tiempo. Actualizada en el tick global
+var float m_tiempo_tick,m_tiempo_tickp;    //Para control de tiempo. Actualizada en el tick global
 var int id;                 //Id del spawner que lo creó. Para identificar el scout y sus minions
 
 var bool m_b_breakpoint; //Se pone a true al disparar con Giru, usado para poner un if y un breakpoint dentro, para
@@ -28,6 +28,7 @@ var bool  m_disparo_posible;
 var float m_tick_disparo;
 var float m_timout_entre_disparos; //cada cuanto puedo disparar al Giru
 var class<Actor> m_ClaseMisil;
+var vector minionpqpipos1,minionpqpipos2;
 
 simulated event PostBeginPlay()
 {
@@ -46,6 +47,7 @@ function Tick(Float Deltatime)
 	
 	//Control global de tiempo. Cada estado lo pondrá a cero y controlará a su gusto
 	m_tiempo_tick += DeltaTime;
+	m_tiempo_tickp += DeltaTime;
 
 	//Actualización de la rotación del pawn que controlamos
 	if (Pawn != None)
@@ -395,35 +397,9 @@ function vector ProyectarPuntoSuelo(vector punto)
 
 
 
-function vector ProyectarPuntoKamikaze(vector punto)
+function vector ProyectarPuntoKamikaze()
 {
-	local Vector newLocation,vAlCentro,HitLocation,HitNormal,centro;
-	local bool bfound;
-	local actor HitActor;
-
-	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
-	vAlCentro = Normal(centro - punto); 
-
-	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,punto-(vAlCentro*3000),vect(10,10,10),,TRACEFLAG_Bullet)
-	{
-		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
-		{
-			bfound = true;
-			break;
-		}
-	}		
-
-	if (!bfound)
-	{
-		`log("Kagada... no sé qué hacer...\n");
-		newLocation = punto; //sin clavarlo....
-	}
-	else
-	{
-		newLocation = HitLocation - (vAlCentro*800); //altura kamikaze
-	}
-
-	return newLocation;
+	return self.Pawn.Location+self.Pawn.Floor*1000;
 }
 
 
@@ -545,5 +521,8 @@ DefaultProperties
 {
 	
 	m_tiempo_tick=0
-	m_despContraTorreta = 40;
+	m_tiempo_tickp=0
+	m_despContraTorreta = 40
+	minionpqpipos1=(X=0,Y=0,Z=0);
+	minionpqpipos2=(X=1000,Y=1000,Z=1000);
 }
