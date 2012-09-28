@@ -1088,7 +1088,7 @@ function float GetAngle(Vector PointB, Vector PointC)
 {
 
 	local int pvida;
-	local float sira;
+	local int nivel_ira;
 
 	pvida=(ERadarInfo.UTPawn.life*100) /ERadarInfo.UTPawn.MaxLife;
 	//`log("la vida de los Penemy en %"@pvida);
@@ -1097,42 +1097,30 @@ function float GetAngle(Vector PointB, Vector PointC)
 	if(PEnemyPawn_Scout (ERadarInfo.UTPawn)!=none && PGame(WorldInfo.Game).bEarthNotFlying)
 	{
 		//Icono ira
-		sira=(PEnemyPawn_Scout(ERadarInfo.UTPawn).ira*100) /PEnemyPawn_Scout(ERadarInfo.UTPawn).max_ira;
-		//_DEBUG_ `log("_____________________________________ % de ira·"@sira);
-		//Lvl1 ira 33%
-		if(sira>33)
-		{
-			Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
-			Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
-			playsound(irasonido1,true);
-			
-			
-		
-		}
-		
-		
-		//Lvl2 ira 66%
-		if(sira>66)
-		{
-			Canvas.SetPos(ScreenHUDLocation.X-98+ira2.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
-			Canvas.DrawTile(ira2, ira2.SizeX*0.25, ira2.SizeY*0.25, 0.f, 0.f, ira2.SizeX, ira2.SizeY,, true);
-			
-		
-		}
-		
-		
-		//Lvl3 ira 100%
-		if(sira>99)
-		{
-			Canvas.SetPos(ScreenHUDLocation.X-98+ira1.SizeX*0.25+ira1.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
-			Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
-			
+		nivel_ira = PEnemyPawn_Scout(ERadarInfo.UTPawn).NivelIra();
 
+		switch (nivel_ira)
+		{
+			//SI es 0, no dibujamos nada obviamente ;)
+
+			case 1:
+		
+				Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+				Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
+				playsound(irasonido1,true);
+				break;
+
+			case 2:
+				Canvas.SetPos(ScreenHUDLocation.X-98+ira2.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+				Canvas.DrawTile(ira2, ira2.SizeX*0.25, ira2.SizeY*0.25, 0.f, 0.f, ira2.SizeX, ira2.SizeY,, true);
+				break;
+
+			case 3:
+				Canvas.SetPos(ScreenHUDLocation.X-98+ira1.SizeX*0.25+ira1.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+				Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
+				break;
 		}
-		
-		
-		
-		
+
 		
 		// Borde
 		Canvas.SetPos(ScreenHUDLocation.X-100, ScreenHUDLocation.Y-150);

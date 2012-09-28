@@ -208,6 +208,40 @@ function GestionIra(bool mecabreo)
 	}
 }
 
+function int ValorIra()
+{
+	return self.ira;
+}
+
+function int NivelIra()
+{
+	//Devuelve el nivel de Ira en función de la ira actual respecto al máximo de ira
+	local int pct;
+	pct = (ira*100) / max_ira;
+
+	if (pct < 30)
+	{
+		return 0;
+	}
+
+	if (pct < 50)
+	{
+		return 1;
+	}
+
+	if (pct < 98)
+	{
+		return 2;
+	}
+
+	return 3;
+}
+
+function ResetIra()
+{
+	ira = 0;
+}
+
 event NuevoPaso()
 {
 	//EL ogro ha empezado otro paso. Ruido y sistema de partículas

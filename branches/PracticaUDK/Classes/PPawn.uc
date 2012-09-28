@@ -43,6 +43,10 @@ var bool m_bEstoyCayendoDelCielo; //Para saber si debemos utilizar m_roll_antes_
 
 var float life;
 
+var EmitterSpawnable m_particulas_Nube_Ira,m_particulas_Rayo_Ira;
+var vector m_pos_deseada_nube; //Para ir moviendo el sistema de partículas
+var bool m_rayazo_recibido; //Si el Giru acaba de recibir un rayaco
+
 function float CalcularMediaTranslateZ(float valorZ)
 {
 	local int i;
@@ -72,9 +76,43 @@ event Tick(float DeltaTime)
 	local vector rx,ry,rz;
 	local vector posActual;
 	local float valorZ;
-
+	local vector posNubeActual;
+	local vector desp;
+	local rotator rot;
+	local quat qact,qgiro;
 
 	super.Tick(DeltaTime);
+
+	//COntrol de posición de la nube de ira
+	if (m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
+	{
+		posNubeActual = m_particulas_Nube_Ira.Location;
+		desp = 600*DeltaTime*Normal(m_pos_deseada_nube - posNubeActual);
+		m_particulas_Nube_Ira.SetLocation(posNubeActual+desp);
+		m_particulas_Rayo_Ira.SetLocation(posNubeActual+desp);
+		//m_particulas_Nube_Ira.SetLocation(m_pos_deseada_nube);
+
+		//m_particulas_Nube_Ira.ParticleSystemComponent.KillParticlesForced();
+	}
+
+	//Si estoy recien estoñao por un rayo, giru el pawn:
+	if (m_rayazo_recibido)
+	{
+		//Puedo cambiar la rotación aquí porque en el controller, si m_rayazo_recibido, no actualiza la rotación ;)
+		GetAxes(self.Rotation,rx,ry,rz);
+		qact = QuatFromRotator(self.Rotation);
+		
+		//qgiro = QuatFromAxisAndAngle(ry,25*DegToRad); 
+		//qact = QuatProduct(qgiro,qact);
+	
+		qgiro = QuatFromAxisAndAngle(rz,600*DeltaTime*DegToRad); 
+		qact = QuatProduct(qgiro,qact);
+		
+
+		rot = QuatToRotator(qact);
+		self.SetRotation(rot);
+	}
+
 	//if (self.IsInState('PawnFalling') || self.IsInState('PawnFallingSky') || self.IsInState('PawnFlaying'))
 
 	if (!self.IsInState('PPawn') && !self.IsInState('PawnPreparandoFlaying'))
@@ -120,7 +158,7 @@ event Tick(float DeltaTime)
 	mesh.SetTranslation(-vz);
 	m_TranslateZ = -vz;
 	//DrawDebugSphere(posActual,5,50,200,0,0,true);
-	NubeDeIra(0);
+
 }
 
 
@@ -330,7 +368,117 @@ simulated function PostBeginPlay()
 
 		}
 	}
+
+	//Inicialización del sistema de partículas de la Nube de Ira
+	m_particulas_Nube_Ira = Spawn(class'EmitterSpawnable',Self);
+	if (m_particulas_Nube_Ira != None)
+	{
+		m_particulas_Nube_Ira.SetTemplate(ParticleSystem'PGameParticles.Particles.NubeIra');
+		//self.Mesh.AttachComponentToSocket(m_particulas_Nube_Ira.ParticleSystemComponent, 'Socket_Cabeza');
+		m_particulas_Nube_Ira.SetFloatParameter('ParamAlpha',0.3);		
+		m_particulas_Nube_Ira.ParticleSystemComponent.SetActive(false);
+		//m_particulas_Nube_Ira.SetFloatParameter('NumRayitos',30);
+		//m_particulas_Nube_Ira.ParticleSystemComponent.DeactivateSystem();
+	}
+
+	//Inicialización del sistema de partículas del rayaco de la Nube de Ira
+	m_particulas_Rayo_Ira = Spawn(class'EmitterSpawnable',Self);
+	if (m_particulas_Rayo_Ira != None)
+	{
+		m_particulas_Rayo_Ira.SetTemplate(ParticleSystem'PGameParticles.Particles.RayoIra');
+		m_particulas_Rayo_Ira.ParticleSystemComponent.SetActive(false);
+	}
+
 }
+
+function ActivarNubeIra()
+{
+	if (!m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
+	{
+		ActualizaPosicionDeseadaNube();
+		m_particulas_Nube_Ira.SetLocation(self.m_pos_deseada_nube);
+		m_particulas_Nube_Ira.ParticleSystemComponent.SetActive(true);
+	}
+}
+
+function DesactivarNubeIra()
+{
+
+return;
+	if (m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
+	{
+		m_particulas_Nube_Ira.ParticleSystemComponent.SetActive(false);
+	}
+	
+}
+
+function EstadoNubeIra(int rayitos)
+{
+	//Si no estamos en el estado base, o saltando,nada de nubes.
+	//Si no, al volar y tal también se pinta y hace cosicas feas ;)
+
+	local name estado;
+	estado = self.GetStateName();
+
+	if ( (estado != 'PPawn' &&  estado != 'PawnFalling')
+		 || rayitos == 0)
+	{
+		DesactivarNubeIra();
+		return;
+	}
+	else
+	{
+		ActivarNubeIra();
+		`log("____Activando nube ira");
+		//Aplica el valor de la ira al número de rayitos que tiene la nuve
+		m_particulas_Nube_Ira.SetFloatParameter('NumRayitos',rayitos);
+	}
+
+	//Y actualizo la posición deseada de la nube:
+	ActualizaPosicionDeseadaNube();
+}
+
+function RayazoNubeIra()
+{
+	//Hace que salga el rayazo de la nube hacia el Giru
+	m_particulas_Rayo_Ira.SetRotation(self.Rotation);
+	m_particulas_Rayo_Ira.ParticleSystemComponent.SetActive(true);
+	//sólo debe estár así un instante o saldrán rayos sin parar:
+	//Por sistema de partículas no he sabido hacerlo..... mierda UDK de las narices... :( 
+	SetTimer(0.8,false,'SaltaPorRayaco');
+	SetTimer(1.5,false,'FinRayaco');
+}
+
+function SaltaPorRayaco()
+{
+	//Hacemos que el Giru pegue un saltico, rollo 'me ha hecho pupita'
+	m_rayazo_recibido = true; //Para que vaya girando
+	//IMPORTANTE::
+	//Este booleano se pondrá a true cuando se acabe el salto, en el EndState de PawnFalling
+
+	self.ReboteGrandeBumpCayendo(none,vect(0,0,0),vect(0,0,0));
+}
+
+function FinRayaco()
+{
+	m_particulas_Rayo_Ira.ParticleSystemComponent.SetActive(false);
+}
+
+
+function ActualizaPosicionDeseadaNube()
+{
+	local vector rx,ry,rz;
+	local vector posNube;
+
+	GetAxes (Self.Rotation,rx,ry,rz);
+	posNube = self.GetPosicionSocketCabeza() + (rz * 55);
+	m_pos_deseada_nube = posNube;
+	
+	//DrawDebugSphere(posNube,50,20,0,200,0,false);
+	//DrawDebugCylinder(self.GetPosicionSocketCabeza(),posNube,6,5,200,0,0,false);
+}
+	
+
 
 function Vector GetPosicionSocketCabeza()
 {
@@ -669,7 +817,6 @@ state PawnFalling
 			PotenciaPropulsorBase(0); //parecerá prácticamente apagado
 		}
 		PotenciaPropulsorBase(fclamp(1-(fTiempoDeSalto),0.1,0.8)); //Va perdiendo potencia
-		
 	}
 
 	/** Adds gravity to the velocity based on floor normal pawn was last on */
@@ -722,7 +869,8 @@ state PawnFalling
 		SetPhysics(PHYS_None); 
 		SetPhysics(PHYS_Spider); // "Glue" back to surface
 		
-		////_DEBUG_ ('el pawn deja de esar en Falling y va a '@NextState);
+		//Ponemos a falso m_rayazo_recibido, para que el pawn deje de girar por el rayaco, si es que lo estaba haciendo ;)
+		m_rayazo_recibido = false;
 	}
 }
 
@@ -1004,16 +1152,7 @@ function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile mis
 	}
 }
 
-function NubeDeIra(float nivel_ira)
-{
-	local vector rx,ry,rz;
-	local vector posNube;
 
-	GetAxes (Self.Rotation,rx,ry,rz);
-	posNube = self.GetPosicionSocketCabeza() + rz*85;
-	DrawDebugSphere(posNube,50,20,0,200,0,false);
-	DrawDebugCylinder(self.GetPosicionSocketCabeza(),posNube,6,5,200,0,0,false);
-}
 
 defaultproperties
 {
