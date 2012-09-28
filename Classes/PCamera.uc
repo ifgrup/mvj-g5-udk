@@ -176,7 +176,7 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
             //tapando. Por eso, el rayo hay que lanzarlo mejor desde el bicho a la cámara, y el primer obstáculo es el que 
             //utilizamos ;)
 
-            if (Trace(HitLocation, HitNormal, out_CamLoc,ppc.Pawn.Location, false, vect(12,12,12),,TRACEFLAG_Blocking) != None)
+            if (Trace(HitLocation, HitNormal, out_CamLoc,ppc.Pawn.Location, true, vect(12,12,12),,TRACEFLAG_Bullet) != None)
             {
                 //Hay contacto. Ponemos la cámara en el obstáculo
                 out_CamLoc=HitLocation;
@@ -212,6 +212,7 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
 				//Solo se pone visible de nuevo si el trace da que hay colision pero estamos fuera.
 				//Por tanto, aqui aseguramos que esté visible
 				PPAwn(ppc.Pawn).mesh.SetHidden(false);
+				PPawn(ppc.Pawn).EstadoPropulsores(true);
 			}
         }//if Pawn!= None
 
