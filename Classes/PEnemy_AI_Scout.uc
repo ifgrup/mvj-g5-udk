@@ -530,5 +530,5 @@ defaultproperties
 	m_max_dist_disparo_ppawn=500
 	m_timout_entre_disparos = 0.2
 	m_ClaseMisil=class 'PMisilScout'
-	m_DistanciaAtaqueBase=1700
+	m_DistanciaAtaqueBase=800
 }

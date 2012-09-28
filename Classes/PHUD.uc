@@ -1146,8 +1146,6 @@ function float GetAngle(Vector PointB, Vector PointC)
 
 
 
-
-	
 	
 	
 	
