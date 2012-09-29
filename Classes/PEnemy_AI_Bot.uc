@@ -40,7 +40,7 @@ simulated event PostBeginPlay()
 	self.bCanStepUpOn =false;
 	//self.bMovable = false;
 	self.bPushedByEncroachers = false;
-		minionpqpipos1=vect(0,0,0);
+	minionpqpipos1=vect(0,0,0);
 	minionpqpipos2=vect(1,1,1);
 
 	
@@ -194,8 +194,12 @@ function kamikaze ()
 		Proj =Projectile(Spawn(PEnemyPawn_Minion(self.Pawn).m_ClaseMisilKamikaze,self,,self.Pawn.Location,,,True));
 		if (Proj!= None)
 		{
+			//Lanzamos el disparo
 			Proj.Init(Normal(posenemigo-self.Pawn.Location));
-			self.Pawn.Destroy();
+			//Eliminamos al Pawn
+			PEnemyPawn_Minion(self.Pawn).Destruccion();
+			self.Pawn=None;
+			//Nos autoeliminamos
 			self.Destroy();
 		
 		}	
@@ -627,6 +631,17 @@ state Congelado
 		return;
 	}
 
+	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
+	{
+		//Sumamos 3 a los disparos recibidos mientras congelado, de forma que un disparo de turret cannon
+		//en este estado, es como 3 disparos de Giru:
+		m_disparos_giru_congelado += 3;
+		if (m_disparos_giru_congelado > 5)
+		{
+			GoToState('DeadAnyicos');
+		}
+	}
+
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en Congelado"@self.Name);
@@ -636,6 +651,7 @@ state Congelado
 			GoToState('DeadAnyicos');
 		}
 	}
+
 
 Begin:
 
@@ -678,8 +694,11 @@ state DeadAnyicos
 	{
 		//Sistema de partículas de cachos de hielo a saco.
 		`log("Soy un PEnemy_AI_Bot, y el puto Giru de los huevos me ha destruído");
+
+		PEnemyPawn_Minion(self.Pawn).Destruccion();
+		self.Pawn=None;
+		//Nos autoeliminamos
 		self.Destroy();
-		self.Pawn.Destroy();
 	}
 
 
@@ -809,6 +828,7 @@ state TowerAttack
 	event Tick(float delta)
 	{
 		local vector desp;
+		local vector despues,antes;
 		
 
 		super.tick(delta);
@@ -831,9 +851,12 @@ state TowerAttack
 			//desp = (desp * 10* delta) / (1+m_tiempo_tick); //intento de desaceleración
 			//desp = desp * 20 * (1/(1+m_tiempo_tick));
 			desp = desp * 100 * delta ;
-	
+			antes = self.Pawn.Location;
 			self.pawn.setLocation( self.Pawn.Location+ desp);
-			m_currentDespkamikaze += vsize(desp);
+			despues = self.Pawn.Location;
+
+			m_currentDespkamikaze += vsize(despues-antes);
+
 			//_DEBUG `log("current desp "@self.Name @m_currentDespContraTorreta);
 	
 			DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
