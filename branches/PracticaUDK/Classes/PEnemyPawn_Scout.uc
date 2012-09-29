@@ -151,42 +151,14 @@ simulated function PostBeginPlay()
 	ColorMesh.SetActorCollision(true, true);
 }
 
-function Vector GetPosicionCuerno()
-{
-	local vector sLocation;
-	local rotator sRotation;
-	local vector rx,ry,rz;
-	local vector centro;
-	local float dist1,dist2;
 
-	/**************
-	GetAxes(self.Rotation,rx,ry,rz);
-	
-	centro = PGame(Worldinfo.Game).GetCentroPlaneta();
-	dist1 = vsize(centro-(self.location + ( rz * 200)));
-	dist2 = vsize(centro-(self.location - (rz * 200)));
-
-	if (dist1 > dist2)
-	{
-		return (self.location + (rz * 200));
-	}
-	else
-	{
-		return (self.location - (rz * 200));
-	}
-   **************/
-
-
-	self.ColorMesh.GetSocketWorldLocationAndRotation('SocketCuerno',sLocation,sRotation);
-	return sLocation;
-}
 
 function Vector GetFireLocation()
 {
 	local vector FireLocation;
 	local Rotator FireRotation;
 
-	ColorMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+	ColorMesh.GetSocketWorldLocationAndRotation('Mascara',FireLocation,FireRotation);
 	return FireLocation;
 }
 
