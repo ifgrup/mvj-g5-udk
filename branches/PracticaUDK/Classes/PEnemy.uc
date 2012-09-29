@@ -183,10 +183,6 @@ function ActualizaRotacion(float DeltaTime)
 	DrawDebugCylinder(self.Location,self.Location+normal(self.Velocity)*100,5,5,0,0,255,false);
 	DrawDebugCylinder(self.Location,self.Location+ViewZ*100,5,5,0,255,0,false);
     */
-	if (PEnemyPawn_Scout(self) != none)
-	{
-		DrawDebugSphere(PEnemyPawn_Scout(self).GetPosicionCuerno(),50,10,200,200,0,false);
-	}
 }
 
 function PawnCaidoEncima()

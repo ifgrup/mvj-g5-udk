@@ -124,13 +124,13 @@ function PararEsperar()
 	self.Salta(true);
 }
 
-function activarEscudoScout(PEnemyPawn_Scout scout, float radio)
+function activarEscudoScout(vector posParticulas, float radio, float speedScout)
 {
-	self.GroundSpeed = scout.GroundSpeed; //Igualamos velocidad al scout
+	self.GroundSpeed = speedScout;//Igualamos velocidad al scout
 	//_DEBUG_DrawDebugCylinder(self.Location,scout.Location,10,10,0,0,200,false);
 	ParticulasEscudo.ParticleSystemComponent.SetActive(true);
 	ParticulasEscudo.SetFloatParameter('RangoAtraccion',radio);
-	ParticulasEscudo.SetVectorParameter('Destino',scout.GetPosicionCuerno());
+	ParticulasEscudo.SetVectorParameter('Destino',posParticulas);
 }
 
 function desactivarEscudoScout()
