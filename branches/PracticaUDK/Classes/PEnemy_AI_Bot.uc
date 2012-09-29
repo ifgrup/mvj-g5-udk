@@ -40,7 +40,8 @@ simulated event PostBeginPlay()
 	self.bCanStepUpOn =false;
 	//self.bMovable = false;
 	self.bPushedByEncroachers = false;
-	
+		minionpqpipos1=vect(0,0,0);
+	minionpqpipos2=vect(1,1,1);
 
 	
 
@@ -161,7 +162,7 @@ function kamikaze ()
 		local vector rx,ry,rz;
 	
 
-		if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+		if (vsize(self.theBase.Location-locaKamikazeini) < m_distancia_Base_kamikaze)
         {
 			
 			GetAxes (self.theBase.Rotation,rx,ry,rz);
@@ -169,7 +170,7 @@ function kamikaze ()
         }
 		else
 		{
-			if (vsize(PGame(WorldInfo.Game).GetALocalPlayerController().Pawn.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
+			if (vsize(PGame(WorldInfo.Game).GetALocalPlayerController().Pawn.Location-locaKamikazeini) < m_distancia_Base_kamikaze)
 			{
 				posenemigo=	PPAwn(PGame(WorldInfo.Game).GetALocalPlayerController().Pawn).GetPosicionSocketCuerpo();
 			}
@@ -190,7 +191,7 @@ function kamikaze ()
 
 		//lanzamos toñazo kamikaze
 
-		Proj = Spawn(class'PMisiles',self,,self.Pawn.Location,,,True);
+		Proj =Projectile(Spawn(PEnemyPawn_Minion(self.Pawn).m_ClaseMisilKamikaze,self,,self.Pawn.Location,,,True));
 		if (Proj!= None)
 		{
 			Proj.Init(Normal(posenemigo-self.Pawn.Location));
@@ -384,12 +385,12 @@ state GoToNextPath
 			GoToState('TowerAttack');
 		}
 
-		if(m_tiempo_tickp >1)
+		if(m_tiempo_tickp >25)
 		{
 			minionpqpipos1=self.Pawn.Location;
 		}
 
-		if(m_tiempo_tickp >30)
+		if(m_tiempo_tickp >60)
 		{
 			minionpqpipos2=self.Pawn.Location;
   			dpqpi=vsize(minionpqpipos1-minionpqpipos2);
@@ -860,7 +861,7 @@ Begin:
 	Pawn.Acceleration = vect(0,0,0);
 	StopLatentExecution();
 	DrawDebugSphere(pawn.Location,80,60,100,0,100,false);
-	//PEnemyPawn_Minion(self.Pawn).activarParticulasKamikaze();
+	PEnemyPawn_Minion(self.Pawn).activarParticulasKamikaze();
 	locaKamikaze=ProyectarPuntoKamikaze();
 	locaKamikazeini=pawn.Location;
 	pawn.SetPhysics(PHYS_None);

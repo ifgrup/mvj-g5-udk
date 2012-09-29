@@ -1,9 +1,9 @@
-class PMisiles extends UTProj_LoadedRocket;
+class PMisiKamimoco  extends UTProj_LoadedRocket;
 var name disparador; //Quién dispara el projectile. Para control de TakeDamage ñaposillo...
 DefaultProperties
 {
-/*
-	//ProjFlightTemplate=ParticleSystem'PGameMisilakos.topotakamikaze'
+
+	ProjFlightTemplate=ParticleSystem'PGameMisilakos.mokokamikaze'
 	DamageRadius=220.0
 	Damage=1
 	checkradius=200.0
@@ -15,5 +15,5 @@ DefaultProperties
 	FlockStiffness=-40
 	FlockMaxForce=800
 	FlockCurlForce=650
-	*/
+	
 }
