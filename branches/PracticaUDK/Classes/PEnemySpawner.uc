@@ -20,6 +20,8 @@ var vector m_location_primer_nodo;
 
 var int m_num_minions_por_spawn; //cuantos minions se crean cada vez
 
+var bool m_bMuertoScout; //Indica si el ogro que se creó, ha muerto
+
 struct OffsetNodo
 {
 	var vector posicion;
@@ -58,6 +60,12 @@ function IncSpawnCount()
  * */
 function SpawnEnemy()
 {
+	//Si el scout creado en primer momento muere, no se genera nada más,  y el spawner se queda inactivo:
+	if (m_bMuertoScout)
+	{
+		return;
+	}
+
 	//Si no hay Scout, lo creamos
     if(EnemyScout == none)
     {
@@ -68,6 +76,7 @@ function SpawnEnemy()
 			return;
 		}
         EnemyScout.SetColor(Col2);
+		EnemyScout.SetId(Group);
 
 		AI = spawn(class'PEnemy_AI_Scout',,,Location);
 		AI.SetColor(Col2);
@@ -86,7 +95,7 @@ function SpawnEnemy()
 
 function GeneraMinions(int cuantos)
 {
-	local PEnemy EN;
+	local PEnemyPawn_Minion EN;
 	local Penemy_AI_Bot AIB;
 	local vector vector_hacia_primer_nodo;
 	local array<OffsetNodo> posiciones;
@@ -122,6 +131,7 @@ function GeneraMinions(int cuantos)
 			if (EN!=None) //Proteccion Víctor
 			{
 				EN.SetColor(Col2);
+				EN.SetID(Group);
 				AIB = spawn(class'PEnemy_AI_Bot',,, posiciones[i].posicion);
 				AIB.SetID(Group);
 				AIB.m_AnguloOffsetInicial = posiciones[i].giro_angulo;
@@ -251,6 +261,23 @@ function SegundaOleada()
 }
 
 
+//Elimina un minion del array Enemy, para que pueda seguir spawneando
+function EliminaMinion(PEnemyPawn_Minion minion)
+{
+	local int index;
+	
+	index = self.Enemy.Find(minion);
+	if (index == -1)
+	{
+		`log ("Shit happens...");
+	}
+	else
+	{
+		Enemy.Remove(index,1);
+	}
+
+}
+
 defaultproperties
 {
 	Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment
@@ -272,4 +299,5 @@ defaultproperties
 	MaxEnemies=80;
 	m_distDelHuevoAlNacer=300
 	m_num_minions_por_spawn=2 //Inicialmente, que sólo genere 2 cada vez.
+	m_bMuertoScout=false
 }

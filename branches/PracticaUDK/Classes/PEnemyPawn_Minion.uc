@@ -14,7 +14,7 @@ var Texture2D minionPortrait0, minionPortrait1;
 
 var EmitterSpawnable ParticulasEscudo; //Partículas de escudo hacia el Scout
 
-var int minionId;
+var int minionId; //Para el tipo de Minion, Murciégalo,Topota, o Moco
 
 var class<Actor> m_ClaseMisilKamikaze,m_ClaseMisilKamikazeto,m_ClaseMisilKamikazemo;
 var EmitterSpawnable KamikazeEmitter;
@@ -116,14 +116,6 @@ function SetColor(LinearColor Col)
 	//mat.SetVectorParameterValue('ColorBase', Col1);
 }
 
-function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
-{
-	`log("Soy un Minion, y Giru me acaba de disparar el muy cabrón" @self.Name @self.GetStateName());
-}
-function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser)
-{
-	`log("Soy un Minion, y una torreta cannon me acaba de disparar la muy guarra" @self.Name);
-}
 
 function PararEsperar()
 {
@@ -183,9 +175,67 @@ function activarParticulasKamikaze(optional vector locaenemigo)
 {
 	KamikazeEmitter.ParticleSystemComponent.SetActive(true);
 	KamikazeEmitter.ParticleSystemComponent.SetRotation(self.Rotation);
-
-
 }
+
+
+function Destruccion()
+{
+	//Sistema Partículas de Muerte, y eliminarse del vector de enemigos de su spawner para control de máximo de minions
+
+	//Notificamos a PGame que eliminie al minion del array de minions
+	if(PGame(WorldInfo.Game) != none)
+	{
+	    PGame(WorldInfo.Game).EnemyKilled(self);
+	}
+
+	self.Owner.Destroy();//muerte al opresor!!
+	self.UnPossessed(); //No tenemos Owner, LIBRES!!!
+	self.Destroy(); //Qué poco ha durado la libertad...
+}
+
+/***************** FUNCIONES DE RECEPCIÓN DE DISPAROS PARA LOS MINIONS ******************************/
+
+function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//Tratamiento default de recepción de disparo de Giru. Si no se redefine en las PEnemy hijas, será 
+	//este. Si se quiere un tratamiento específico, se redefine el hijo.
+	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoGiru + lo que deba hacer
+
+    life--;
+	//_DEBUG_ ("Vida PEnemy" @life);
+	if(life <= 0)
+	{
+		Destruccion();
+	}
+}
+
+
+function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//Tratamiento default de recepción de disparo de TurretIce. Si no se redefine en las PEnemy hijas, será 
+	//este. Si se quiere un tratamiento específico, se redefine el hijo.
+	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoTurretCannon + lo que deba hacer
+
+    life-=3; //Cada disparo de torreta es un toñazo 3 veces más grande que el del Giru, por ejemplo
+	//_DEBUG_ ("Vida PEnemy" @life);
+	if(life <= 0)
+	{
+		Destruccion();		
+	}
+}
+
+function RecibidoDisparoTurretIce(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//Tratamiento default de recepción de disparo de TurretIce. Si no se redefine en las PEnemy hijas, será 
+	//este. Si se quiere un tratamiento específico, se redefine el hijo.
+	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoTurretIce + lo que deba hacer
+
+    //No afecta a la vida, simplemente lo para (por ejemplo)..
+	//Así que no hay que hacer nada más de momento
+}
+
+
+
 
 defaultproperties
 {
@@ -236,4 +286,5 @@ defaultproperties
 	GroundSpeed=80.0
 	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 100
+	life=8
 }
