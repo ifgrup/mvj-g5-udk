@@ -15,6 +15,14 @@ var float m_defaultGroundSpeed;
 
 var Texture2D m_portrait;
 
+var int id ; //ID del grupo/spawner/ogro al que pertenece
+/**
+ * Ponemos el identificador. Debe ser el mismo que el del Spawner que lo generó
+ * */
+function SetID(int i)
+{
+	id = i;
+}
 
 
 function Vector GetPosicionSocketCuerpo();
@@ -192,6 +200,8 @@ function PawnCaidoEncima()
 	self.GotoState('ChafadoPorPawn');
 }
 
+function Destruccion(); //Al declararla aquí, obligamos a definirla para todos
+
 /*Take Damage genérico de TODOS los PEnemy.
  * Simplemente decodifica el tipo de daño, y llama a la función correspondiente según el daño.
  * Cada Pawn hijo deberá escribir su propio tratamiento para cada tipo de daño
@@ -210,7 +220,10 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 	{
 		//_DEBUG_ ("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
 		RecibidoDisparoGiru(HitLocation, Momentum,DamageCauser);
-		PEnemy_AI_Controller(Owner).ControlTakeDisparoGiru(HitLocation, Momentum,DamageCauser);
+		if (Owner != None) //entre el primer if y este parece que muere... viva la mutex del UDK...
+		{
+			PEnemy_AI_Controller(Owner).ControlTakeDisparoGiru(HitLocation, Momentum,DamageCauser);
+		}
 		return;
 	}
 
@@ -240,57 +253,15 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
     RecibidoDanyoSinIdentificar(HitLocation,Momentum,DamageCauser);	
 } //TakeDamage
 
-function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
-{
-	//Tratamiento default de recepción de disparo de Giru. Si no se redefine en las PEnemy hijas, será 
-	//este. Si se quiere un tratamiento específico, se redefine el hijo.
-	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoGiru + lo que deba hacer
-
-    life--;
-	//_DEBUG_ ("Vida PEnemy" @life);
-	if(life == 0)
-	{
-		
-		Destroy();
-		if(PGame(WorldInfo.Game) != none)
-		{
-		    PGame(WorldInfo.Game).EnemyKilled(self);
-		}
-	}
-}
-
-
-function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser)
-{
-	//Tratamiento default de recepción de disparo de TurretIce. Si no se redefine en las PEnemy hijas, será 
-	//este. Si se quiere un tratamiento específico, se redefine el hijo.
-	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoTurretCannon + lo que deba hacer
-
-    life-=3; //Cada disparo de torreta es un toñazo 3 veces más grande que el del Giru, por ejemplo
-	//_DEBUG_ ("Vida PEnemy" @life);
-	if(life == 0)
-	{
-		
-		Destroy();
-		if(PGame(WorldInfo.Game) != none)
-		{
-		    PGame(WorldInfo.Game).EnemyKilled(self);
-		}
-	}
-}
-
-function RecibidoDisparoTurretIce(vector HitLocation, vector Momentum,Actor DamageCauser)
-{
-	//Tratamiento default de recepción de disparo de TurretIce. Si no se redefine en las PEnemy hijas, será 
-	//este. Si se quiere un tratamiento específico, se redefine el hijo.
-	//Y si quiere hacer algo más aparte de esto, pues que haga super.RecibidoDisparoTurretIce + lo que deba hacer
-
-    //No afecta a la vida, simplemente lo para (por ejemplo)..
-	//Así que no hay que hacer nada más de momento
-}
 
 
 
+
+/************ FUNCIONES DE RECEPCION DE DISPAROS. DEBEN SER SOBREESCRITAS EN CLASES HIJAS *************/
+
+function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser);
+function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser);
+function RecibidoDisparoTurretIce(vector HitLocation, vector Momentum,Actor DamageCauser);
 function RecibidoDanyoSinIdentificar(vector HitLocation, vector Momentum,Actor DamageCauser)
 {
 	//Creo que no se debería ejecutar nunca, siempre deberíamos saber por qué motivos recibe daño.
@@ -782,6 +753,6 @@ defaultproperties
 	bCanClimbLadders=true
 	MaxStepHeight=45
 	WalkableFloorZ=0
-	life=40
+	life=12
 	MaxLife=80
 }

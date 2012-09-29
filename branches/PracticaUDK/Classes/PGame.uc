@@ -341,6 +341,10 @@ function EnemyKilled(PEnemy enemigoMuerto)
 {
 	if (PEnemyPawn_Minion(enemigoMuerto) != None)
 	{
+		EliminaMinionVector(PEnemyPawn_Minion(enemigoMuerto));
+
+		//VICTOR:
+		/***********
 		EnemiesLeft--;
 		if(EnemiesLeft <= 0)
 		{
@@ -348,10 +352,16 @@ function EnemyKilled(PEnemy enemigoMuerto)
 			bSpawnBoss = true;
 			ActivateSpawners();
 		}
+		***************/
+
 	}
 	else if (PEnemyPawn_Scout(enemigoMuerto) != None)
 	{
 		EScoutLeft--;
+		//Como ha muerto el líder, el guía espiritual, los minions no pueden superarlo y se suicidan:
+		TodosMinionsKamikaze(PEnemyPawn_Scout(enemigoMuerto).id);
+		//Y hacemos que el spawner no genere más ogros ni más minions:
+		InhabilitarSpawner(PEnemyPawn_Scout(enemigoMuerto).id);
 		if(EScoutLeft <= 0)
 		{
 			MapaFinalizado();
@@ -429,6 +439,69 @@ function GetVectorEnemigos(int idSpawner, out array<PEnemy> enemigos, out PEnemy
 		}
 	 }
 }
+
+function TodosMinionsKamikaze(int id_scout)
+{
+	 local Spawner ES;
+	 local int index;
+	 local int i;
+     local  array<PEnemy> sus_minions;
+
+	 index= EnemySpawners.Find('id', id_scout);
+
+	 if(index == -1)
+	 {
+		`log("KAGADA");
+	 }
+	 else
+	 {
+		ES = EnemySpawners[index];
+		sus_minions = ES.SpawnPoint.Enemy;
+		for (i=0;i<sus_minions.Length;i++)
+		{
+			sus_minions[i].Owner.GotoState('TowerAttack');
+		}
+	 }
+}
+
+function InhabilitarSpawner(int idSpawner)
+{
+	 local Spawner ES;
+	 local int index;
+
+	 index = EnemySpawners.Find('id', idSpawner);
+	 if(index == -1)
+	 {
+		`log("KAGADA");
+	 }
+	 else
+	 {
+		ES = EnemySpawners[index];
+		ES.SpawnPoint.m_bMuertoScout = true;
+	 }
+}
+
+//EliminaMinionVector
+//Dado un minion, lo elimina del vector Enemy del PEnemySpawner que lo creó
+function EliminaMinionVector(PEnemyPawn_Minion minion)
+{
+	 local Spawner ES;
+	 local int index;
+
+	 index= EnemySpawners.Find('id', minion.id);
+
+	 if(index == -1)
+	 {
+		`log("KAGADA EliminaMinionVector");
+	 }
+	 else
+	 {
+		ES = EnemySpawners[index];
+		ES.SpawnPoint.EliminaMinion(minion);
+	 }
+}
+
+
 exec function ponerpasta(int p)
 {
 SetCredito(p);

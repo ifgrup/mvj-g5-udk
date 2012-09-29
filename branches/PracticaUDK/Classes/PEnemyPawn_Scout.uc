@@ -230,6 +230,74 @@ event NuevoPaso()
 	//_DEBUG_`log("Nuevo Paso Ogro!");
 }
 
+/***************** FUNCIONES DE RECEPCIÓN DE DISPAROS PARA LOS SCOUTS ******************************/
+function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	local int escudo;
+	//Sólo afecta si no tiene escudo
+	//El escudo lo gestiona el AI, le preguntamos cómo lo tiene
+	if (self.Owner!=None)
+	{
+		escudo = PEnemy_AI_Scout(Owner).m_escudo;
+		if (escudo > 0)
+		{
+			return;
+		}
+		else
+		{
+			self.life--;
+			if (life <=0)
+			{
+				Destruccion();
+			}
+		}
+	}
+
+}
+function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+    //Sólo afecta si no tiene escudo, o tiene muy poquito.
+    //Molaría que este disparo también restara escudo, pero se complica al regenerarse con los minions..
+	local int escudo;
+	
+	if (self.Owner!=None)
+	{
+		escudo = PEnemy_AI_Scout(Owner).m_escudo;
+		if (escudo >2 ) //Con poquito escudo ya le sirve
+		{
+			return;
+		}
+		else
+		{
+			self.life-=2;
+			if (life <=0)
+			{
+				Destruccion();
+			}
+		}
+	}
+
+
+}
+function RecibidoDisparoTurretIce(vector HitLocation, vector Momentum,Actor DamageCauser)
+{
+	//El Scout es un chicarrón del norte, el hielo se lo pasa por los sockets, así que no le afecta
+	return;
+}
+
+function Destruccion()
+{
+	if(PGame(WorldInfo.Game) != none)
+	{
+	    PGame(WorldInfo.Game).EnemyKilled(self);
+	}
+	
+	self.Owner.Destroy();//muerte al opresor!!
+	self.UnPossessed(); //No tenemos Owner, LIBRES!!!
+	self.Destroy(); //Qué poco ha durado la libertad...
+	
+}
+
 
 defaultproperties
 {
@@ -265,4 +333,5 @@ defaultproperties
 	m_puntos_al_morir = 300
 	ira=0;
 	max_ira=100;
+	life=30;
 }
