@@ -18,7 +18,7 @@ var Texture2D m_portrait;
 
 
 function Vector GetPosicionSocketCuerpo();
-
+function Vector GetFireLocation();
 
 function Texture2D GetPortrait()
 {
