@@ -182,6 +182,8 @@ function Vector GetFireLocation()
 function activarParticulasKamikaze(optional vector locaenemigo)
 {
 	KamikazeEmitter.ParticleSystemComponent.SetActive(true);
+	KamikazeEmitter.ParticleSystemComponent.SetRotation(self.Rotation);
+
 
 }
 
