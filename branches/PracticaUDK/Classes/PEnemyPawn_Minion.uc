@@ -149,6 +149,16 @@ function Vector GetPosicionSocketCuerpo()
 
 }
 
+function Vector GetFireLocation()
+{
+	local vector FireLocation;
+	local Rotator FireRotation;
+
+	ColorMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+	return FireLocation;
+}
+
+
 function activarParticulasKamikaze(optional vector locaenemigo)
 {
 	ParticulasEscudo.SetFloatParameter('RangoAtraccion',200);

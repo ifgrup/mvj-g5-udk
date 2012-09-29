@@ -181,6 +181,16 @@ function Vector GetPosicionCuerno()
 	return sLocation;
 }
 
+function Vector GetFireLocation()
+{
+	local vector FireLocation;
+	local Rotator FireRotation;
+
+	ColorMesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+	return FireLocation;
+}
+
+
 function SetColor(LinearColor Col)
 {
 	Col1 = Col;

@@ -878,7 +878,7 @@ function inibotoneshud()
 function AddPostRenderedActor(Actor A)
 {
 	// Remove post render call for UTPawns as we don't want the name bubbles showing
-	if (UTPawn(A) != None)
+	if (PEnemy(A) != None)
 	{
 		return;
 	}
