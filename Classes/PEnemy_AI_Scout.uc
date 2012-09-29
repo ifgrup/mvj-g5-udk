@@ -84,9 +84,10 @@ function GestionEscudo()
 		
 			if (Penemy_AI_Bot(helper.Owner).id == self.id)
 			{
-			
-				helper.activarEscudoScout(PEnemyPawn_Scout(self.Pawn),m_radio_escudo);
-			
+				//Las partículas las queríamos en un socket, pero nuestro querido UDK hace lo que le sale 
+				//de los mismísimos sockets, así que al location
+				helper.activarEscudoScout(Pawn.location,m_radio_escudo,pawn.GroundSpeed);
+
 				Index = m_escudo_info.Find('Pawn', helper);
 				if (Index == INDEX_NONE && helper.life> 0)
 				{
