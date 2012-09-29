@@ -16,6 +16,10 @@ var EmitterSpawnable ParticulasEscudo; //Partículas de escudo hacia el Scout
 
 var int minionId;
 
+var class<Actor> m_ClaseMisilKamikaze,m_ClaseMisilKamikazeto,m_ClaseMisilKamikazemo;
+var EmitterSpawnable KamikazeEmitter;
+var ParticleSystem Kamikazepst,Kamikazetemtopota,Kamikazetemmoco;
+
 function CambiaBicho()
 {
 	local Vector translation;
@@ -30,6 +34,10 @@ function CambiaBicho()
 			ColorMesh.SetAnimTreeTemplate(minionAnimTree0);
 			//translation.Z = 3;
 			//ColorMesh.SetTranslation(translation);
+			//kamikaze
+			m_ClaseMisilKamikaze=m_ClaseMisilKamikazemo;
+			Kamikazepst=Kamikazetemmoco;
+
 		break;
 		case 1: //topota
 			ColorMesh.SetSkeletalMesh(minionMesh1,true);
@@ -37,6 +45,10 @@ function CambiaBicho()
 			ColorMesh.SetPhysicsAsset(minionPhysicsAsset1);
 			ColorMesh.AnimSets=minionAnimSet1;
 			ColorMesh.SetAnimTreeTemplate(minionAnimTree1);
+			//kamikaze
+			m_ClaseMisilKamikaze=m_ClaseMisilKamikazeto;
+			Kamikazepst=Kamikazetemtopota;
+
 		break;
 	}
 }
@@ -81,6 +93,14 @@ simulated function PostBeginPlay()
 	
 
 	self.ColorMesh.AttachComponentToSocket(ParticulasEscudo.ParticleSystemComponent,'Socket_Cuerpo');
+
+	//Preparamos las partículas para el estado Kamikaze
+	
+	KamikazeEmitter = Spawn(class'EmitterSpawnable',Self);
+	KamikazeEmitter.SetTemplate(Kamikazepst);
+	KamikazeEmitter.ParticleSystemComponent.bAutoActivate = false;
+	KamikazeEmitter.ParticleSystemComponent.SetActive(false);
+	self.ColorMesh.AttachComponentToSocket(KamikazeEmitter.ParticleSystemComponent,'Socket_Cuerpo');
 
 	//Toma colisiones güenas...
 	CylinderComponent.SetActorCollision(false, false); //Desactivamos cilindro de colisión
@@ -161,8 +181,7 @@ function Vector GetFireLocation()
 
 function activarParticulasKamikaze(optional vector locaenemigo)
 {
-	ParticulasEscudo.SetFloatParameter('RangoAtraccion',200);
-	ParticulasEscudo.SetVectorParameter('Destino',locaenemigo);
+	KamikazeEmitter.ParticleSystemComponent.SetActive(true);
 
 }
 
@@ -195,6 +214,10 @@ defaultproperties
 	minionAnimSet0(0)=AnimSet'enemigos.Slime_Anims'
 	minionPhysicsAsset0=PhysicsAsset'enemigos.Slime_Physics'
 	minionPortrait0=Texture2D'PGameHudIco.Murciegalo_Portrait'
+	Kamikazetemmoco=ParticleSystem'PGameMisilakos.mokokamikazeSP'
+	m_ClaseMisilKamikazemo=class 'PMisiKamimoco'
+
+
 
 	minionMesh1=SkeletalMesh'enemigos.Minion.Topota'
 	minionMaterial1=Material'enemigos.Material_Enemigos'
@@ -202,6 +225,9 @@ defaultproperties
 	minionAnimSet1(0)=AnimSet'enemigos.Minion.Topota_Animset'
 	minionPhysicsAsset1=PhysicsAsset'enemigos.Minion.Topota_Physics'
 	minionPortrait1=Texture2D'PGameHudIco.Topota_Icono'
+	Kamikazetemtopota=ParticleSystem'PGameMisilakos.topotakamikazeSP'
+	m_ClaseMisilKamikazeto=class 'PMisiKamitopota'
+
 
 	ColorMesh=PEnemySkeletalMeshComponent
 
