@@ -493,26 +493,26 @@ Begin:
 
 /*Disparo del PEnemy al Giru.
  * Cada hijo de PEnemy debe indicar la clase de PMisil en su propiedad m_ClaseMisil
- * Y llamar a esat función cuando desee dispara. Se hace actualmente en el SeePlayer
+ * Y llamar a esta función cuando desee dispara. Se hace actualmente en el SeePlayer
  * También son definibles los timeouts entre disparos y la distancia máxima en la que se considera
  * que se le puede disparar
  */
 function DisparaAPPawn(PPawn giru)
 {
-	local vector minionpos,ppawnpos;
+	local vector FireLocation,ppawnpos;
 	local Projectile Proj;
 
-	minionpos = self.Pawn.Location  ;
+	//minionpos = self.Pawn.Location  ;
 	ppawnpos =  giru.GetPosicionSocketCuerpo();
 			
-	minionpos+= 150 * normal(ppawnpos - minionpos);
+	//minionpos+= 150 * normal(ppawnpos - minionpos);
 	//Obtener pos del socket del minion
-	//Mesh.GetSocketWorldLocationAndRotation('FireLocation',FireLocation,FireRotation);
+	FireLocation = PEnemy(self.Pawn).GetFireLocation();
 
-	Proj = Projectile (Spawn( m_ClaseMisil ,self,,minionpos,,,True));
+	Proj = Projectile (Spawn( m_ClaseMisil ,self,,FireLocation,,,True));
 	if (Proj!= None)
 	{
-		Proj.Init(Normal(ppawnpos-minionpos));
+		Proj.Init(Normal(ppawnpos-FireLocation));
 		self.m_disparo_posible = false ; //Debe pasar otro intervalo para que vuelva a disparar
 	}
 }
