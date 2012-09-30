@@ -42,8 +42,21 @@ event Touch(Actor Other, PrimitiveComponent OtherComp,Vector HitLocation,Vector 
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
-	self.SetLocation(m_pos_inicial);
-	return;
+		
+	//Ha sido por disparo de Giru?
+	if(PMisiles(DamageCauser) != None && PPlayerController(EventInstigator) != None)
+	{
+		Toque();
+		return;
+	}
+
+	//Ha sido por disparo de TurretCannon?
+    if(PMisiles(DamageCauser) != None && PMisiles(DamageCauser).disparador == 'PTurretCannon')
+	{
+		Toque();
+		return;
+	}
+
 }
 
 
@@ -229,8 +242,8 @@ defaultproperties
 		bHasPhysicsAssetInstance=true
 		//bUpdateKinematicBonesFromAnimation=false
 		PhysicsWeight=1.0
-		RBChannel=RBCC_GameplayPhysics
-		RBCollideWithChannels=(Default=TRUE,BlockingVolume=TRUE,GameplayPhysics=TRUE,EffectPhysics=TRUE)
+		//RBChannel=RBCC_GameplayPhysics
+		//RBCollideWithChannels=(Default=TRUE,BlockingVolume=TRUE,GameplayPhysics=TRUE,EffectPhysics=TRUE)
 		LightEnvironment=MyLightEnvironment
 		bSkipAllUpdateWhenPhysicsAsleep=TRUE
 		bBlockFootPlacement=false
@@ -253,9 +266,10 @@ defaultproperties
 	BlockRigidBody=true
 	bCollideActors=true
 	bCollideWorld=true
-	//CollisionType=COLLIDE_BlockAll
+	CollisionType=COLLIDE_BlockAll
 	Components.Add(tree) 
 	m_toquesToDestroy=5
 	Physics=PHYS_None
 	bWorldGeometry=true
+	bCanBeDamaged=true
 }

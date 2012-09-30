@@ -28,7 +28,7 @@ var bool  m_disparo_posible;
 var float m_tick_disparo;
 var float m_timout_entre_disparos; //cada cuanto puedo disparar al Giru
 var class<Actor> m_ClaseMisil;
-var vector minionpqpipos1,minionpqpipos2;
+var vector minionpqpipos1;
 
 simulated event PostBeginPlay()
 {
@@ -524,5 +524,5 @@ DefaultProperties
 	m_tiempo_tickp=0
 	m_despContraTorreta = 40
 	minionpqpipos1=(X=0,Y=0,Z=0);
-	minionpqpipos2=(X=1000,Y=1000,Z=1000);
+	
 }
