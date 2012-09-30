@@ -73,7 +73,7 @@ var GFxObject gameoverMC;
 var GFxObject loghudMC;
 var GFxObject	tloghudMC;
 var GFxClikWidget Btn_menu, Btn_salir;
-var bool animLog;
+var bool animLog,animtuto;
 var GFxObject textofinMC;
 var GFxObject tutoMC;
 
@@ -720,7 +720,7 @@ function MensajitoPotPantalla(string texto)
 	loghudMC.SetBool("_visible", true);
 	loghudMC.GotoAndPlay("reload");
 	tloghudMC.SetText(texto);
-	tutoMC.SetBool("_visible", true);
+	
 
 
 }
@@ -729,6 +729,28 @@ function SetAnimLog(bool val)
 	animLog=val;
 }
 
+function tutorial(int parte)
+{
+
+	SetAnimtuto(false);
+	tutoMC.SetBool("_visible", true);
+	if(parte==0)
+	{
+		tutoMC.GotoAndPlay("tuto1");
+	}
+	else
+	{
+		tutoMC.GotoAndPlay("tuto2");
+	}
+}
+function SetAnimtuto(bool val)
+{
+	animtuto=val;
+	if(animtuto)
+	{
+		tutoMC.SetBool("_visible", false);
+	}
+}
 
 
 

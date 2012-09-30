@@ -136,5 +136,5 @@ DefaultProperties
 	CantidadColor=0
 	bumped=false
 
-	life=50
+	life=5
 }

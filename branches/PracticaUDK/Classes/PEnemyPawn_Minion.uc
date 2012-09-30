@@ -19,14 +19,15 @@ var int minionId; //Para el tipo de Minion, Murciégalo,Topota, o Moco
 var class<Actor> m_ClaseMisilKamikaze,m_ClaseMisilKamikazeto,m_ClaseMisilKamikazemo;
 var EmitterSpawnable KamikazeEmitter;
 var ParticleSystem Kamikazepst,Kamikazetemtopota,Kamikazetemmoco;
-
+var bool eresmoko;
 function CambiaBicho()
 {
 	local Vector translation;
+	local bool bMaterialActivo;
 	minionId = Rand(2);
 	switch(minionId)
 	{
-		case 0: //Murciégalo
+		case 0: //Moco
 			ColorMesh.SetSkeletalMesh(minionMesh0,true);
 			ColorMesh.SetMaterial(0,minionMaterial0);
 			ColorMesh.SetPhysicsAsset(minionPhysicsAsset0);
@@ -36,7 +37,10 @@ function CambiaBicho()
 			//ColorMesh.SetTranslation(translation);
 			//kamikaze
 			m_ClaseMisilKamikaze=m_ClaseMisilKamikazemo;
+			
 			Kamikazepst=Kamikazetemmoco;
+			bMaterialActivo = true;
+			eresmoko=true;
 
 		break;
 		case 1: //topota
@@ -48,9 +52,18 @@ function CambiaBicho()
 			//kamikaze
 			m_ClaseMisilKamikaze=m_ClaseMisilKamikazeto;
 			Kamikazepst=Kamikazetemtopota;
-
+			bMaterialActivo = false;
 		break;
 	}
+
+	if(bMaterialActivo)
+	{
+		mat = new class'MaterialInstanceConstant';
+		mat = ColorMesh.CreateAndSetMaterialInstanceConstant(0);
+		mat.SetParent(Material'enemigos.TexturaMoco_Mat');
+		mat.SetVectorParameterValue('ColorBase', Col1);
+	}
+
 }
 
 function Texture2D GetPortrait()
@@ -74,12 +87,6 @@ simulated function PostBeginPlay()
 	super.PostBeginPlay();
 	Col1 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 	Col2 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
-/*	mat = new class'MaterialInstanceConstant';
-	mat = ColorMesh.CreateAndSetMaterialInstanceConstant(0);
-	mat.SetParent(Material'enemigos.Material_Enemigos');
-	mat.SetVectorParameterValue('ColorBase', Col1);
-	mat.SetVectorParameterValue('DetailColor', Col2);
-*/
 
 	CambiaBicho();
 
@@ -102,6 +109,7 @@ simulated function PostBeginPlay()
 	KamikazeEmitter.ParticleSystemComponent.SetActive(false);
 	self.ColorMesh.AttachComponentToSocket(KamikazeEmitter.ParticleSystemComponent,'Socket_Cuerpo');
 
+
 	//Toma colisiones güenas...
 	CylinderComponent.SetActorCollision(false, false); //Desactivamos cilindro de colisión
 	ColorMesh.SetActorCollision(true, true,true);
@@ -112,8 +120,16 @@ simulated function PostBeginPlay()
 
 function SetColor(LinearColor Col)
 {
+	local vector colorpsmoko;
+	
 	Col1 = Col;
-	//mat.SetVectorParameterValue('ColorBase', Col1);
+	colorpsmoko.X=col1.R/255;
+	colorpsmoko.Y=col1.G/255;
+	colorpsmoko.Z=col1.B/255;
+	if(eresmoko)
+	{
+		mat.SetVectorParameterValue('ColorBase', Col1);
+	}
 }
 
 
@@ -287,4 +303,5 @@ defaultproperties
 	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 100
 	life=8
+	eresmoko=false
 }
