@@ -29,6 +29,11 @@ var int m_idx_temblor; //para acceder al vector anterior
 var float m_tiempoLastTemblor;
 var rotator m_rotInicial;
 var vector m_pos_inicial;
+var vector 	m_Color;
+var LinearColor m_lc_Color;
+var vector m_normal;
+
+var EmitterSpawnable m_particulas_destruccion,m_particulas_hojas;
 
 event Bump(Actor Other, PrimitiveComponent OtherComp,vector VectorHitNormal)
 {
@@ -106,6 +111,13 @@ simulated function PostBeginPlay()
 
 	j = Rand(m.Length);
 	TreeMesh.SetMaterial(0, m[j]);
+	m[j].GetVectorParameterValue('Color_Hojas',m_lc_Color);
+	m_Color.X = m_lc_Color.R;
+	m_Color.Y = m_lc_Color.G;
+	m_Color.Z = m_lc_Color.B;
+
+
+	
 	
 	//Guardo la posición inicial
 	m_pos_inicial = self.Location;
@@ -124,7 +136,60 @@ simulated function PostBeginPlay()
 	GetAxes(self.treemesh.Rotation,rx,ry,rz);
 	m_rotInicial = self.treemesh.Rotation;
 	m_ejeTemblor = ry;
+	
+	
+	//Inicialización del sistema de partículas de toque
+	m_particulas_hojas = Spawn(class'EmitterSpawnable',Self);
+	if (m_particulas_hojas != None)
+	{
+		m_particulas_hojas.SetTemplate(ParticleSystem'PGameParticles.Particles.P_Hojas_Caen');
+		m_particulas_hojas.ParticleSystemComponent.SetActive(false);
+	}
+
+	//Inicialización del sistema de partículas de la destrucción del árbol
+	m_particulas_destruccion = Spawn(class'EmitterSpawnable',Self);
+	if (m_particulas_destruccion != None)
+	{
+		m_particulas_destruccion.SetTemplate(ParticleSystem'PGameParticles.Particles.P_DestruzziongAlbor');
+		m_particulas_destruccion.ParticleSystemComponent.SetActive(false);
+	}
+
+	CalcularNormal();
+
 }
+
+function CalcularNormal()
+{
+	local Vector vAlCentro,HitLocation,HitNormal,centro;
+	local bool bfound;
+	local actor HitActor;
+
+	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
+	vAlCentro = Normal(centro - self.Location); 
+
+	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,self.Location-(vAlCentro*100),vect(10,10,10),,TRACEFLAG_Bullet)
+	{
+		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
+		{
+			bfound = true;
+			break;
+		}
+	}		
+
+	if (!bfound)
+	{
+		`log("Kagada... no sé qué hacer...\n");
+		m_normal=vect(0,0,0);
+	}
+	else
+	{
+		m_normal = HitNormal;
+	}
+
+}
+
+
+
 
 static final function vector MatrixGetScale(Matrix TM)
 {
@@ -159,16 +224,27 @@ function Toque()
 
 function TemblarArbol()
 {
-	`log("Tembleque " @self.Name);
+
+	//Caen unas poquitas hojas
+	//Primero desactivamos para que si estaba aun en marcha por un rebote anterior,
+	//pueda empezar de nuevo otra vez
+	m_particulas_hojas.ParticleSystemComponent.SetActive(false);
+	m_particulas_hojas.SetLocation(self.Location + normal(m_normal)*100 );
+	m_particulas_hojas.SetRotation(m_rotInicial);
+	m_particulas_hojas.SetVectorParameter('ColorHojas',m_Color);
+	m_particulas_hojas.ParticleSystemComponent.SetActive(true);
+
 
 	if (m_temblar_arbol)
 	{
 		return; //intento de evitar toques recursivos
 	}
+
 	m_temblar_arbol = true;
 	m_tiempoTemblor = 0;
 	//Restauramos la posición inicial, por si llega un toque en medio de otro toque.
 	self.treemesh.SetRotation(m_rotInicial);
+
 }
 
 function Destruccion()
@@ -178,6 +254,10 @@ function Destruccion()
 	self.bWorldGeometry = false;
 	self.SetCollision(false,false,false);
 	`log("Destruccion arbol "@self.Name);
+	m_particulas_destruccion.SetLocation(self.Location + normal(m_normal)*100 );
+	m_particulas_destruccion.SetRotation(m_rotInicial);
+	m_particulas_destruccion.SetVectorParameter('ColorHojas',m_Color);
+	m_particulas_destruccion.ParticleSystemComponent.SetActive(true);
 	self.Destroy();
 }
 
@@ -223,7 +303,7 @@ event Tick(float delta)
 
 	//DrawDebugCylinder(self.Location,self.Location+vector(QuatToRotator(qActual))*100,14,14,200,0,0,false); //origen rojo
 	//DrawDebugCylinder(self.Location,self.Location+vector(r2)*100,10,10,0,0,200,true); //destino azul
-		
+			
 	self.treemesh.SetRotation(QuatToRotator(qActual));
 	//self.SetRotation(QuatToRotator(qActual));
 
