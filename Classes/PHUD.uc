@@ -744,6 +744,19 @@ simulated event Tick(float DeltaTime)
 		ADbotonesporCredito();
 		vidaGiru();
 		pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
+		if(PGame(WorldInfo.Game).juegofinalizadogana)
+		{
+			fineee("\n WINEEEEEE");
+
+		}
+
+
+		if(PGame(WorldInfo.Game).juegofinalizadomuerte)
+		{
+			fineee("Game Over");
+
+		}
+
 	}
 
 	
@@ -1196,7 +1209,11 @@ function vidaGiru()
 
 }
 
-
+exec function inituto(int cap)
+{
+	
+	pGFx.tutorial(cap);
+}
 //
 
 defaultproperties
@@ -1208,7 +1225,7 @@ defaultproperties
 	musica=SoundCue'PGameMusicrr.musica2'
 	musicamenu=SoundCue'PGameMusicrr.intro2dgame_2_Cue'
 	irasonido1=SoundCue'A_Character_IGMale_Cue.Efforts.A_Effort_IGMale_MGasp_Cue'
-	distanciatorreta=(X=350,Y=350,Z=350)
+	distanciatorreta=(X=300,Y=300,Z=300)
 	Pixel_X_Mirilla = 642
 	Pixel_Y_Mirilla = 362
 	m_min_offset_mirilla_y = 55

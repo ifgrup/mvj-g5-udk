@@ -333,5 +333,5 @@ defaultproperties
 	m_puntos_al_morir = 300
 	ira=0;
 	max_ira=100;
-	life=30;
+	life=3;
 }

@@ -191,8 +191,14 @@ function kamikaze ()
 		//lanzamos toñazo kamikaze
 
 		Proj =Projectile(Spawn(PEnemyPawn_Minion(self.Pawn).m_ClaseMisilKamikaze,self,,self.Pawn.Location,,,True));
+		
 		if (Proj!= None)
 		{
+			
+			if(PMisiKamimoco(Proj)!=None)
+			{
+				PMisiKamimoco(Proj).colormoco(PEnemyPawn_Minion(self.Pawn).Col1);
+			}
 			//Lanzamos el disparo
 			Proj.Init(Normal(posenemigo-self.Pawn.Location));
 			//Eliminamos al Pawn
@@ -537,6 +543,7 @@ state Congelado
 			if (PEnemy(Pawn).life > 0)
 			{
 				//Si sigue vivo, que siga caminando o lo que estuviera haciendo en el estado anterior
+				m_tiempo_tickp=0;
 				self.PopState();
 			}
 		}

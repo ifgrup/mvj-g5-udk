@@ -14,6 +14,7 @@ var bool NodosCreados;
 var int EScoutLeft;
 var int m_ticks_spawn_enemigos; //control de ticks spawneando enemigos
 var int m_intervalo_spawn_enemies; //tiempo entre spawn de cualquier huevo
+var bool juegofinalizadomuerte,juegofinalizadogana;
 
 struct Spawner
 {
@@ -379,8 +380,8 @@ function EnemyKilled(PEnemy enemigoMuerto)
 function BaseDestrozada()
 {
 `log("Base destrozada");
-
-    consolecommand("Open PGameMenuini");
+	GameOver();
+   // consolecommand("Open PGameMenuini");
 
 
 }
@@ -388,8 +389,8 @@ function BaseDestrozada()
 
 function GameOver()
 {
-
-consolecommand("Open PGameMenuini");
+juegofinalizadomuerte=true;
+//consolecommand("Open PGameMenuini");
 
 
 }
@@ -397,6 +398,8 @@ consolecommand("Open PGameMenuini");
 
 function MapaFinalizado()
 {
+
+juegofinalizadogana=true;
 
 
 }
@@ -580,4 +583,6 @@ defaultproperties
 	m_max_radiorandom=100;
 	m_min_radiorandom=400;
 	m_intervalo_spawn_enemies = 10 //Iniciamente, cada 10 segundos
+	juegofinalizadomuerte=false;
+	juegofinalizadogana=false;
 }
