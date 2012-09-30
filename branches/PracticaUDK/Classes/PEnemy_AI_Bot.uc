@@ -41,8 +41,7 @@ simulated event PostBeginPlay()
 	//self.bMovable = false;
 	self.bPushedByEncroachers = false;
 	minionpqpipos1=vect(0,0,0);
-	minionpqpipos2=vect(1,1,1);
-
+	dpqpi=-5;
 	
 
 }
@@ -214,12 +213,6 @@ function kamikaze ()
  */
 auto state Idle_Inicial
 {
-	event BeginState(Name PrevName)
-	{
-		//_DEBUG_ ("Penemy_AI_Bot creado, estoy en Idle");
-		m_tiempo_tick = 0;
-	}
-
 	event Tick(float Deltatime)
 	{
 		//Debemos permanecer en este estado mientras el pawn esté cayendo,
@@ -230,6 +223,13 @@ auto state Idle_Inicial
 		super.Tick(Deltatime);
 
 		
+			
+
+
+		if (m_tiempo_tick >= 1.0)
+		{
+			m_tiempo_tick = 0; //para el siguiente 'timer'
+
 			if(VSize(theBase.Location - Pawn.Location) < m_distancia_Base_kamikaze)
 			{
 				//Lo paramos, y lo enviamos al estado de ataque a la torre (TowerAttack)
@@ -240,23 +240,10 @@ auto state Idle_Inicial
 
 				StopLatentExecution();
 				GoToState('TowerAttack');
+				return;
 			}
-
-
-		if (m_tiempo_tick >= 1.0)
-		{
 			m_intentos_nuevo_nodo++;
-			if (m_b_breakpoint)
-			{
-				m_b_breakpoint = true;
-			}
-			m_tiempo_tick = 0; //para el siguiente 'timer'
  
-			if (vsize(self.theBase.Location-self.Pawn.Location) < m_distancia_Base_kamikaze)
-            {
-				 GoToState('TowerAttack');
-				 return;
-            }
 
 			if (!Penemy(Pawn).IsInState('Cayendo'))
 			{
@@ -265,23 +252,10 @@ auto state Idle_Inicial
 				if(theObjective != none)
 				{
 					m_intentos_nuevo_nodo = 0;
-					if (m_b_breakpoint)
-					{
-						antes = theObjective.Location;
-						//_DEBUG_DrawDebugSphere(antes,30,10,255,0,0,true);
-						//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
-					}
+					
 					nodotemporal = theObjective;
 					theObjective = AplicarOffsetNodo(nodotemporal); //Para el pseudo-flocking
-					//nodotemporal = none ; //Porque si no el garbage no se lo carga creo...
-
-					if (m_b_breakpoint)
-					{
-						despues = theObjective.Location;
-						//_DEBUG_DrawDebugSphere(despues,30,10,0,0,255,true);
-						//_DEBUG_DrawDebugCylinder(antes,despues,5,10,0,255,0,true);
-					}
-
+					nodotemporal = none ; //Porque si no el garbage no se lo carga creo...
 					//Tenemos objetivo. Podemos ir al siguiente estado
 					//_DEBUG_ ("En idle, tengo nodo nuevo y me voy");
 					GotoState('GoToNextPath');
@@ -293,22 +267,13 @@ auto state Idle_Inicial
                   {
 					 GoToState('TowerAttack');
                   }
-				  else if (m_intentos_nuevo_nodo >15)
+				  else if (m_intentos_nuevo_nodo >6)
 				  {
 					GoToState('TowerAttack'); //Yo lo enviaba a explotar y punto, rollo suicida
 					`log("_____________No encuentro nodo, ataquer!" @self.Name);
 				  }
-
-				  if (self.m_b_breakpoint)
-				  {
-						m_tiempo_tick = m_tiempo_tick;
-				  }
 				  
 				}
-			}
-			else if (self.m_b_breakpoint)
-			{
-					m_tiempo_tick = m_tiempo_tick;
 			}
 		}//if >1 segundo
 	}//Tick
@@ -340,6 +305,7 @@ Begin:
 	self.velocity = vect (0,0,0);
 	self.pawn.velocity = vect (0,0,0);
 	m_intentos_nuevo_nodo = 0;
+	m_tiempo_tick = 0;
 
 	
 
@@ -373,35 +339,15 @@ state GoToNextPath
 		local vector antes,despues;
 
 		super.Tick(DeltaTime);
-		if (m_b_breakpoint)
+		
+		//tema ñordamiento 
+		if(m_tiempo_tickp > 10)
 		{
-			//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
-		}
-		if(VSize(theBase.Location - Pawn.Location) < m_distancia_Base_kamikaze)
-		{
-			//Lo paramos, y lo enviamos al estado de ataque a la torre (TowerAttack)
-			Velocity = vect(0,0,0);
-			Acceleration = vect(0,0,0);
-			self.pawn.Velocity = vect(0,0,0);
-			self.pawn.Acceleration = vect(0,0,0);
-
-			StopLatentExecution();
-			GoToState('TowerAttack');
-		}
-
-		if(m_tiempo_tickp >25)
-		{
-			minionpqpipos1=self.Pawn.Location;
-		}
-
-		if(m_tiempo_tickp >60)
-		{
-			minionpqpipos2=self.Pawn.Location;
-  			dpqpi=vsize(minionpqpipos1-minionpqpipos2);
-
-			if(dpqpi==0)
+			
+			
+  			dpqpi=VSize(minionpqpipos1- self.pawn.Location);
+			if(dpqpi<1)
 			{
-				DrawDebugSphere(self.Pawn.Location,35,20,250,0,0,false);
 				
 				Velocity = vect(0,0,0);
 				Acceleration = vect(0,0,0);
@@ -410,35 +356,44 @@ state GoToNextPath
 
 				StopLatentExecution();
 				GoToState('TowerAttack');
+				return;
 			}
-
+			minionpqpipos1 = self.Pawn.Location;
 			m_tiempo_tickp=0;
 		}
 		
 
 
 		//Cada segundo, hacemos el control que hacía inicialmente la función BrainTimer
-		if (theObjective == None)
-		{
-			GoToState('Idle_Inicial');
-			return;
-		}
+	
 		//_DEBUG_DrawDebugCylinder(self.Pawn.Location,theObjective.Location,3,4,0,0,200,false);
 		//_DEBUG_DrawDebugCylinder(self.Pawn.Location,nodotemporal.Location,3,4,200,0,200,false);
 		//_DEBUG_DrawDebugSphere(theObjective.Location,25,10,0,0,200,false);
 
 		if(m_tiempo_tick >=1.0)
 		{
-			m_tiempo_tick = m_tiempo_tick - 1.0; //Por intentar autoajustar un poco y que no siempre sea 1s y pico
-			// Comprobamos si hemos llegado al destino
+			m_tiempo_tick = 0;
+
 			if(VSize(theBase.Location - Pawn.Location) < m_distancia_Base_kamikaze)
 			{
 				//Lo paramos, y lo enviamos al estado de ataque a la torre (TowerAttack)
 				Velocity = vect(0,0,0);
 				Acceleration = vect(0,0,0);
+				self.pawn.Velocity = vect(0,0,0);
+				self.pawn.Acceleration = vect(0,0,0);
+
 				StopLatentExecution();
 				GoToState('TowerAttack');
+				return;
 			}
+
+
+			if (theObjective == None)
+			{
+				GoToState('Idle_Inicial');
+				return;
+			}
+
 
 			// Comprobamos si hemos llegado al nodo y pedimos el siguiente punto de ruta
 			distNodo = VSize(theObjective.Location - Pawn.Location);
@@ -448,25 +403,8 @@ state GoToNextPath
 				// Si tenemos objetivo, nos movemos a su posición
 				if(theObjective != none)
 				{
-					if (m_b_breakpoint)
-					{
-						antes = theObjective.Location;
-						//_DEBUG_DrawDebugSphere(antes,30,10,255,0,0,true);
-						//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
-					}
 					nodotemporal = theObjective;
 					theObjective = AplicarOffsetNodo(nodotemporal); //Para el pseudo-flocking
-					//nodotemporal = none ; //Porque si no el garbage no se lo carga creo...
-			
-					if (m_b_breakpoint)
-					{
-						despues = theObjective.Location;
-						//_DEBUG_DrawDebugSphere(despues,30,10,0,0,255,true);
-						//_DEBUG_DrawDebugCylinder(antes,despues,5,10,0,255,0,true);
-					}
-
-					//`log("Nuevo nodo seleccionado, voy palla");
-
 					GotoState('GoToNextPath'); //Autollamada al begin state para ir hacia el nuevo nodo
 				}
 				else
@@ -476,7 +414,7 @@ state GoToNextPath
 					//Pero lo suyo es ir al estado Idle
 					//`log("Idle al llegar al nodo");
 					//_DEBUGDrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
-					`log("Idle por no tener nodo after GetNextNode");
+					//_DEBUG`log("Idle por no tener nodo after GetNextNode");
 					GoToState('Idle_Inicial');
 
 				}
@@ -490,37 +428,17 @@ state GoToNextPath
 				if (abs(distNodo - oldDistNodo)<0.1)
 				{
 					m_segundosQuieto +=1;
-					if (m_segundosQuieto == 10)
+					if (m_segundosQuieto == 5)
 					{
 						m_segundosQuieto = 0;
 						theObjective = PGame(WorldInfo.Game).GetNextPath(id, NodeIndex);
 						if (theObjective != None)
 						{
-							if (m_b_breakpoint)
-							{
-								antes = theObjective.Location;
-								//_DEBUG_DrawDebugSphere(antes,30,10,255,0,0,true);
-								//_DEBUG_DrawDebugSphere(self.Pawn.Location,35,20,0,0,0,false);
-							}
-
 							nodotemporal = theObjective;
 							theObjective = AplicarOffsetNodo(nodotemporal); //Para el pseudo-flocking
 							//nodotemporal = none ; //Porque si no el garbage no se lo carga creo...
-			
-							if (m_b_breakpoint)
-							{
-								despues = theObjective.Location;
-								//_DEBUG_DrawDebugSphere(despues,30,10,0,0,255,true);
-								//_DEBUG_DrawDebugCylinder(antes,despues,5,10,0,255,0,true);
-							}
 						}
-						else
-						{
-							//No tiene nodo destino, y no hemos llegado a la base. Nos vamos a Idle
-							//_DEBUGDrawDebugSphere(self.Pawn.Location,25,5,255,255,255,true);
-							`log("Idle por no tener nodo after quieto");
-							GoToState('Idle_Inicial');
-						}
+						
 					}
 				}
 				oldDistNodo = distNodo;
@@ -864,17 +782,7 @@ state TowerAttack
 		
 	}
 
-/*
-event EndState(name NextStateName)
-	{
-		`log ("_**********************_____EEEE_____ saliendo de kamikaze");
-	}
-	event PoppedState()
-	{
-			`log("_____******************__PPPPPPPPPPPP___ saliendo de kamikaze");
-	}
 
-*/
 Begin:
 	StopLatentExecution();
 	m_tiempo_tick = 0;
@@ -883,7 +791,7 @@ Begin:
 	Pawn.Velocity = vect(0,0,0);
 	Pawn.Acceleration = vect(0,0,0);
 	StopLatentExecution();
-	DrawDebugSphere(pawn.Location,80,60,100,0,100,false);
+	//_DEBUG	DrawDebugSphere(pawn.Location,80,60,100,0,100,false);
 	PEnemyPawn_Minion(self.Pawn).activarParticulasKamikaze();
 	locaKamikaze=ProyectarPuntoKamikaze();
 	locaKamikazeini=pawn.Location;
@@ -893,7 +801,7 @@ Begin:
 	
 	//MoveToDirectNonPathPos(locaKamikaze);
 //	SetTimer(8,false,'kamikaze');
-	DrawDebugSphere(locaKamikaze,80,20,0,50,100,true);
+	//_DEBUG DrawDebugSphere(locaKamikaze,80,20,0,50,100,true);
 	m_tiempo_tick=0;
 	//self.pawn.GoToState('');
 	m_currentDespkamikaze=0;
