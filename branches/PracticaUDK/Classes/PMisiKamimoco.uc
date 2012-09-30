@@ -1,5 +1,21 @@
 class PMisiKamimoco  extends UTProj_LoadedRocket;
 var name disparador; //Quién dispara el projectile. Para control de TakeDamage ñaposillo...
+
+
+
+function colormoco(LinearColor col)
+{
+	local vector colorpsmoko;
+
+
+	colorpsmoko.X=col.R;
+	colorpsmoko.Y=col.G;
+	colorpsmoko.Z=col.B;
+	
+	self.ProjEffects.SetVectorParameter('ColorMoko',colorpsmoko);
+}
+
+
 DefaultProperties
 {
 

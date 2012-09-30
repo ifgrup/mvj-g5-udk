@@ -130,7 +130,7 @@ function GeneraMinions(int cuantos)
 			EN = spawn(class'PEnemyPawn_Minion',,, posiciones[i].posicion);
 			if (EN!=None) //Proteccion Víctor
 			{
-				EN.SetColor(Col2);
+				EN.SetColor(Col1);
 				EN.SetID(Group);
 				AIB = spawn(class'PEnemy_AI_Bot',,, posiciones[i].posicion);
 				AIB.SetID(Group);

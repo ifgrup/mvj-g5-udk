@@ -1215,6 +1215,8 @@ state PlayerPreparandoFlaying
 		//Si aqui guardamos la posicion y rotacion actuales de la camara,
 		//Y sobreescribimos el GetPlayerViewPoint para que siempre devuelva eso
 		//Podríamos hacer el efecto de que la cámara no se mueve, y ver despegar al robot
+		bGodMode=true;
+
 	}
 
 	event EndState(Name nextstate)
@@ -1222,7 +1224,7 @@ state PlayerPreparandoFlaying
 		//_DEBUG_ ("Fin de PlayerPreparandoFlaying");
 		//Ya estamos volando, actualizamos booleano para control de HUD
 		PGame(WorldInfo.Game).bEarthNotFlying =! PGame(WorldInfo.Game).bEarthNotFlying;
-		
+		bGodMode=false;
 	}
 
 	event PlayerTick(float DeltaTime)
@@ -1388,6 +1390,9 @@ exec function vuela()
 	{
 		GotoState('PlayerPreparandoFlaying'); //Para preparar el salto para arriba
 	}
+
+	
+
 }
 
 exec function pantallazo()
