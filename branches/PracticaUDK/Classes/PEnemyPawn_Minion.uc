@@ -235,7 +235,7 @@ function MuerteVerdadera ()
 
 	//m_part_muerte.ParticleSystemComponent.SetActive(false);
 	self.Owner.Destroy();//muerte al opresor!!
-	self.UnPossessed(); //No tenemos Owner, LIBRES!!!
+	//self.UnPossessed(); //No tenemos Owner, LIBRES!!!
 	self.Destroy(); //Qué poco ha durado la libertad...
 }
 
