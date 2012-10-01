@@ -1507,7 +1507,10 @@ exec function iceradio(int radio, int altura)
 	m_torreta_victor.m_alturainicial = altura;
 	ice();
 }
-
+exec function to()
+{
+	PPAwn(self.pawn).ActivarParticulasTonyazo();
+}
 
 defaultproperties
 {

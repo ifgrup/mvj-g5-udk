@@ -43,6 +43,7 @@ var bool m_bEstoyCayendoDelCielo; //Para saber si debemos utilizar m_roll_antes_
 
 var float life;
 
+var EmitterSpawnable m_particulas_tonyazo; //Al caer al suelo desde el cielo
 
 var vector m_pos_deseada_nube; //Para ir moviendo el sistema de partículas
 var bool m_rayazo_recibido; //Si el Giru acaba de recibir un rayaco
@@ -375,10 +376,19 @@ simulated function PostBeginPlay()
 		}
 	}
 
+	//Partículas del tonyazo contra el suelo
+	m_particulas_tonyazo = Spawn(class'EmitterSpawnable',Self);
+	if (m_particulas_tonyazo != none)
+	{
+			m_particulas_tonyazo.ParticleSystemComponent.bAutoActivate = false; 
+			m_particulas_tonyazo.SetTemplate(ParticleSystem'PGameParticles.Particles.P_TonyazoGiru');
+	}
+
+	//Activamos propulsores
 	EstadoPropulsores(true);
 
+	//Instanciamos la Nube de Ira, que se activará al acercarnos al ogro
 	m_nubeIra = spawn(class 'PNubeIra',self);
-	//ActivarNubeIra();
 }
 
 function ActivarNubeIra()
@@ -961,6 +971,15 @@ state PawnFallingSky
 }
 
 //STATE PawnRecienCaido
+function ActivarParticulasTonyazo()
+{
+	m_particulas_tonyazo.SetLocation(self.Location);
+	m_particulas_tonyazo.SetRotation(self.Rotation);
+	m_particulas_tonyazo.ParticleSystemComponent.ActivateSystem();
+	m_particulas_tonyazo.ParticleSystemComponent.SetActive(false);
+	m_particulas_tonyazo.ParticleSystemComponent.SetActive(true);
+}
+
 state PawnRecienCaido
 {
 	//ignores HitWall;
@@ -973,7 +992,7 @@ state PawnRecienCaido
 
 		PC = PPlayerController(Instigator.Controller);
 		PC.GotoState('PlayerRecienCaido');
-
+		ActivarParticulasTonyazo();
 		SetTimer(2,false,'TimerCaida');
 	}
 
@@ -981,6 +1000,8 @@ state PawnRecienCaido
 	{
 
 		//Apagamos el sistema de partículas, y volvemos a la normalidad
+		m_particulas_tonyazo.ParticleSystemComponent.SetActive(false);
+		m_particulas_tonyazo.ParticleSystemComponent.DeactivateSystem();
 		GoToState('');
 
 	}
