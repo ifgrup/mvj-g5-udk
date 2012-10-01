@@ -16,6 +16,9 @@ var int m_ticks_spawn_enemigos; //control de ticks spawneando enemigos
 var int m_intervalo_spawn_enemies; //tiempo entre spawn de cualquier huevo
 var bool juegofinalizadomuerte,juegofinalizadogana;
 
+
+var PGameSonidos SONIDOS_JUEGO;
+
 struct Spawner
 {
 	var int id;
@@ -53,6 +56,8 @@ simulated function PostBeginPlay()
 	local Spawner SP;
 
 	local InteractiveFoliageActor IFA;
+
+	SONIDOS_JUEGO = spawn(class'PGameSonidos',,,,,,);
 
 
     foreach DynamicActors(class'PEnemySpawner', ES)
