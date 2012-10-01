@@ -512,7 +512,7 @@ event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
 	parbol = PTree(Wall);
 	if ( parbol != None )  //Si nos chocamos contra un arbol
 	{
-		`log("Hitwall gral  árbol neng!" @self.Name @Wall.Name);
+		//_DEBUG`log("Hitwall gral  árbol neng!" @self.Name @Wall.Name);
 		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
 
