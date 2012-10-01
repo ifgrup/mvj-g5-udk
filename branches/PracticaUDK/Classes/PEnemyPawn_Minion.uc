@@ -18,6 +18,8 @@ var int minionId; //Para el tipo de Minion, Murciégalo,Topota, o Moco
 
 var class<Actor> m_ClaseMisilKamikaze,m_ClaseMisilKamikazeto,m_ClaseMisilKamikazemo;
 var EmitterSpawnable KamikazeEmitter;
+var EmitterSpawnable m_part_muerte;
+
 var ParticleSystem Kamikazepst,Kamikazetemtopota,Kamikazetemmoco;
 var bool eresmoko;
 function CambiaBicho()
@@ -84,6 +86,8 @@ function Texture2D GetPortrait()
 
 simulated function PostBeginPlay()
 {
+	local vector v_color;
+
 	super.PostBeginPlay();
 	Col1 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
 	Col2 = MakeLinearColor(FRand(), FRand(), FRand(), 1.0);
@@ -116,6 +120,20 @@ simulated function PostBeginPlay()
 	ColorMesh.SetTraceBlocking(true, true);
 	ColorMesh.SetBlockRigidBody(true);
 	ColorMesh.SetTraceBlocking(true,true);
+
+	//Partículas para muerte
+	
+	m_part_muerte = Spawn(class'EmitterSpawnable',Self);
+	m_part_muerte.SetTemplate(ParticleSystem'PGameParticles.Particles.P_MuerteMinion');
+	m_part_muerte.ParticleSystemComponent.bAutoActivate = false;
+	m_part_muerte.ParticleSystemComponent.SetActive(false);
+	
+	v_color.x=Col1.R;//*2;
+	v_color.y=Col1.G;//*2;
+	v_color.z=Col1.B;//*2;
+	m_part_muerte.ParticleSystemComponent.SetVectorParameter('ColorMuerte',v_color);
+	self.ColorMesh.AttachComponentToSocket(m_part_muerte.ParticleSystemComponent,'Socket_Cuerpo');
+
 }
 
 function SetColor(LinearColor Col)
@@ -197,13 +215,25 @@ function activarParticulasKamikaze(optional vector locaenemigo)
 function Destruccion()
 {
 	//Sistema Partículas de Muerte, y eliminarse del vector de enemigos de su spawner para control de máximo de minions
+	m_part_muerte.ParticleSystemComponent.SetRotation(self.Rotation);
+	m_part_muerte.ParticleSystemComponent.SetActive(false);
+	m_part_muerte.ParticleSystemComponent.SetActive(true);
+	//Si muere en este instante, las partículas dejan de verse, así que lanzamos un timer para que muera dentro de
+	//un segundo, pero antes lo ponemos invisible para que parezca que ha desaparecido
+	//self.SetDrawScale3D(vect(0,0,0));
+	SetTimer(0.5,false,'MuerteVerdadera');
+}
 
+function MuerteVerdadera ()
+{
+	//m_part_muerte.ParticleSystemComponent.SetActive(false);
 	//Notificamos a PGame que eliminie al minion del array de minions
 	if(PGame(WorldInfo.Game) != none)
 	{
 	    PGame(WorldInfo.Game).EnemyKilled(self);
 	}
 
+	//m_part_muerte.ParticleSystemComponent.SetActive(false);
 	self.Owner.Destroy();//muerte al opresor!!
 	self.UnPossessed(); //No tenemos Owner, LIBRES!!!
 	self.Destroy(); //Qué poco ha durado la libertad...
@@ -302,6 +332,6 @@ defaultproperties
 	GroundSpeed=80.0
 	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 100
-	life=8
+	life=5
 	eresmoko=false
 }
