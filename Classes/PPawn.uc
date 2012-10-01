@@ -428,7 +428,6 @@ function RayazoNubeIra()
 	//sólo debe estár así un instante o saldrán rayos sin parar:
 	//Por sistema de partículas no he sabido hacerlo..... mierda UDK de las narices... :( 
 	SetTimer(0.8,false,'SaltaPorRayaco');
-	//VICTOR SetTimer(1.5,false,'FinRayaco');
 }
 
 function SaltaPorRayaco()
@@ -441,12 +440,6 @@ function SaltaPorRayaco()
 	self.ReboteGrandeBumpCayendo(none,vect(0,0,0),vect(0,0,0));
 }
 
-/*
-function FinRayaco()
-{
-	m_particulas_Rayo_Ira.ParticleSystemComponent.SetActive(false);
-}
-*/
 
 function ActualizaPosicionDeseadaNube()
 {
