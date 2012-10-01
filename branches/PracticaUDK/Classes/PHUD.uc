@@ -84,7 +84,7 @@ var bool bgameover;
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
-	//PlaySound(musica,true);
+	PlaySound(musica);
 	
 	area=Spawn(class'PHUD_Area',,,,,,true);
 	area.interruptor(false);
