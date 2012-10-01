@@ -81,7 +81,20 @@ function GestionEscudo()
 		if(PEnemyPawn_Minion(GP)!=none)
 		{
 			helper=PEnemyPawn_Minion(GP);
-		
+
+			if (helper == none)
+			{
+				//Es que se ha perdido la referencia... raro, peerooo...nothing to do...
+				continue;
+			}
+			if (helper != none && helper.Owner==None)
+			{
+				//Significa que el Owner ha morío, no hay otra explicación...
+				//Así que no hacemos nada más, porque DeleteMe ya se pone a true por default
+				//y se supone que se eliminará al final.
+				continue;
+			}
+			else
 			if (Penemy_AI_Bot(helper.Owner).id == self.id)
 			{
 				//Las partículas las queríamos en un socket, pero nuestro querido UDK hace lo que le sale 
@@ -102,7 +115,7 @@ function GestionEscudo()
 					m_escudo_info[i].DeleteMe = false;
 					*/
 				}
-				else
+				else //Es que ya estaba, hay que mantenerlo, por eso DeleteMe debe ser false
 				{
 					m_escudo_info[Index].DeleteMe = false;
 				}

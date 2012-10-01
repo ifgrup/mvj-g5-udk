@@ -555,8 +555,14 @@ function CreateVegetationCollision()
 						loc = MatrixGetOrigin(comp.PerInstanceSMData[j].Transform);
 						rot = MatrixGetRotator(comp.PerInstanceSMData[j].Transform);
 						scale = MatrixGetScale(comp.PerInstanceSMData[j].Transform);
-
+	
 						Tree = Spawn(class'PTree',,,loc,rot);
+						if (Tree.Location == vect (0,0,0))
+						{
+							//Porque UDK lo ha decidido así...
+							Tree.Destroy();
+							continue;
+						}
 						Tree.SetDrawScale3D(scale);
 					}
 				}

@@ -73,6 +73,16 @@ simulated function PostBeginPlay()
 	local array<MaterialInstanceConstant> m;
 	local vector rx,ry,rz;
 
+	/******************* IMPORTANTE *********************/
+	/*Cuando Venus está alineado con Ganímedes en 2*Pi*0.87*tamanyo testicular del creador de UDK, en radianes creo,
+	 * el spawn del arbol, sin dar ningún error, lo coloca en (0,0,0).
+	 * En tal caso, pasando olímpicamente, no hacemos nada, y despúes del spawn, lo destruimos...
+	 * WE ALL LOVE UDK!!!
+	 */
+	if (self.Location == vect(0,0,0))
+	{
+		return;
+	}
 
 	i=Rand(3);
 	switch(i)
@@ -164,10 +174,11 @@ function CalcularNormal()
 	local bool bfound;
 	local actor HitActor;
 
+
 	centro = PGame(WorldInfo.Game).GetCentroPlaneta();
 	vAlCentro = Normal(centro - self.Location); 
 
-	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,self.Location-(vAlCentro*100),vect(10,10,10),,TRACEFLAG_Bullet)
+	foreach TraceActors(class'Actor',HitActor, HitLocation, HitNormal,centro,self.Location-(vAlCentro*500),vect(10,10,10),,TRACEFLAG_Bullet)
 	{
 		if(PGame(Worldinfo.Game).EsPlaneta(HitActor))
 		{
@@ -178,7 +189,7 @@ function CalcularNormal()
 
 	if (!bfound)
 	{
-		`log("Kagada... no sé qué hacer...\n");
+		`log("Kagada PTree calculando normal 0,0,0...\n");
 		m_normal=vect(0,0,0);
 	}
 	else
