@@ -233,13 +233,13 @@ event NuevoPaso()
 /***************** FUNCIONES DE RECEPCIÓN DE DISPAROS PARA LOS SCOUTS ******************************/
 function RecibidoDisparoGiru(vector HitLocation, vector Momentum,Actor DamageCauser)
 {
-	local int escudo;
+	local int lescudo;
 	//Sólo afecta si no tiene escudo
 	//El escudo lo gestiona el AI, le preguntamos cómo lo tiene
 	if (self.Owner!=None)
 	{
-		escudo = PEnemy_AI_Scout(Owner).m_escudo;
-		if (escudo > 0)
+		lescudo = PEnemy_AI_Scout(Owner).m_escudo;
+		if (lescudo > 0)
 		{
 			return;
 		}
@@ -258,12 +258,12 @@ function RecibidoDisparoTurretCannon(vector HitLocation, vector Momentum,Actor D
 {
     //Sólo afecta si no tiene escudo, o tiene muy poquito.
     //Molaría que este disparo también restara escudo, pero se complica al regenerarse con los minions..
-	local int escudo;
+	local int lescudo;
 	
 	if (self.Owner!=None)
 	{
-		escudo = PEnemy_AI_Scout(Owner).m_escudo;
-		if (escudo >2 ) //Con poquito escudo ya le sirve
+		lescudo = PEnemy_AI_Scout(Owner).m_escudo;
+		if (lescudo >2 ) //Con poquito escudo ya le sirve
 		{
 			return;
 		}

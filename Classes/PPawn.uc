@@ -43,9 +43,10 @@ var bool m_bEstoyCayendoDelCielo; //Para saber si debemos utilizar m_roll_antes_
 
 var float life;
 
-var EmitterSpawnable m_particulas_Nube_Ira,m_particulas_Rayo_Ira;
+
 var vector m_pos_deseada_nube; //Para ir moviendo el sistema de partículas
 var bool m_rayazo_recibido; //Si el Giru acaba de recibir un rayaco
+var PNubeIra  m_nubeIra;
 
 function float CalcularMediaTranslateZ(float valorZ)
 {
@@ -80,19 +81,24 @@ event Tick(float DeltaTime)
 	local vector desp;
 	local rotator rot;
 	local quat qact,qgiro;
+	local float dist,v;
 
 	super.Tick(DeltaTime);
 
 	//COntrol de posición de la nube de ira
-	if (m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
+	if (m_nubeIra.EstaActiva())
 	{
-		posNubeActual = m_particulas_Nube_Ira.Location;
-		desp = 600*DeltaTime*Normal(m_pos_deseada_nube - posNubeActual);
-		m_particulas_Nube_Ira.SetLocation(posNubeActual+desp);
-		m_particulas_Rayo_Ira.SetLocation(posNubeActual+desp);
-		//m_particulas_Nube_Ira.SetLocation(m_pos_deseada_nube);
-
-		//m_particulas_Nube_Ira.ParticleSystemComponent.KillParticlesForced();
+		ActualizaPosicionDeseadaNube();
+		posNubeActual = m_nubeIra.Location;
+		dist = vsize(m_pos_deseada_nube - posNubeActual);
+		//Cuanto más lejos, más rápido queremos que se acerque
+		v = dist *3 ;
+		if (dist > 10) //para evitar flickering
+		{
+			posNubeActual = m_nubeIra.Location;
+			desp = v*DeltaTime*Normal(m_pos_deseada_nube - posNubeActual);
+			m_nubeIra.posicionar(posNubeActual+desp,self.Rotation);
+		}
 	}
 
 	//Si estoy recien estoñao por un rayo, giru el pawn:
@@ -371,44 +377,22 @@ simulated function PostBeginPlay()
 
 	EstadoPropulsores(true);
 
-	//Inicialización del sistema de partículas de la Nube de Ira
-	m_particulas_Nube_Ira = Spawn(class'EmitterSpawnable',Self);
-	if (m_particulas_Nube_Ira != None)
-	{
-		m_particulas_Nube_Ira.SetTemplate(ParticleSystem'PGameParticles.Particles.NubeIra');
-		m_particulas_Nube_Ira.SetFloatParameter('ParamAlpha',0.3);		
-		m_particulas_Nube_Ira.ParticleSystemComponent.SetActive(false);
-	}
-
-	//Inicialización del sistema de partículas del rayaco de la Nube de Ira
-	m_particulas_Rayo_Ira = Spawn(class'EmitterSpawnable',Self);
-	if (m_particulas_Rayo_Ira != None)
-	{
-		m_particulas_Rayo_Ira.SetTemplate(ParticleSystem'PGameParticles.Particles.RayoIra');
-		m_particulas_Rayo_Ira.ParticleSystemComponent.SetActive(false);
-	}
-
+	m_nubeIra = spawn(class 'PNubeIra',self);
+	//ActivarNubeIra();
 }
 
 function ActivarNubeIra()
 {
-	if (!m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
-	{
-		ActualizaPosicionDeseadaNube();
-		m_particulas_Nube_Ira.SetLocation(self.m_pos_deseada_nube);
-		m_particulas_Nube_Ira.ParticleSystemComponent.SetActive(true);
-	}
+	//if (!m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
+	//{
+		//ActualizaPosicionDeseadaNube();
+		m_nubeIra.Activar();
+	//}
 }
 
 function DesactivarNubeIra()
 {
-
-return;
-	if (m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
-	{
-		m_particulas_Nube_Ira.ParticleSystemComponent.SetActive(false);
-	}
-	
+	m_nubeIra.Desactivar();
 }
 
 function EstadoNubeIra(int rayitos)
@@ -430,22 +414,21 @@ function EstadoNubeIra(int rayitos)
 		ActivarNubeIra();
 		`log("____Activando nube ira");
 		//Aplica el valor de la ira al número de rayitos que tiene la nuve
-		m_particulas_Nube_Ira.SetFloatParameter('NumRayitos',rayitos);
+		m_nubeIra.SetNumRayitos(rayitos);
 	}
 
-	//Y actualizo la posición deseada de la nube:
-	ActualizaPosicionDeseadaNube();
+	//La posición de la nube se actualiza a cada tick, si está activa
+	
 }
 
 function RayazoNubeIra()
 {
 	//Hace que salga el rayazo de la nube hacia el Giru
-	m_particulas_Rayo_Ira.SetRotation(self.Rotation);
-	m_particulas_Rayo_Ira.ParticleSystemComponent.SetActive(true);
+	m_nubeIra.Rayaco();
 	//sólo debe estár así un instante o saldrán rayos sin parar:
 	//Por sistema de partículas no he sabido hacerlo..... mierda UDK de las narices... :( 
 	SetTimer(0.8,false,'SaltaPorRayaco');
-	SetTimer(1.5,false,'FinRayaco');
+	//VICTOR SetTimer(1.5,false,'FinRayaco');
 }
 
 function SaltaPorRayaco()
@@ -458,11 +441,12 @@ function SaltaPorRayaco()
 	self.ReboteGrandeBumpCayendo(none,vect(0,0,0),vect(0,0,0));
 }
 
+/*
 function FinRayaco()
 {
 	m_particulas_Rayo_Ira.ParticleSystemComponent.SetActive(false);
 }
-
+*/
 
 function ActualizaPosicionDeseadaNube()
 {

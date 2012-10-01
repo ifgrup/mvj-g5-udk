@@ -1508,13 +1508,6 @@ exec function iceradio(int radio, int altura)
 	ice();
 }
 
-exec function kk()
-{
-	PPawn(self.Pawn).ActualizaPosicionDeseadaNube();
-	PPawn(self.Pawn).m_particulas_Rayo_Ira.SetLocation(PPawn(self.Pawn).m_pos_deseada_nube);
-	PPawn(self.Pawn).RayazoNubeIra();
-}
-
 
 defaultproperties
 {
