@@ -226,7 +226,7 @@ function Toque()
 {
 	m_toques ++;
 	TemblarArbol();
-	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(ALARMA_CASA),,,true,self.Location);
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(TONYAZO_ARBOL),,,true,self.Location);
 	
 
 	if (m_toques >= m_toquesToDestroy )
