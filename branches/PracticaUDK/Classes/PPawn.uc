@@ -479,7 +479,7 @@ function EstadoNubeIra(int rayitos)
 	else
 	{
 		ActivarNubeIra();
-		`log("____Activando nube ira");
+		//_DEBUG `log("____Activando nube ira");
 		//Aplica el valor de la ira al número de rayitos que tiene la nuve
 		m_nubeIra.SetNumRayitos(rayitos);
 	}
@@ -1236,7 +1236,7 @@ state GiruMuerto
 
 	event EndState(Name nexstate)
 	{
-	`log("Me piro de Muerte a "@nexstate);
+	//_DEBUG `log("Me piro de Muerte a "@nexstate);
 	}
 
 }
@@ -1274,7 +1274,7 @@ function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile mis
 	local string str;
 
 	self.Life -= misil.Damage;
-	`log("Toñazo recibido en Giru "@self.life);
+	//_DEBUG `log("Toñazo recibido en Giru "@self.life);
 
 	if (self.Life <= 0)
 	{
@@ -1285,7 +1285,7 @@ function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile mis
 function RecibidoRayacoNube()
 {
 	self.Life -= 20;
-	`log("Rayazo recibido en Giru "@self.life);
+	//_DEBUG `log("Rayazo recibido en Giru "@self.life);
 
 	if (self.Life <= 0)
 	{

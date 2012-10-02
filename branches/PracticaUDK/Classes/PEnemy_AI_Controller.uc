@@ -92,19 +92,19 @@ function SetID(int i)
  */
 function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("PEnemy_AI_Controller, recibido danyo Giru Global, DEBES SOBREESCRIBIRME!!!\n" @self.GetStateName());
+	//_DEBUG `log("PEnemy_AI_Controller, recibido danyo Giru Global, DEBES SOBREESCRIBIRME!!!\n" @self.GetStateName());
 	m_b_breakpoint = true; //Para poder poner un breakpoint en un if (m_b_breakpoint), y sólo se parará si
 						   //has disparado a ese PEnemy
 }
 
 function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("PEnemy_AI_Controller, recibido danyo TurretCannon Global, DEBES SOBREESCRIBIRME!!!\n");
+	//_DEBUG `log("PEnemy_AI_Controller, recibido danyo TurretCannon Global, DEBES SOBREESCRIBIRME!!!\n");
 }
 
 function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser)
 {
-	`log("PEnemy_AI_Controller, recibido danyo TurretIce Global, DEBES SOBREESCRIBIRME!!!\n");
+	//_DEBUG `log("PEnemy_AI_Controller, recibido danyo TurretIce Global, DEBES SOBREESCRIBIRME!!!\n");
 }
 
 
@@ -182,7 +182,7 @@ function PPathNode AplicarOffsetNodo(PPathNode nodo)
 
 	if (vsize(initlocation - p.Location) > 200)
 	{
-		`log("Kagada en offset");
+		//_DEBUG `log("Kagada en offset");
 		return nodo;
 	}
 	return p;
@@ -240,7 +240,7 @@ state Rebotando
 			pawn.SetBase(Wall, HitNormal);
 			PEnemy(pawn).OrientarPEnemyPorNormal(HitNormal, rot);
 			pawn.SetRotation(rot);
-			`log("Pop 1");
+			//_DEBUG `log("Pop 1");
 			self.PopState();
 		}
 		else
@@ -264,7 +264,7 @@ state Rebotando
 		PEnemy(pawn).OrientarPEnemyPorNormal(HitNormal, rot);
 		pawn.SetRotation(rot);
 
-		`log("Pop 2");
+		//_DEBUG `log("Pop 2");
 		self.PopState();
 		
 	}
@@ -384,7 +384,7 @@ function vector ProyectarPuntoSuelo(vector punto)
 
 	if (!bfound)
 	{
-		`log("Kagada... no sé qué hacer...\n");
+		//_DEBUG `log("Kagada... no sé qué hacer...\n");
 		newLocation = punto; //sin clavarlo....
 	}
 	else
@@ -406,7 +406,7 @@ function vector ProyectarPuntoKamikaze()
 
 function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 {
-	`log("ContraTorreta no tratado" @self.name);
+	//_DEBUG `log("ContraTorreta no tratado" @self.name);
 }
 
 
@@ -464,7 +464,7 @@ state TonyaoContraTorreta
 		//Si durante el rebote, antes de alejarse a la distancia dicha, toca el suelo, se parará, y jamás
 		//legará a esa distancia, por lo que se quedará parado in eternum
 		//Así que si toca el suelo, finalizamos el rebote
-		`log("_Contra suelo after rebote "@self.Name);
+		//_DEBUG `log("_Contra suelo after rebote "@self.Name);
 		m_tiempo_tick = 0;
 		m_ChocandoContraTorreta = false;
 		m_bPausaContraTorreta = false;

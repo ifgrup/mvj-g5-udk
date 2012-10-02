@@ -180,7 +180,7 @@ animLog=true;
 function SetOverUIElement(bool val)
 {
 	bMouseOverUIElement = val;
-	`log("Flash");
+	//_DEBUG `log("Flash");
 }
 function SetTowerActive(bool val)
 {
@@ -261,7 +261,7 @@ function SetHbtActive(Hbt val)
 
 
 
-`log("La torre activa es: " @HbtActive);
+//_DEBUG `log("La torre activa es: " @HbtActive);
 
 
 
