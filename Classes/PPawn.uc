@@ -261,6 +261,7 @@ singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
 	else
 	{
 		//_DEBUG_ ("Bump contra Noseque"@Other.Name);
+		PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_CONTRA_MINION),,,true,self.Location);
 		ReboteRespectoA(Other,200);
 	}
 
@@ -729,6 +730,7 @@ function bool DoJump( bool bUpdating )
 {
 	local vector tmpFloor;
 
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRO_SALTA),,,true,self.Location);
 	// Si podemos saltar...
 	//Controlamos que no vengamos del Bump contra la torreta en este if. En el else sí se hace ese salto
 
@@ -1058,6 +1060,7 @@ state PawnRecienCaido
 		PC.GotoState('PlayerRecienCaido');
 		ActivarParticulasTonyazo();
 		SetTimer(2,false,'TimerCaida');
+		PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_CAE_SUELO),,,true,self.Location);
 	}
 
 	function TimerCaida()
@@ -1174,6 +1177,7 @@ state PawnPreparandoFlaying
 function MuerteGiru()
 {
 	//self.Mesh.SetHidden(true);
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_MUERE),,,true,self.Location);
 	ActivarParticulasMuerte();
 	SetTimer(1.0,false,'ACascarla');
 }
@@ -1241,6 +1245,7 @@ state GiruMuerto
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
 
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_PUPITA),,,true,self.Location);
 	//Ha sido por disparo de Minion?
 	if(PMisilMinion(DamageCauser) != None)
 	{
@@ -1290,7 +1295,7 @@ function RecibidoRayacoNube()
 
 function GiruAndaSound()
 {
-	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_VUELA_ESPACIO),,,true,self.Location);
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_ANDA),,,true,self.Location);
 
 }
 

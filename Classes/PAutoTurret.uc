@@ -208,6 +208,7 @@ simulated event PostBeginPlay()
 
 function Toque()
 {
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_CONTRA_TORRETA),,,true,self.Location);
 	self.m_toques++;
 	if (m_toques >= m_toquesToDestroy)
 	{
@@ -235,6 +236,7 @@ function Destruccion()
 
 function TorretaMuerta()
 {
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(TORRETA_DESTROZADA),,,true,self.Location);
 	m_part_destruccion.ParticleSystemComponent.SetActive(false);
 	self.Destroy();
 }
