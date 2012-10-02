@@ -59,7 +59,7 @@ var int  m_ticks_update_igu; //control de ticks para no refrescar igu a cada tic
 
 //gestion de iconos en pantalla 
 
-
+var bool m_b_fin;
 
 struct SRadarInfo
 {
@@ -197,6 +197,8 @@ event PostRender()
 		}
 	}
 
+	area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
+
 	//SI estamos abajo, sólo nos interesa la gestión del disparo, no??
 	if(PGame(WorldInfo.Game).bEarthNotFlying)
 	{
@@ -215,7 +217,7 @@ event PostRender()
 
 
 
-	area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
+	
 	//Conseguir la actual interfaz de interaccion del mouse
 
 	MouseInteractionInterface = GetMouseActor(HitLocation, HitNormal,bEsPlaneta);
@@ -752,22 +754,43 @@ simulated event Tick(float DeltaTime)
 		pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
 		if(PGame(WorldInfo.Game).juegofinalizadogana)
 		{
-			fineee("\n WINEEEEEE");
-
+			if (!m_b_fin)
+			{
+				m_b_fin = true;
+				SetTimer(6,false,'LanzarWin');
+				msgpantalla("ALL ENEMIES DEAD!!\nYOU WIN!!");
+				SetTimer(1.7,false,'Parriba');
+			}
 		}
-
-
 		if(PGame(WorldInfo.Game).juegofinalizadomuerte)
 		{
-			fineee("Game Over");
-
+			if (!m_b_fin)
+			{
+				m_b_fin = true;
+				SetTimer(6,false,'LanzarKagada');
+				msgpantalla("You have sustained a lethal injury.\nSorry but you are finished here");
+				SetTimer(1.7,false,'Parriba');
+			}   
 		}
-
 	}
-
-	
 }
 
+function Parriba()
+{
+	PPlayerController(PlayerOwner).vuela();
+}
+
+function LanzarWin()
+{
+	msgpantalla("");
+	fineee("YOU WIN!!!");
+}
+
+function LanzarKagada()
+{
+	msgpantalla("");
+	fineee("YOU LOOSE!");
+}
 
 //cambio de mirilla
 //Aplica offset en pixels x,y a la posición de la mirilla
@@ -1160,22 +1183,14 @@ function float GetAngle(Vector PointB, Vector PointC)
 
 		Canvas.SetPos(ScreenHUDLocation.X-100 , ScreenHUDLocation.Y-50);
 		Canvas.DrawMaterialTile(ERadarInfo.MaterialInstanceConstant, PointerSize, PointerSize);
-	
 	}
-
-
-
-	
-	
-	
 }
 
 
 
 exec function msgpantalla(string texto)
 {
-
-pGFx.MensajitoPotPantalla(texto);
+	pGFx.MensajitoPotPantalla(texto);
 //pGFx.loghudMC.GotoAndPlay("ini");
 }
 
