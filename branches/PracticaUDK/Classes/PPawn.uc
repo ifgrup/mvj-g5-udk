@@ -1176,7 +1176,7 @@ function Sacabo()
 {
 	self.Destroy();
 	PGame(WorldInfo.Game).GameOver();
-	PGame(WorldInfo.Game).Destroy();
+	//PGame(WorldInfo.Game).Destroy();
 }
 
 
