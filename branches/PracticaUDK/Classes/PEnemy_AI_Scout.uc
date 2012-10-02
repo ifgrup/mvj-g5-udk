@@ -524,6 +524,9 @@ state ArrivedDestination
 		Pawn.Acceleration = vect(0,0,0);
 		Pawn.Velocity = vect(0,0,0);
 		StopLatentExecution();
+		PGame(Worldinfo.Game).m_TextoPendiente = "They are arriving at your home!!\nImprove your strategy!!";
+		PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(ALARMA_CASA),,,true,self.Location);
+		
 	}
 
 

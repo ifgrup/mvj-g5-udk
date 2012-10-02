@@ -26,6 +26,7 @@ function DisparoTorreta()
 		GeneraNuevaOndaHielo();
 		//pem=Spawn(class'PEmiter',self,,enemigoactual.Location+vect(300,0,0),enemigoactual.Rotation,,true);
 		//pem.SpawnEmitter();
+		PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(TORRETA_ICE_DISPARA),,,true,self.Location);
 }
 
 

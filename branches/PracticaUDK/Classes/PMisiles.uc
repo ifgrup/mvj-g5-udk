@@ -3,6 +3,8 @@ var name disparador; //Quién dispara el projectile. Para control de TakeDamage ñ
 DefaultProperties
 {
 
+	SpawnSound = SoundCue'PGameMusicrr.disparogiru_cue'
+
 	//0ProjFlightTemplate=ParticleSystem'PGameMisilakos.topotakamikaze'
 /*	DamageRadius=220.0
 	Damage=1
