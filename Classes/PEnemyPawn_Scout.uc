@@ -221,7 +221,18 @@ function int NivelIra()
 
 function ResetIra()
 {
-	ira = 0;
+	//Rebajamos la nube poco a poco
+	ira = 0.97*max_ira; //Así seguro que no vuelve a devolver ira máxima
+	SetTimer(0.2,true,'BajaIra');
+}
+
+function BajaIra()
+{
+	ira = ira -5;
+	if (ira<=0)
+	{
+		ClearTimer('BajaIra');
+	}
 }
 
 event NuevoPaso()
@@ -332,6 +343,6 @@ defaultproperties
 	m_defaultGroundSpeed=GroundSpeed
 	m_puntos_al_morir = 300
 	ira=0;
-	max_ira=100;
+	max_ira=50;
 	life=3;
 }

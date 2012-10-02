@@ -244,6 +244,7 @@ singular event Bump(Actor Other,PrimitiveComponent OtherComp, Vector HitNormal)
 	{  //Es una torreta. Rebotamos
 		//_DEBUG_ ("Bump contra Torreta"@Other.Name);
 		ReboteRespectoA(Other);
+		PAutoTurret(Other).Toque();
 	}
 	else
 	{

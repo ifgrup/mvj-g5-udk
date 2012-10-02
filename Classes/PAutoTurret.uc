@@ -155,6 +155,8 @@ var int m_TiempoEnConstruccion; //Segundos que estará en construccion
 var int m_toques; //toques que lleva de PEnemys.
 var int m_toquesToDestroy; //toques con los que se destruye
 
+var EmitterSpawnable m_part_destruccion; 
+
 event PostInitAnimTree(SkeletalMeshComponent skelcomp)
 {
 	Super.PostInitAnimTree(skelcomp);
@@ -164,6 +166,7 @@ event PostInitAnimTree(SkeletalMeshComponent skelcomp)
 		m_quatTorreta=QuatFromRotator(PivotController.BoneRotation);
 	}
 }
+
 
 simulated event PostBeginPlay()
 {
@@ -191,6 +194,14 @@ simulated event PostBeginPlay()
 	DestroyEffect.SetTemplate(TurretEmitters.DestroyEmitter);
 	EnConstruccionEffect.SetTemplate(TurretEmitters.EnConstruccion);
 
+	
+	m_part_destruccion = Spawn(class'EmitterSpawnable',Self);
+ 	if (m_part_destruccion != none)
+	{
+			m_part_destruccion.ParticleSystemComponent.bAutoActivate = false; 
+			m_part_destruccion.SetTemplate(ParticleSystem'PGameParticles.Particles.P_Explo_Torreta');
+	}
+
 	/*IMPRESCINDIBLE ponerla sin físicas para que no aplique nada sobre ella y la controlemos nosotros*/
 	SetPhysics(PHYS_None);
 }
@@ -209,6 +220,14 @@ function Destruccion()
 	//Partículas y demás, y Destroy
 	`log("Destruccion torreta "@self.Name);
 	//DrawDebugSphere(self.Location,200,100,200,0,0,true);
+	ShieldMesh.SetHidden(true); //Quitamos el escudo
+	m_part_destruccion.ParticleSystemComponent.SetActive(true);
+	SetTimer(0.6,false,'TorretaMuerta'); //Para dar tiempo al s.partículas
+}
+
+function TorretaMuerta()
+{
+	m_part_destruccion.ParticleSystemComponent.SetActive(false);
 	self.Destroy();
 }
 
