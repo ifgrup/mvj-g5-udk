@@ -223,6 +223,14 @@ function Destruccion()
 	ShieldMesh.SetHidden(true); //Quitamos el escudo
 	m_part_destruccion.ParticleSystemComponent.SetActive(true);
 	SetTimer(0.6,false,'TorretaMuerta'); //Para dar tiempo al s.partículas
+	if (PTurretCannon(self) != None)
+	{
+		PGame(Worldinfo.Game).m_TextoPendiente = "Cannon Turret Destroyed!!";
+	}
+	else
+	{
+		PGame(Worldinfo.Game).m_TextoPendiente = "Ice Turret Destroyed!!";
+	}
 }
 
 function TorretaMuerta()

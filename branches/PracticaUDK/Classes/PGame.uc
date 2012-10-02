@@ -16,6 +16,7 @@ var int m_ticks_spawn_enemigos; //control de ticks spawneando enemigos
 var int m_intervalo_spawn_enemies; //tiempo entre spawn de cualquier huevo
 var bool juegofinalizadomuerte,juegofinalizadogana;
 
+var string m_TextoPendiente;
 
 var PGameSonidos SONIDOS_JUEGO;
 
@@ -363,7 +364,17 @@ function EnemyKilled(PEnemy enemigoMuerto)
 	}
 	else if (PEnemyPawn_Scout(enemigoMuerto) != None)
 	{
+
 		EScoutLeft--;
+		if (EScoutLeft ==1)
+		{
+			self.m_TextoPendiente = "Only One Left!!";
+		}
+		else
+		{
+			self.m_TextoPendiente = "Well Done!! Keep on Fighting!!!";
+		}
+
 		//Como ha muerto el líder, el guía espiritual, los minions no pueden superarlo y se suicidan:
 		TodosMinionsKamikaze(PEnemyPawn_Scout(enemigoMuerto).id);
 		//Y hacemos que el spawner no genere más ogros ni más minions:

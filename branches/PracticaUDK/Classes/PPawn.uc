@@ -51,6 +51,8 @@ var bool m_rayazo_recibido; //Si el Giru acaba de recibir un rayaco
 var PNubeIra  m_nubeIra;
 var bool m_bgiro_muerte;
 var float m_escala;
+var bool m_avisado_life;
+var int m_ticks_arriba;
 
 function float CalcularMediaTranslateZ(float valorZ)
 {
@@ -411,6 +413,30 @@ simulated function PostBeginPlay()
 	//Instanciamos la Nube de Ira, que se activará al acercarnos al ogro
 	m_nubeIra = spawn(class 'PNubeIra',self);
 	SetTimer(7,true,'GiruAndaSound');
+
+	//Cuando estamos arriba, cada 10 segundos sube un punto de vida, pero claro, dejas a los bichos a sus anchas...
+	SetTimer(1,true,'ControlVidaArriba');
+
+}
+
+function ControlVidaArriba()
+{
+	if (self.GetStateName() == 'PawnFlaying')
+	{
+		m_ticks_arriba++;
+		m_ticks_arriba = clamp(m_ticks_arriba,0,10);
+	}
+	else
+	{
+		m_ticks_arriba=0;
+	}
+
+	if (m_ticks_arriba == 10)
+	{
+		self.life += 1;
+		self.life = clamp(life,0,100);
+		m_ticks_arriba=0;
+	}
 }
 
 function ActivarNubeIra()
@@ -1240,6 +1266,8 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 
 function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile misil)
 {
+	local string str;
+
 	self.Life -= misil.Damage;
 	`log("Toñazo recibido en Giru "@self.life);
 
@@ -1364,5 +1392,5 @@ defaultproperties
 	CollisionType=COLLIDE_BlockAll
 	m_escala=1	
 	m_DistanciaAlSuelo= 10
-	life=2;
+	life=100;
 }
