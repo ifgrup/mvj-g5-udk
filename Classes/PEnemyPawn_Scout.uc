@@ -9,6 +9,7 @@ var LinearColor Col1, Col2;
 
 var int ira, max_ira;
 var PShield escudo;
+var EmitterSpawnable m_particulas_muerte; //Partículas de escudo hacia el Scout
 
 simulated function PostBeginPlay()
 {
@@ -149,6 +150,12 @@ simulated function PostBeginPlay()
 	ColorMesh.SetTraceBlocking(true, true);
 	ColorMesh.SetBlockRigidBody(true);
 	ColorMesh.SetActorCollision(true, true);
+
+	//Partículas de muerte
+	m_particulas_muerte = Spawn(class'EmitterSpawnable',Self);
+	m_particulas_muerte.ParticleSystemComponent.bAutoActivate = false;
+	m_particulas_muerte.ParticleSystemComponent.SetActive(false);
+	m_particulas_muerte.SetTemplate(ParticleSystem'PGameParticles.Particles.P_MuerteOgro');
 }
 
 
@@ -298,11 +305,32 @@ function RecibidoDisparoTurretIce(vector HitLocation, vector Momentum,Actor Dama
 
 function Destruccion()
 {
+	ActivarParticulasMuerte();
+	self.escudo.mesh.SetHidden(true); //Ocultamos el escudo
+	
+	//self.escudo.Destroy();
+	//escudo.Mesh.SetScale(7);
+
+	SetTimer(0.7,false,'MuerteScout');
+}
+
+function ActivarParticulasMuerte()
+{
+	m_particulas_muerte.SetLocation(self.Location);
+	m_particulas_muerte.SetRotation(self.Rotation);
+	m_particulas_muerte.ParticleSystemComponent.ActivateSystem();
+	m_particulas_muerte.ParticleSystemComponent.SetActive(false);
+	m_particulas_muerte.ParticleSystemComponent.SetActive(true);
+}
+
+function MuerteScout()
+{
+	self.ColorMesh.SetHidden(true);
+	
 	if(PGame(WorldInfo.Game) != none)
 	{
 	    PGame(WorldInfo.Game).EnemyKilled(self);
 	}
-	
 	self.Owner.Destroy();//muerte al opresor!!
 	self.UnPossessed(); //No tenemos Owner, LIBRES!!!
 	self.Destroy(); //Qué poco ha durado la libertad...
