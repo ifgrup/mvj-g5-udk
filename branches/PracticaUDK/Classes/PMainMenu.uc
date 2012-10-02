@@ -1,7 +1,7 @@
 class PMainMenu extends GFxMoviePlayer;
 
-var GFxClikWidget btnStart,btnExit,btncjugar,btncreditos;
-var GFxObject MainMenuTitle;
+var GFxClikWidget btnStart,btnExit,btncreditos;
+var GFxObject MainMenuTitle, pausemenuMC;
 
 function bool Start(optional bool startPaused=false)
 {
@@ -9,6 +9,7 @@ function bool Start(optional bool startPaused=false)
 	Advance(0);
     MainMenuTitle=GetVariableObject("_root.textField");
 	MainMenuTitle.SetText("FishTros Game");
+	pausemenuMC=GetVariableObject("_root.pausemenu");
 	
 
 	return true;
@@ -22,30 +23,21 @@ event bool WidgetInitialized(name WN,name WP, GFxObject w)
 	{
 		case ('optionsBtn'):
 			btnStart=GFxClikWidget(w);
-			
-		btnStart.SetString("label", "Jugar");
+			btnStart.SetString("label", "Jugar");
 			btnStart.AddEventListener('CLIK_press',OnStartMenuTUPUTAMADRE);
 			break;
-		case ('creditos'):
+			case ('creditos'):
 			btncreditos=GFxClikWidget(w);
-			
-		btncreditos.SetString("label", "Créditos");
-			btncreditos.AddEventListener('CLIK_press',OnStartMenuSalir);
-			break;
-		case ('cjugar'):
-			btncjugar=GFxClikWidget(w);
-			
-		btncjugar.SetString("label", "Como Jugar");
-			btncjugar.AddEventListener('CLIK_press',OnStartMenuSalir);
+			btncreditos.SetString("label", "Créditos");
+			btncreditos.AddEventListener('CLIK_press',creditos);
 			break;
 			case ('exit'):
 			btnExit=GFxClikWidget(w);
-			
-		btnExit.SetString("label", "Salir");
+			btnExit.SetString("label", "Salir");
 			btnExit.AddEventListener('CLIK_press',OnStartMenuSalir);
 			break;
 
-		default:
+			default:
 			break;
 
 	}
@@ -73,6 +65,10 @@ function OpenGame()
     consolecommand("Open Test");
 }
 
+function creditos(GFxClikWidget.EventData ev)
+{
+	pausemenuMC.GotoAndPlay("open");
+}
 
 DefaultProperties
 {
@@ -83,7 +79,6 @@ DefaultProperties
 	MovieInfo=SwfMovie'PGameMenuFlash.pmainmenuini'
 	WidgetBindings.Add((WidgetName="optionsBtn",WidgetClass=class'GfxClikWidget'));
 	WidgetBindings.Add((WidgetName="creditos",WidgetClass=class'GfxClikWidget'));
-	WidgetBindings.Add((WidgetName="cjugar",WidgetClass=class'GfxClikWidget'));
 	WidgetBindings.Add((WidgetName="exit",WidgetClass=class'GfxClikWidget'));
 
 }
