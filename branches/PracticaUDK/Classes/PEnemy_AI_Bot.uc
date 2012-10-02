@@ -624,6 +624,7 @@ Begin:
 
     //Lanzo los sistemas de partículas de congelación
 	ActivarPartCongelacion();
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(MINION_CONGELADO),,,true,self.Location);
 }/* ---------------FIN ESTADO CONGELADO --------------*/
 //____________________________________________________________________________________________________________________________________
 
