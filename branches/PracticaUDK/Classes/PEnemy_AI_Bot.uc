@@ -803,7 +803,7 @@ state TowerAttack
 		if 	(m_currentDespkamikaze >= vsize(locaKamikaze-locaKamikazeini)
 			|| (m_tiempo_tick > m_tiempo_max_kamikaze) 	)
 		{
-			DrawDebugSphere(self.Pawn.Location,40,10,0,100,0,false);
+			//_DEBUG_DrawDebugSphere(self.Pawn.Location,40,10,0,100,0,false);
 			kamikaze();
 		}
 		else
@@ -820,7 +820,7 @@ state TowerAttack
 
 			//_DEBUG `log("current desp "@self.Name @m_currentDespContraTorreta);
 	
-			DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
+			//_DEBUG_DrawDebugSphere(self.Pawn.Location,40,10,32,63,63,false);
 		}
 		
 	}
