@@ -246,6 +246,7 @@ event NuevoPaso()
 {
 	//EL ogro ha empezado otro paso. Ruido y sistema de partículas
 	//_DEBUG_`log("Nuevo Paso Ogro!");
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(OGRO_ARRASTRANDO_PIE),,,true,self.Location);
 }
 
 /***************** FUNCIONES DE RECEPCIÓN DE DISPAROS PARA LOS SCOUTS ******************************/
