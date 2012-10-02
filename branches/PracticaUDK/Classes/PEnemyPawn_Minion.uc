@@ -235,6 +235,17 @@ function DesactivarPartCongelacion()
 	//m_part_congelacion.SetCollision(false,false,false);
 }
 
+function Destruccion()
+{
+	//Sistema Partículas de Muerte, y eliminarse del vector de enemigos de su spawner para control de máximo de minions
+	m_part_muerte.ParticleSystemComponent.SetRotation(self.Rotation);
+	m_part_muerte.ParticleSystemComponent.SetActive(false);
+	m_part_muerte.ParticleSystemComponent.SetActive(true);
+	//Si muere en este instante, las partículas dejan de verse, así que lanzamos un timer para que muera dentro de
+	//un segundo, pero antes lo ponemos invisible para que parezca que ha desaparecido
+	//self.SetDrawScale3D(vect(0,0,0));
+	SetTimer(0.5,false,'MuerteVerdadera');
+}
 function DestruccionPorHielo()
 {
 	//No queremos la animación de destrucción normal del penemy, la de las partículas ya ha sido suficiente
