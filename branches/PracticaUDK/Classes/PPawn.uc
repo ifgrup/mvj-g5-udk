@@ -389,6 +389,7 @@ simulated function PostBeginPlay()
 
 	//Instanciamos la Nube de Ira, que se activará al acercarnos al ogro
 	m_nubeIra = spawn(class 'PNubeIra',self);
+	SetTimer(7,true,'GiruAndaSound');
 }
 
 function ActivarNubeIra()
@@ -437,6 +438,7 @@ function RayazoNubeIra()
 	m_nubeIra.Rayaco();
 	//sólo debe estár así un instante o saldrán rayos sin parar:
 	//Por sistema de partículas no he sabido hacerlo..... mierda UDK de las narices... :( 
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(OGRO_RAYO_IRA),,,true,self.Location);
 	SetTimer(0.8,false,'SaltaPorRayaco');
 }
 
@@ -1142,7 +1144,11 @@ function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile mis
 	}
 }
 
+function GiruAndaSound()
+{
+	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(GIRU_VUELA_ESPACIO),,,true,self.Location);
 
+}
 
 defaultproperties
 {
