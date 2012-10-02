@@ -140,7 +140,7 @@ function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 	//Y al árbol (SI, lo se. Tendríamos que haber hecho que torretas y árboles heredaran de lo mismo...
 	if (PTree(torreta) != None)
 	{
-		`log("Minion contra arbol" @self.Name);
+		//_DEBUG `log("Minion contra arbol" @self.Name);
 		PTree(torreta).Toque();
 	}
 
@@ -276,7 +276,7 @@ auto state Idle_Inicial
 				  else if (m_intentos_nuevo_nodo >6)
 				  {
 					GoToState('TowerAttack'); //Yo lo enviaba a explotar y punto, rollo suicida
-					`log("_____________No encuentro nodo, ataquer!" @self.Name);
+					//_DEBUG `log("_____________No encuentro nodo, ataquer!" @self.Name);
 				  }
 				  
 				}
@@ -286,13 +286,13 @@ auto state Idle_Inicial
 
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
 		self.m_b_breakpoint = true;
 	}
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en IDLE"@self.Name);
 	}
 
 	function BumpContraSuelo(Actor suelo,Vector HitNormal)
@@ -302,7 +302,7 @@ auto state Idle_Inicial
 
 	function ContraTorreta(Actor torreta, optional float dist)
 	{
-		`log("_ignorado toñazo mientras cayendo "@self.Name);
+		//_DEBUG `log("_ignorado toñazo mientras cayendo "@self.Name);
 	}
 
 
@@ -472,7 +472,7 @@ state GoToNextPath
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
 		
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH REPETICIONES "@self.Name @repeti);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en GOTONEXTPATH REPETICIONES "@self.Name @repeti);
 		//self.PushState('StopColision');
 		ReboteRespectoA( None,vect(0,0,0),false,300);
 		self.m_b_breakpoint = true;
@@ -480,12 +480,12 @@ state GoToNextPath
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoTurretCannon en GOTONEXTPATH"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoTurretCannon en GOTONEXTPATH"@self.Name);
 	}
 
 	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoTurretIce en GOTONEXTPATH"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoTurretIce en GOTONEXTPATH"@self.Name);
 		//Hay que congelar al bicho, que se quede quieto, salga el sistema de partículas del hielo
 		//y que cuando acabe de estar congelado, vuelva a este estado.
 		self.PushState('Congelado');
@@ -538,7 +538,7 @@ state Congelado
 	
 	event PoppedState()
 	{
-		`log("_____ME PIRO__" @m_tiempo_tick);
+		//_DEBUG `log("_____ME PIRO__" @m_tiempo_tick);
 		m_disparos_giru_congelado=0;
 	}
 
@@ -567,7 +567,7 @@ state Congelado
 	
 	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, Ya estoy congelado, pa qué sufrir más?..."@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, Ya estoy congelado, pa qué sufrir más?..."@self.Name);
 		//Si ya está congelado, no vuelve a congelarse, simplemente lo ignoramos
 		return;
 	}
@@ -586,7 +586,7 @@ state Congelado
 
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en Congelado"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en Congelado"@self.Name);
 		m_disparos_giru_congelado++;
 		if (m_disparos_giru_congelado > 2) //COn 3 toques, rebentaos
 		{
@@ -656,7 +656,7 @@ state DeadAnyicos
 	event BeginState(name PreviousStateName)
 	{
 		//Sistema de partículas de cachos de hielo a saco.
-		`log("Soy un PEnemy_AI_Bot, y el puto Giru de los huevos me ha destruído");
+		//_DEBUG `log("Soy un PEnemy_AI_Bot, y el puto Giru de los huevos me ha destruído");
 		ActivarPartDeadAnyicos();
 		SetCollision(false,false,false);
 		PEnemyPawn_Minion(self.Pawn).DestruccionPorHielo();
@@ -677,7 +677,7 @@ state StopColision
 	//Todas las funciones sobreescribibles las dejamos vacías just in case
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en StopColision "@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en StopColision "@self.Name);
 		self.m_b_breakpoint = true;
 	}
 
@@ -755,17 +755,17 @@ state TowerAttack
 
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
 	}
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en TowerAttack"@self.Name);
 	}
 
 	function ContraBase()
 	{
-		`log ("Minion estonyao contra base "@self.Name);
+		//_DEBUG `log ("Minion estonyao contra base "@self.Name);
 		self.pawn.Destroy();
 		self.Destroy();
 	}

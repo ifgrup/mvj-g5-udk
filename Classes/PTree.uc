@@ -189,7 +189,7 @@ function CalcularNormal()
 
 	if (!bfound)
 	{
-		`log("Kagada PTree calculando normal 0,0,0...\n");
+		//_DEBUG `log("Kagada PTree calculando normal 0,0,0...\n");
 		m_normal=vect(0,0,0);
 	}
 	else
@@ -266,7 +266,7 @@ function Destruccion()
 	//Debemos mostrar el sistema de partículas de las hojas y dejar el troncho del árbol
 	self.bWorldGeometry = false;
 	self.SetCollision(false,false,false);
-	`log("Destruccion arbol "@self.Name);
+	//_DEBUG `log("Destruccion arbol "@self.Name);
 	m_particulas_destruccion.SetLocation(self.Location + normal(m_normal)*100 );
 	m_particulas_destruccion.SetRotation(m_rotInicial);
 	m_particulas_destruccion.SetVectorParameter('ColorHojas',m_Color);

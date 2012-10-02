@@ -212,7 +212,7 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 	//PEnemy_AI_Bot(Owner).RecibirDanyo(iDamageAmount, EventInstigator, HitLocation, Momentum, DamageType, HitInfo, DamageCauser);
 	if (self.Owner == None)
 	{
-		`log("___________OWNER NULO_____________ MAL ROLLO!!");
+		//_DEBUG `log("___________OWNER NULO_____________ MAL ROLLO!!");
 		return;
 	}
 	//Ha sido por disparo de Giru?
@@ -269,10 +269,10 @@ function RecibidoDanyoSinIdentificar(vector HitLocation, vector Momentum,Actor D
 	local int i;
 	for (i=0;i<3;i++)
 	{
-		`log("__________________________!!!____________________");
+		//_DEBUG `log("__________________________!!!____________________");
 	}
 
-	`log("__________TAKE DAMAGE SIN IDENTIFICAR!! TRATALO!!!" @life);
+	//_DEBUG `log("__________TAKE DAMAGE SIN IDENTIFICAR!! TRATALO!!!" @life);
 
 }
 
@@ -288,7 +288,7 @@ state ChafadoPorPawn
 	event BeginState(Name PrevName)
 	{
 
-		`log('PEnemy en estado Chafado Por Pawn');
+		//_DEBUG `log('PEnemy en estado Chafado Por Pawn');
 		self.Destroy();
 	}
 
@@ -468,7 +468,7 @@ function AterrizadoAfterSpawn()
 		
 	GotoState(''); //estado default
 	GetAxes(Rotation,ViewX,ViewY,ViewZ);
-	`log("__Aterrizado " @self.Name);
+	//_DEBUG `log("__Aterrizado " @self.Name);
 }
 
 //over-ride epics silly character stuff
@@ -496,7 +496,7 @@ event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
 	{
 		//Toñazo contra el suelo? pos interesa principalmente para el controler por si al caer de un rebote no se cosca
 		//y no desapila el estado.
-		`log("HitWall gral suelo!");
+		//_DEBUG `log("HitWall gral suelo!");
 		PEnemy_AI_Controller(Owner).BumpContraSuelo(Wall,HitNormal);
 		return;
 	}
@@ -505,7 +505,7 @@ event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
 	ptorreta = PAutoTurret(Wall);
 	if ( ptorreta != None )  //Si nos chocamos contra una torreta
 	{
-		`log("HitWall gral torreta!");
+		//_DEBUG `log("HitWall gral torreta!");
 		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
 	}
 
@@ -519,7 +519,7 @@ event HitWall(Vector HitNormal, Actor Wall,PrimitiveComponent WallComp)
 	pbase = PPlayerBase(Wall);
 	if (pbase != None)
 	{
-		`log("HitWall gral casa!");
+		//_DEBUG `log("HitWall gral casa!");
 		PEnemy_AI_Controller(Owner).ContraBase();
 	}
 }
@@ -568,21 +568,21 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	ptorreta = PAutoTurret(Other);
 	if ( ptorreta != None )  //Si nos chocamos contra una torreta
 	{
-		`log("Bump torreta!");
+		//_DEBUG `log("Bump torreta!");
 		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
 	}
 
 	parbol = PTree(Other);
 	if ( parbol != None )  //Si nos chocamos contra un arbol
 	{
-		`log("S'ha comio un árbol neng!" @self.Name @Other.Name);
+		//_DEBUG `log("S'ha comio un árbol neng!" @self.Name @Other.Name);
 		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
 
 	pbase = PPlayerBase(Other);
 	if (pbase != None)
 	{
-		`log("Bump casa!");
+		//_DEBUG `log("Bump casa!");
 		PEnemy_AI_Controller(Owner).ContraBase();
 	}
 	//super.Bump( Other, OtherComp, HitNormal );
@@ -650,21 +650,21 @@ singular event BaseChange()
 	ptorreta = PAutoTurret(Base);
 	if ( ptorreta != None )  //Si nos chocamos contra una torreta
 	{
-		`log("BaseChange torreta!");
+		//_DEBUG `log("BaseChange torreta!");
 		PEnemy_AI_Controller(Owner).ContraTorreta(ptorreta);
 	}
 	
 	parbol = PTree(Base);
 	if ( parbol != None )  //Si nos chocamos contra una torreta
 	{
-		`log("BaseChange arbol!" @self.Name @PEnemy_AI_Controller(Owner).GetStateName() ) ;
+		//_DEBUG `log("BaseChange arbol!" @self.Name @PEnemy_AI_Controller(Owner).GetStateName() ) ;
 		PEnemy_AI_Controller(Owner).ContraTorreta(parbol);
 	}
 
 	pbase = PPlayerBase(Base);
 	if (pbase != None)
 	{
-		`log("BaseChange casa!" @self.Name);
+		//_DEBUG `log("BaseChange casa!" @self.Name);
 		PEnemy_AI_Controller(Owner).ContraBase();
 	}
 

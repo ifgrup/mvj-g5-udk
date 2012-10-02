@@ -213,7 +213,7 @@ function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 
 	if (m_ChocandoContraTorreta)
 	{
-		`log("Evito Recursividad "@self.Name @torreta.Name);
+		//_DEBUG `log("Evito Recursividad "@self.Name @torreta.Name);
 		return;
 	}
 	m_ChocandoContraTorreta = true;
@@ -223,13 +223,13 @@ function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 
 	if(PAutoTurret(torreta)!=None)
 	{
-		`log("Scout se come torreta" @self.Name);
+		//_DEBUG `log("Scout se come torreta" @self.Name);
 		PAutoTurret(torreta).Destruccion();
 	}
 
 	if(PTree(torreta)!=None)
 	{
-		`log("Scout se come arbol" @self.Name);
+		//_DEBUG `log("Scout se come arbol" @self.Name);
 		PTree(torreta).Destruccion();
 	}
 	
@@ -416,7 +416,7 @@ state MoveToDestination
 		{
 			if (m_bBreakpoint)
 			{
-				`log("Parate colega!");
+				//_DEBUG `log("Parate colega!");
 			}
 			m_tiempo_tick -= 1.0; //reset del tiempo para el siguiente 'timer'
 			
@@ -483,14 +483,14 @@ state MoveToDestination
 	
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_SCOUT ControlTakeDisparoGiru en MoveToDestination"@self.Name);
+		//_DEBUG `log("PEnemy_AI_SCOUT ControlTakeDisparoGiru en MoveToDestination"@self.Name);
 		m_bBreakpoint = true;
 
 	}
 	
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser)
 	{
-		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en MoveToDestination"@self.Name);
+		//_DEBUG `log("PEnemy_AI_BOT, ControlTakeDisparoGiru en MoveToDestination"@self.Name);
 	}
 
 
@@ -519,7 +519,7 @@ state ArrivedDestination
 	event BeginState(name PreviousStateName)
 	{
 		PGame(WorldInfo.Game).PlayerBase.pupitabase();
-		`log("SCOUT LLEGADO A BASE!!!   vida de la base" @PGame(WorldInfo.Game).PlayerBase.life);
+		//_DEBUG `log("SCOUT LLEGADO A BASE!!!   vida de la base" @PGame(WorldInfo.Game).PlayerBase.life);
 		//DBG WorldInfo.Game.Broadcast(self, Name@" ha llegado a destino");
 		Pawn.Acceleration = vect(0,0,0);
 		Pawn.Velocity = vect(0,0,0);

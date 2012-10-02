@@ -135,7 +135,7 @@ simulated function PostBeginPlay()
 	//Escudo
 	if(ColorMesh.GetSocketByName('SocketEscudo') != none)
 	{
-		`log("encuentra socket escudo");
+		//_DEBUG `log("encuentra socket escudo");
 		escudo= Spawn(class 'PShield');
 		self.ColorMesh.AttachComponentToSocket(escudo.Mesh,'SocketEscudo');
 		escudo.ShieldMIC.SetVectorParameterValue('Color',col1);

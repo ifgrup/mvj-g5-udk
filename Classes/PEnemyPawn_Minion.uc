@@ -173,7 +173,7 @@ function PararEsperar()
 
 	self.Velocity=retroceso*100;//*Fclamp(Vsize(Velocity),3,5); 
 
-	`log("_______________PARAR_ESPERAR __________"@self.Name);	
+	//_DEBUG `log("_______________PARAR_ESPERAR __________"@self.Name);	
 	self.Salta(true);
 }
 
@@ -190,7 +190,7 @@ function desactivarEscudoScout()
 {
 	self.GroundSpeed = self.m_defaultGroundSpeed; //Restauramos velocidad
 	ParticulasEscudo.ParticleSystemComponent.SetActive(false);
-	`log("Desactivo");
+	//_DEBUG `log("Desactivo");
 }
 
 function Vector GetPosicionSocketCuerpo()

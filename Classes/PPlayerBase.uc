@@ -73,7 +73,7 @@ event Tick(float DeltaTime)
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
 	
-    `log("me tan dando");
+    //_DEBUG `log("me tan dando");
 	life--;
 	if(life == 0)
 	{

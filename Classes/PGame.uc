@@ -279,7 +279,7 @@ function PPathNode GetNextPath(int id, out int NodeIndex)
 	if (indice == -1)
 	{
 		//Grave problema... significa que no hemos creado los nodos..
-		`log("___ERROR___ No se han creado los nodos para el grupo " @id);
+		//_DEBUG `log("___ERROR___ No se han creado los nodos para el grupo " @id);
 		return none;
 	}
 	GN = GroupNodos[indice];
@@ -332,7 +332,7 @@ function ActivateSpawners()
 	if (m_ticks_spawn_enemigos == 0)
 	{
 		m_intervalo_spawn_enemies = fclamp (m_intervalo_spawn_enemies-1,4,10);
-		`log ("Nuevo intervalo spawn"@m_intervalo_spawn_enemies);
+		//_DEBUG `log ("Nuevo intervalo spawn"@m_intervalo_spawn_enemies);
 	}
 
     SetTimer(m_intervalo_spawn_enemies, false, 'ActivateSpawners');
@@ -395,7 +395,7 @@ function EnemyKilled(PEnemy enemigoMuerto)
 //control de Game Over
 function BaseDestrozada()
 {
-`log("Base destrozada");
+//_DEBUG `log("Base destrozada");
 	GameOver();
    // consolecommand("Open PGameMenuini");
 
@@ -441,7 +441,7 @@ function GetVectorEnemigos(int idSpawner, out array<PEnemy> enemigos, out PEnemy
 
 	 if(index == -1)
 	 {
-		`log("KAGADA");
+		//_DEBUG `log("KAGADA");
 	 }
 	 else
 	 {
@@ -470,7 +470,7 @@ function TodosMinionsKamikaze(int id_scout)
 
 	 if(index == -1)
 	 {
-		`log("KAGADA");
+		//_DEBUG `log("KAGADA");
 	 }
 	 else
 	 {
@@ -491,7 +491,7 @@ function InhabilitarSpawner(int idSpawner)
 	 index = EnemySpawners.Find('id', idSpawner);
 	 if(index == -1)
 	 {
-		`log("KAGADA");
+		//_DEBUG `log("KAGADA");
 	 }
 	 else
 	 {
@@ -511,7 +511,7 @@ function EliminaMinionVector(PEnemyPawn_Minion minion)
 
 	 if(index == -1)
 	 {
-		`log("KAGADA EliminaMinionVector");
+		//_DEBUG `log("KAGADA EliminaMinionVector");
 	 }
 	 else
 	 {
