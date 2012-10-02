@@ -356,7 +356,7 @@ state MoveToDestination
 		local float distanciaBase;
 		local float distNodo;
 
-		DrawDebugInfo();
+		//_DEBUG_DrawDebugInfo();
 		super.Tick(DeltaTime);
 
 		if (pawn.Velocity == vect(0,0,0) && m_Destination == theObjective)
