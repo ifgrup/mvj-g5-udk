@@ -260,7 +260,7 @@ function AddPathNode(int id, PPathNode pNodo, optional LinearColor col)
 		GP.Col = col;
 
 		GroupNodos.AddItem(GP);
-		Broadcast(none, "Creando nuevo grupo de nodos...");
+		//_DEBUG_Broadcast(none, "Creando nuevo grupo de nodos...");
 	}
 	else
 		GroupNodos[indice].Nodos.AddItem(pNodo);
