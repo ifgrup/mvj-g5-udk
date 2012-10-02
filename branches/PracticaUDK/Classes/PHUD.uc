@@ -102,6 +102,23 @@ simulated event PostBeginPlay()
 	}
 
 	pGFx.SetTurretIdle();
+	//Lanzamos el tutorial
+	SetTimer(10.0,false,'LanzaTutorial1');
+	SetTimer(5.0,true,'LanzaTutorialArriba');
+}
+
+function LanzaTutorial1()
+{
+	inituto(0);
+}
+
+function LanzaTutorialArriba()
+{
+	if (PlayerOwner.GetStateName() == 'PlayerFlaying')
+	{
+		ClearTimer('LanzaTutorialArriba');
+		inituto(1);
+	}
 }
 
 simulated event Destroyed()
@@ -751,6 +768,7 @@ simulated event Tick(float DeltaTime)
 	{
 		ADbotonesporCredito();
 		vidaGiru();
+		MostrarTextoPendiente();
 		pGFx.AUIVuela(!PGame(WorldInfo.Game).bEarthNotFlying );
 		if(PGame(WorldInfo.Game).juegofinalizadogana)
 		{
@@ -774,6 +792,16 @@ simulated event Tick(float DeltaTime)
 		}
 	}
 }
+
+function MostrarTextoPendiente()
+{
+	if (PGame(Worldinfo.Game).m_TextoPendiente != "")
+	{
+		msgpantalla(PGame(Worldinfo.Game).m_TextoPendiente);
+		PGame(Worldinfo.Game).m_TextoPendiente = "";
+	}
+}
+ 
 
 function Parriba()
 {
@@ -1229,8 +1257,13 @@ function vidaGiru()
 	if (gppawn != None)
 	{
 		pGFx.hvidaMC.GotoAndStopI(gppawn.life);
+	
+		if (gppawn.life < 10 && !gppawn.m_avisado_life)
+		{
+			gppawn.m_avisado_life = true;
+			msgpantalla("Few Life Left!! Try to fly to recover!");
+		}
 	}
-
 }
 
 exec function inituto(int cap)
