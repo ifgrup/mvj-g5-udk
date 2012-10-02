@@ -52,7 +52,7 @@ function PostBeginPlay()
 function IncSpawnCount()
 {
 	m_num_minions_por_spawn = clamp (m_num_minions_por_spawn+1,3,7);
-	`log ("__Nuevo num de minions por scout "@m_num_minions_por_spawn);
+	//_DEBUG `log ("__Nuevo num de minions por scout "@m_num_minions_por_spawn);
 }
 
 /**
@@ -229,7 +229,7 @@ function bool CanSpawnEnemy()
 	}
 	else
 	{
-		`log("No hay nodos todavía para el grupo " @group);
+		//_DEBUG `log("No hay nodos todavía para el grupo " @group);
 	}
    
 	return res;
@@ -242,13 +242,13 @@ function PrimeraOleada()
 	//pueden generar. Así que si no los ha podido generar, relanzamos el timer un segundo más tarde
 	if (Enemy.Length ==0)
 	{
-		`log ("Primera Oleada, reintento en 1 s "@self.name);
+		//_DEBUG `log ("Primera Oleada, reintento en 1 s "@self.name);
 		SetTimer(1.0,false,'PrimeraOleada');
 		return;
 	}
 	else
 	{
-		`log ("Primera Oleada creada "@self.name);
+		//_DEBUG `log ("Primera Oleada creada "@self.name);
 		SetTimer(5.0,false,'SegundaOleada');
 		return;
 	}
@@ -256,7 +256,7 @@ function PrimeraOleada()
 
 function SegundaOleada()
 {
-	`log ("Segunda Oleada "@self.name);
+	//_DEBUG `log ("Segunda Oleada "@self.name);
 	GeneraMinions(5); //Genera 5 enemigos , y a los 5 segundos, otros 5. Con el mismo timer me daba problemas...
 }
 
@@ -269,7 +269,7 @@ function EliminaMinion(PEnemyPawn_Minion minion)
 	index = self.Enemy.Find(minion);
 	if (index == -1)
 	{
-		`log ("Shit happens...");
+		//_DEBUG `log ("Shit happens...");
 	}
 	else
 	{

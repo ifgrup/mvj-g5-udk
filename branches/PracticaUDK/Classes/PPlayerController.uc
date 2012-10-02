@@ -1394,7 +1394,7 @@ exec function vuela()
 	//Si no estamos o andando o bien volando, no dejamos que se ejecute ni salto ni caída
 	if (GetStateName() != 'PlayerSpidering' && GetStateName() != 'PlayerFlaying')
 	{
-		`log("_____________Ahora no coleguita....");
+		//_DEBUG `log("_____________Ahora no coleguita....");
 		return;
 	}
 

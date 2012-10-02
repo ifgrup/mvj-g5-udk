@@ -269,7 +269,7 @@ event PostRender()
 				{
 					rTorreta=Rotator(-HitNormal); //hacia el suelo
 					rTorreta.Pitch+=65535/4; //90 grados parriba
-					`log ( "la torreta activa es:"	@pGFx.HbtActive);		
+					//_DEBUG `log ( "la torreta activa es:"	@pGFx.HbtActive);		
 					
 					switch (pGFx.HbtActive)
 					{
@@ -318,7 +318,7 @@ event PostRender()
 			}
 			else
 			{
-				`Log("Click fuera de planeta "@dist @hitlocation);
+				//_DEBUG `Log("Click fuera de planeta "@dist @hitlocation);
 			}
 			PendingLeftPressed = false;
 		}
