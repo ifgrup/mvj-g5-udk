@@ -167,6 +167,11 @@ event PostRender()
 	local int bEsPlaneta;
 	
 	Super.PostRender();
+	if (WorldInfo.Game == none)
+	{
+		//Has muerto y está recargando
+		return;
+	}
 		
 	//Casting
 	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput); 
@@ -197,7 +202,6 @@ event PostRender()
 	{
 		if(PendingLeftPressed)
 		{
-			`log("PHUD START FIRE UNO");
 			pPlayerController = PPlayerController(PlayerOwner);
 			pPlayerController.StartFire();
 			PendingLeftPressed = false;
@@ -1207,7 +1211,10 @@ function vidaGiru()
 {
 	local PPawn gppawn;
 	gppawn=PPawn(PlayerOwner.Pawn);
-	pGFx.hvidaMC.GotoAndStopI(gppawn.life);
+	if (gppawn != None)
+	{
+		pGFx.hvidaMC.GotoAndStopI(gppawn.life);
+	}
 
 }
 

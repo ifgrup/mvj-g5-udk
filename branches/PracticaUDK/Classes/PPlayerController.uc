@@ -1253,7 +1253,32 @@ state PlayerPreparandoFlaying
 
 }//state PlayerPreparandoFlaying
 
+/******************************************************************************************************************/
+state PlayerMuerto
+{
+	//Todo vacío, no queremos que haga nada
+	event BeginState(Name prevstate)
+	{
+	}
+	event Tick(float d)
+	{
+	}
+	
+	event EndState(Name nextstate)
+	{
 
+	}
+	function UpdateRotation(float DeltaTime)
+	{
+		ViewShake(DeltaTime);
+	}
+	
+	function ProcessMove(float DeltaTime, vector NewAccel, eDoubleClickDir DoubleClickMove, rotator DeltaRot)
+    {
+
+    }
+	
+}
 
 /**
  * Eventos de Ratón RR
@@ -1510,6 +1535,11 @@ exec function iceradio(int radio, int altura)
 exec function to()
 {
 	PPAwn(self.pawn).ActivarParticulasTonyazo();
+}
+
+exec function rip()
+{
+	PPAwn(self.pawn).GotoState('GiruMuerto');
 }
 
 defaultproperties

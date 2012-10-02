@@ -44,10 +44,13 @@ var bool m_bEstoyCayendoDelCielo; //Para saber si debemos utilizar m_roll_antes_
 var float life;
 
 var EmitterSpawnable m_particulas_tonyazo; //Al caer al suelo desde el cielo
+var EmitterSpawnable m_partmuerte;
 
 var vector m_pos_deseada_nube; //Para ir moviendo el sistema de partículas
 var bool m_rayazo_recibido; //Si el Giru acaba de recibir un rayaco
 var PNubeIra  m_nubeIra;
+var bool m_bgiro_muerte;
+var float m_escala;
 
 function float CalcularMediaTranslateZ(float valorZ)
 {
@@ -87,7 +90,7 @@ event Tick(float DeltaTime)
 	super.Tick(DeltaTime);
 
 	//COntrol de posición de la nube de ira
-	if (m_nubeIra.EstaActiva())
+	if (m_nubeIra != None && m_nubeIra.EstaActiva())
 	{
 		ActualizaPosicionDeseadaNube();
 		posNubeActual = m_nubeIra.Location;
@@ -102,7 +105,7 @@ event Tick(float DeltaTime)
 		}
 	}
 
-	//Si estoy recien estoñao por un rayo, giru el pawn:
+	//Si estoy recien estoñao por un rayo, giro el pawn:
 	if (m_rayazo_recibido)
 	{
 		//Puedo cambiar la rotación aquí porque en el controller, si m_rayazo_recibido, no actualiza la rotación ;)
@@ -112,10 +115,17 @@ event Tick(float DeltaTime)
 		//qgiro = QuatFromAxisAndAngle(ry,25*DegToRad); 
 		//qact = QuatProduct(qgiro,qact);
 	
-		qgiro = QuatFromAxisAndAngle(rz,600*DeltaTime*DegToRad); 
-		qact = QuatProduct(qgiro,qact);
-		
+		if (m_bgiro_muerte) //SI el giro es por muerte, a saco de rápido
+		{
+			//El giro aún más rápido
+			qgiro = QuatFromAxisAndAngle(rz,2000*DeltaTime*DegToRad); 
+		}
+		else
+		{
+			qgiro = QuatFromAxisAndAngle(rz,600*DeltaTime*DegToRad); 
+		}
 
+		qact = QuatProduct(qgiro,qact);
 		rot = QuatToRotator(qact);
 		self.SetRotation(rot);
 	}
@@ -385,6 +395,16 @@ simulated function PostBeginPlay()
 			m_particulas_tonyazo.SetTemplate(ParticleSystem'PGameParticles.Particles.P_TonyazoGiru');
 	}
 
+	//Partículas muerte
+	m_partmuerte = Spawn(class'EmitterSpawnable',Self);
+	if (m_partmuerte != none)
+	{
+		m_partmuerte.ParticleSystemComponent.bAutoActivate = false; 
+		m_partmuerte.SetTemplate(ParticleSystem'PGameParticles.Particles.P_MuerteGiru');
+		Mesh.AttachComponentToSocket(m_partmuerte.ParticleSystemComponent, 'Socket_Base');
+	}
+
+
 	//Activamos propulsores
 	EstadoPropulsores(true);
 
@@ -395,16 +415,18 @@ simulated function PostBeginPlay()
 
 function ActivarNubeIra()
 {
-	//if (!m_particulas_Nube_Ira.ParticleSystemComponent.bIsActive)
-	//{
-		//ActualizaPosicionDeseadaNube();
+	if (m_nubeIra != None)
+	{
 		m_nubeIra.Activar();
-	//}
+	}
 }
 
 function DesactivarNubeIra()
 {
-	m_nubeIra.Desactivar();
+	if (m_nubeIra != None)
+	{
+		m_nubeIra.Desactivar();
+	}
 }
 
 function EstadoNubeIra(int rayitos)
@@ -413,6 +435,12 @@ function EstadoNubeIra(int rayitos)
 	//Si no, al volar y tal también se pinta y hace cosicas feas ;)
 
 	local name estado;
+	
+	if (m_nubeIra == None) //Si acabamos de morir por ejemplo,nos la hemos cargao...
+	{
+		return;
+	}
+
 	estado = self.GetStateName();
 
 	if ( (estado != 'PPawn' &&  estado != 'PawnFalling')
@@ -436,11 +464,18 @@ function EstadoNubeIra(int rayitos)
 function RayazoNubeIra()
 {
 	//Hace que salga el rayazo de la nube hacia el Giru
+	if (m_nubeIra == None)
+	{
+		return;
+	}
+
 	m_nubeIra.Rayaco();
 	//sólo debe estár así un instante o saldrán rayos sin parar:
 	//Por sistema de partículas no he sabido hacerlo..... mierda UDK de las narices... :( 
 	PlaySound(PGame(WorldInfo.Game).SONIDOS_JUEGO.TocalaOtraVezSam(OGRO_RAYO_IRA),,,true,self.Location);
 	SetTimer(0.8,false,'SaltaPorRayaco');
+	//Y restamos vida, que nos hace pupita clar...
+	self.TakeDamage(0,none,vect(0,0,0),vect(0,0,0),None,,m_nubeIra);
 }
 
 function SaltaPorRayaco()
@@ -1110,6 +1145,71 @@ state PawnPreparandoFlaying
 
 }//state PawnPreparandoFlaying
 
+function MuerteGiru()
+{
+	//self.Mesh.SetHidden(true);
+	ActivarParticulasMuerte();
+	SetTimer(1.0,false,'ACascarla');
+}
+	
+function ActivarParticulasMuerte()
+{
+	self.Mesh.SetHidden(true);
+	m_partmuerte.SetRotation(self.Rotation);
+	m_partmuerte.ParticleSystemComponent.SetActive(true);
+	//setTimer(0.1,true,'ReducirGiru');
+}
+
+function ReducirGiru()
+{
+	m_escala = m_escala * 0.6;
+	self.Mesh.SetScale(m_escala);
+}
+
+function ACascarla()
+{
+	self.Mesh.SetScale(0.01);
+	setTimer(0.2,false,'Sacabo');
+}
+
+function Sacabo()
+{
+	self.Destroy();
+	PGame(WorldInfo.Game).GameOver();
+	PGame(WorldInfo.Game).Destroy();
+}
+
+
+state GiruMuerto
+{
+	ignores bump,touch,basechange,TakeDamage,Landed;
+
+	event BeginState(Name prevstate)
+	{
+		local PPlayerController PC;
+		PC = PPlayerController(Instigator.Controller);
+		PC.GotoState('PlayerMuerto');
+		m_nubeIra.Destroy(); //Por si estaba activa
+		m_nubeIra = None;
+		self.m_rayazo_recibido= true; //Para que haga el saltito girando
+		self.m_bgiro_muerte = true;
+		self.ReboteGrandeBumpCayendo(none,vect(0,0,0),vect(0,0,0),10);
+		self.EstadoPropulsores(false);
+
+		SetTimer(0.4,false,'MuerteGiru'); //+/- cuando esté arriba del salto
+		/*** OJOOOOOOOOO!!!  ***********
+		 * * Como se va al Falling por el salto, aquí no podemos poner los timers de muerte, así que
+		 * los ponemos a nivel general
+		 * */
+	}
+
+
+	event EndState(Name nexstate)
+	{
+	`log("Me piro de Muerte a "@nexstate);
+	}
+
+}
 
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
@@ -1123,13 +1223,17 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 		return;
 	}
 	if(PMisilScout(DamageCauser) != None)
-		{
-			//_DEBUG_ ("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
-			RecibidoDisparoMisil(HitLocation, Momentum,Projectile(DamageCauser));
-			return;
-		}
+	{
+		//_DEBUG_ ("Giru me ha disparado (Global TakeDamage PEnemy)"@self.Name);
+		RecibidoDisparoMisil(HitLocation, Momentum,Projectile(DamageCauser));
+		return;
+	}
 
-
+	if (PNubeIra(DamageCauser) != None)
+	{
+		RecibidoRayacoNube();
+		return;
+	}
 
 } //TakeDamage
 
@@ -1138,6 +1242,17 @@ function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile mis
 {
 	self.Life -= misil.Damage;
 	`log("Toñazo recibido en Giru "@self.life);
+
+	if (self.Life <= 0)
+	{
+		self.GotoState('GiruMuerto');
+	}
+}
+
+function RecibidoRayacoNube()
+{
+	self.Life -= 20;
+	`log("Rayazo recibido en Giru "@self.life);
 
 	if (self.Life <= 0)
 	{
@@ -1247,7 +1362,7 @@ defaultproperties
 	bCollideActors=true
 	bCollideWorld=true
 	CollisionType=COLLIDE_BlockAll
-	
+	m_escala=1	
 	m_DistanciaAlSuelo= 10
-	life=100;
+	life=2;
 }
