@@ -99,8 +99,9 @@ function Dimensionar()
 {
 	local float s;
 	local vector tamrayitos;
-	
-	s= fclamp((m_rayitos+20)/100.0,0.2,1.2); //100 es el máximo, así que ..
+	//Pondero para que el tamaño sea hasta 3 veces más grande
+	//Y el mínimo 60% del tamaño inicial
+	s= fclamp((m_rayitos*3)/50.0,0.6,3); //50 es el máximo, así que ..
 	laMesh.SetScale(s);
 	tamrayitos.X=s;
 	tamrayitos.Y=s;

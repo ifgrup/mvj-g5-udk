@@ -19,6 +19,7 @@ var int minionId; //Para el tipo de Minion, Murciégalo,Topota, o Moco
 var class<Actor> m_ClaseMisilKamikaze,m_ClaseMisilKamikazeto,m_ClaseMisilKamikazemo;
 var EmitterSpawnable KamikazeEmitter;
 var EmitterSpawnable m_part_muerte;
+var EmitterSpawnable m_part_congelacion;
 
 var ParticleSystem Kamikazepst,Kamikazetemtopota,Kamikazetemmoco;
 var bool eresmoko;
@@ -134,6 +135,12 @@ simulated function PostBeginPlay()
 	m_part_muerte.ParticleSystemComponent.SetVectorParameter('ColorMuerte',v_color);
 	self.ColorMesh.AttachComponentToSocket(m_part_muerte.ParticleSystemComponent,'Socket_Cuerpo');
 
+	//Partículas de congelación:
+	m_part_congelacion = Spawn(class'EmitterSpawnable',Self);
+	m_part_congelacion.SetTemplate(ParticleSystem'PGameParticles.Particles.CristalesCuarzo');
+	m_part_congelacion.ParticleSystemComponent.bAutoActivate = false;
+	m_part_congelacion.ParticleSystemComponent.SetActive(false);
+	ColorMesh.AttachComponentToSocket(m_part_congelacion.ParticleSystemComponent,'Socket_Cuerpo');
 }
 
 function SetColor(LinearColor Col)
@@ -211,17 +218,29 @@ function activarParticulasKamikaze(optional vector locaenemigo)
 	KamikazeEmitter.ParticleSystemComponent.SetRotation(self.Rotation);
 }
 
-
-function Destruccion()
+function ActivarPartCongelacion()
 {
-	//Sistema Partículas de Muerte, y eliminarse del vector de enemigos de su spawner para control de máximo de minions
-	m_part_muerte.ParticleSystemComponent.SetRotation(self.Rotation);
-	m_part_muerte.ParticleSystemComponent.SetActive(false);
-	m_part_muerte.ParticleSystemComponent.SetActive(true);
-	//Si muere en este instante, las partículas dejan de verse, así que lanzamos un timer para que muera dentro de
-	//un segundo, pero antes lo ponemos invisible para que parezca que ha desaparecido
-	//self.SetDrawScale3D(vect(0,0,0));
+	m_part_congelacion.SetRotation(self.Rotation);
+	m_part_congelacion.ParticleSystemComponent.SetActive(true);
+	//m_part_congelacion.SetCollision(false,false,false);
+	//m_part_congelacion.SetCollisionSize(100,100);
+}
+
+function DesactivarPartCongelacion()
+{
+	m_part_congelacion.ParticleSystemComponent.SetActive(false);
+	m_part_congelacion.ParticleSystemComponent.KillParticlesForced();
+	m_part_congelacion.ParticleSystemComponent.DeactivateSystem();
+
+	//m_part_congelacion.SetCollision(false,false,false);
+}
+
+function DestruccionPorHielo()
+{
+	//No queremos la animación de destrucción normal del penemy, la de las partículas ya ha sido suficiente
 	SetTimer(0.5,false,'MuerteVerdadera');
+	MuerteVerdadera();
+
 }
 
 function MuerteVerdadera ()
