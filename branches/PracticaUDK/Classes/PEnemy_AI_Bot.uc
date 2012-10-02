@@ -530,21 +530,37 @@ Begin:
 */
 state Congelado
 {
+
+	//Todas las funciones sobreescribibles las dejamos vacías just in case
+	function ContraBase() {}
+	function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta){}
+	function BumpContraSuelo(Actor suelo, vector HitNormal) {}
+	
+	event PoppedState()
+	{
+		`log("_____ME PIRO__" @m_tiempo_tick);
+		m_disparos_giru_congelado=0;
+	}
+
 	event Tick (float DeltaTime)
 	{
 		super.Tick(DeltaTime);
-		
-		//m_pEmiter se destuirá sólo de momento...cuando lo haga
-		if (m_pEmiter == None) //Alguna vez ha pasado, supongo que el tick entra antes que el begin asigne el emiter..
-			return;
+		self.Pawn.Velocity=vect(0,0,0);
+		self.Pawn.Acceleration=vect(0,0,0);
+		self.Velocity=vect(0,0,0);
+		self.Acceleration=vect(0,0,0);
 
-		if(m_tiempo_tick >= m_pEmiter.m_tiempoHielo)
+		if(m_tiempo_tick >= 4)
 		{
-			if (PEnemy(Pawn).life > 0)
+			if(Pawn != None)
 			{
-				//Si sigue vivo, que siga caminando o lo que estuviera haciendo en el estado anterior
-				m_tiempo_tickp=0;
-				self.PopState();
+				DesactivarPartCongelacion();
+				if (PEnemy(Pawn).life > 0)
+				{
+					//Si sigue vivo, que siga caminando o lo que estuviera haciendo en el estado anterior
+					m_tiempo_tickp=0;
+					self.PopState();
+				}
 			}
 		}
 	}
@@ -563,6 +579,7 @@ state Congelado
 		m_disparos_giru_congelado += 3;
 		if (m_disparos_giru_congelado > 5)
 		{
+			DesactivarPartCongelacion();
 			GoToState('DeadAnyicos');
 		}
 	}
@@ -571,10 +588,21 @@ state Congelado
 	{
 		`log("PEnemy_AI_BOT, ControlTakeDisparoGiru en Congelado"@self.Name);
 		m_disparos_giru_congelado++;
-		if (m_disparos_giru_congelado > 5)
+		if (m_disparos_giru_congelado > 2) //COn 3 toques, rebentaos
 		{
+			DesactivarPartCongelacion();
 			GoToState('DeadAnyicos');
 		}
+	}
+
+	function ActivarPartCongelacion()
+	{
+		PEnemyPawn_Minion(self.Pawn).ActivarPartCongelacion();
+	}
+
+	function DesactivarPartCongelacion()
+	{
+		PEnemyPawn_Minion(self.Pawn).DesactivarPartCongelacion();
 	}
 
 
@@ -595,9 +623,7 @@ Begin:
 	//moviéndose hacia donde iba
 
     //Lanzo los sistemas de partículas de congelación
-	m_pEmiter=Spawn(class'PEmiter',self,,pawn.Location,pawn.Rotation,,true);
-	m_pEmiter.m_tiempoHielo += rand(2) - rand(2); //Random +- 2 segundos para que no todos sean iguales
-	m_pEmiter.SpawnEmitter();
+	ActivarPartCongelacion();
 }/* ---------------FIN ESTADO CONGELADO --------------*/
 //____________________________________________________________________________________________________________________________________
 
@@ -613,17 +639,26 @@ state DeadAnyicos
 	function ControlTakeDisparoGiru(vector HitLocation, vector Momentum, Actor DamageCauser){}
 	function ControlTakeDisparoTurretCannon(vector HitLocation, vector Momentum, Actor DamageCauser){}
 	function ControlTakeDisparoTurretIce(vector HitLocation, vector Momentum, Actor DamageCauser){}
+	function ContraBase() {}
+	function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta){}
+	function BumpContraSuelo(Actor suelo, vector HitNormal) {}
 	
+	function ActivarPartDeadAnyicos()
+	{
+		local EmitterSpawnable part;
+		part = Spawn(class'EmitterSpawnable',Self,,self.pawn.location,self.pawn.Rotation);
+		part.SetTemplate(ParticleSystem'PGameParticles.Particles.P_Anyicos_Hielo');
+		part.ParticleSystemComponent.SetActive(true);
+	}
+
 
 	event BeginState(name PreviousStateName)
 	{
 		//Sistema de partículas de cachos de hielo a saco.
 		`log("Soy un PEnemy_AI_Bot, y el puto Giru de los huevos me ha destruído");
-
-		PEnemyPawn_Minion(self.Pawn).Destruccion();
-		self.Pawn=None;
-		//Nos autoeliminamos
-		self.Destroy();
+		ActivarPartDeadAnyicos();
+		SetCollision(false,false,false);
+		PEnemyPawn_Minion(self.Pawn).DestruccionPorHielo();
 	}
 
 

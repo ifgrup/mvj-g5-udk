@@ -534,6 +534,11 @@ simulated event Bump( Actor Other, PrimitiveComponent OtherComp, Vector HitNorma
 	local PTree parbol;
 	local PPlayerBase pbase;
 
+	if (Owner == None)
+	{
+		return;
+	}
+
 	if (PEnemy_AI_Controller(Owner).GetStateName() == 'TowerAttack')
 	{
 		return;
