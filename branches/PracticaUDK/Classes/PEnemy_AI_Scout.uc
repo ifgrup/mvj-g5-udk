@@ -189,6 +189,11 @@ function NubeDeIraSobrePawn()
 	local PPawn giru;
 
 	giru = PPawn( PGame(WorldInfo.Game).GetALocalPlayerController().Pawn);
+	if (giru == None) //Acaba de morir por ejemplo
+	{
+		return;
+	}
+
 	scoutpawn = PEnemyPawn_Scout(self.Pawn);
 	
 	giru.EstadoNubeIra(scoutpawn.ValorIra());
