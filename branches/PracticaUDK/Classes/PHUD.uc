@@ -85,7 +85,7 @@ simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
 	PlaySound(musica);
-	
+
 	area=Spawn(class'PHUD_Area',,,,,,true);
 	area.interruptor(false);
 	area.SetCollision(false,false,false);
@@ -167,8 +167,7 @@ event PostRender()
 	local int bEsPlaneta;
 	
 	Super.PostRender();
-	
-
+		
 	//Casting
 	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput); 
 
@@ -192,6 +191,20 @@ event PostRender()
 			}
 		}
 	}
+
+	//SI estamos abajo, sólo nos interesa la gestión del disparo, no??
+	if(PGame(WorldInfo.Game).bEarthNotFlying)
+	{
+		if(PendingLeftPressed)
+		{
+			`log("PHUD START FIRE UNO");
+			pPlayerController = PPlayerController(PlayerOwner);
+			pPlayerController.StartFire();
+			PendingLeftPressed = false;
+		}
+		return;
+	}
+
 
 	//renderizar iconos en  pantalla 
 	iconosapantalla();
@@ -221,19 +234,7 @@ event PostRender()
 		//Si se presiona el boton izquierdo del mouse 
 		if(PendingLeftPressed)
 		{
-			//controlamos que el jugador no este volando y le hacemos disparar
-			if(PGame(WorldInfo.Game).bEarthNotFlying)
-			{
-			pPlayerController = PPlayerController(PlayerOwner);
-		
-			pPlayerController.StartFire();
-			}
-			/*
-			if(!PGame(WorldInfo.Game).bEarthNotFlying)
-			{
-				`log("mierdote");
-			}
-			*/
+			
 			//bMouseOverUIElement me dice siestoy encima del propio clip de flash.En talcaso obviamente no podemos actuar encima suyo
 			//reload dice si la torreta esta recargada. bTowerActive si esta habilitada por credito
 		   // if(!pGFx.bMouseOverUIElement && pGFx.reload && pGFx.bTowerActive && pGFx.HbtActive!=2 && pct )
@@ -600,7 +601,9 @@ function Vector GetMirillaWorldLocation()
 
 	//player owner y canvas validos?
 	if(Canvas == none || PlayerOwner == none)
+	{
 		return vect(0, 0, 0);
+	}
 
 	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput);
 
@@ -620,7 +623,6 @@ function Vector GetMirillaWorldLocation()
 	//Hacer una traza para saber la posicion del mouse en el mundo
 	Trace(HitLocationNoActor, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin, true,,, TRACEFLAG_Bullet);
 	//return HitLocationNoActor;
-
 
 	ForEach TraceActors(class'Actor', HitActor, HitLocation, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin,,, TRACEFLAG_Bullet)
     {
