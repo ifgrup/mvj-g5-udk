@@ -179,8 +179,8 @@ event PostRender()
 	local PTurretIce ti;
 	local PTurretCannon tc;
 	local Rotator rTorreta; //rotacion de la torreta al spawnearla
-	local float dist;
-	local bool bTierraAire,pct;
+	//local float dist;
+	local bool pct;
 	local int bEsPlaneta;
 	
 	Super.PostRender();
@@ -467,8 +467,6 @@ function PMouseInteractionInterface GetMouseActor(optional out Vector HitLocatio
 	local PPlayerInput pPlayerInput;
 	local Vector2D MousePosition;
 	local Actor HitActor;
-	local int i;
-	local vector mundoLocation, mundoNormal;
 
 	//Asegurarnos de que tenemos canvas y player owner validos
 	if(Canvas == none || PlayerOwner == none)
@@ -857,8 +855,7 @@ exec function interferenciapantalla()
 function pupitaenpantalla()
 {
 	
-	local float puta;
-
+	
 	if (!m_pupita)
 	{
 		m_Mater = new () class'MaterialInstanceTimeVarying';

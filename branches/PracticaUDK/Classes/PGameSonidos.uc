@@ -16,7 +16,6 @@ enum SONIDOS
 	MINION_CONGELADO,
 	TORRETA_ICE_DISPARA,
 	TORRETA_CANON_DISPARA,
-	OGRO_RUGIENDO_IRA,
 	OGRO_ARRASTRANDO_PIE,
 	OGRO_RAYO_IRA,
 	ALARMA_CASA,
@@ -49,7 +48,6 @@ DefaultProperties
 	m_sonidos(MINION_CONGELADO)= SoundCue'PGameMusicrr.ice-cracking-01_Cue'
 	m_sonidos(TORRETA_ICE_DISPARA)=SoundCue'PGameMusicrr.disparotorretahielo5_Cue'
 	m_sonidos(TORRETA_CANON_DISPARA)=SoundCue'PGameMusicrr.DisparoCannon_Cue'
-	m_sonidos(OGRO_RUGIENDO_IRA)= SoundCue'PGameMusicrr.rugiendo_ira'
 	m_sonidos(OGRO_ARRASTRANDO_PIE)=SoundCue'PGameMusicrr.OgroCamina_Cue'
 	m_sonidos(OGRO_RAYO_IRA)=SoundCue'PGameMusicrr.OgroIra_Cue'
 	m_sonidos(ALARMA_CASA)=SoundCue'PGameMusicrr.AlarmaScoutCasa_Cue'

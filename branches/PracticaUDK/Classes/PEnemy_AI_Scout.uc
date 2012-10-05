@@ -351,7 +351,6 @@ state MoveToDestination
 
 	event Tick(float DeltaTime)
 	{
-		local Pawn pDetectado;
 		local PPathNode nodo;
 		local float distanciaBase;
 		local float distNodo;

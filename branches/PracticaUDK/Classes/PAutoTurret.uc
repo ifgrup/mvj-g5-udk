@@ -1223,7 +1223,7 @@ defaultproperties
 	Components.Add(DMesh)
 
 	//TurretMesh se asigna en cada torreta hija con la mesh que corresponde a la propia torreta
-	RangoDisparo=800
+	RangoDisparo=1000
 	m_TimeoutEntreDisparo=0.33  //3 disparos por segundo
 	m_TimeoutEntreRotacionIdle=3 //Random cada 3 segundos
 	m_TimeoutEntreRotacionDisparando=0.2 //Reapunta al target 5 veces por segundo

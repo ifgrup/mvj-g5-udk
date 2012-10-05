@@ -122,7 +122,6 @@ function ActualizaRotacion(float DeltaTime)
 {
 	local rotator ViewRotation;
 	local vector MyFloor;//, CrossDir, FwdDir, OldFwdDir, RealFloor;
-	local vector rx,ry,rz;
 
 
 	MyFloor = self.Floor;
@@ -674,9 +673,7 @@ singular event BaseChange()
 
 event Touch(actor other, PrimitiveComponent othercomp,vector HitLocation,vector HitNormal)
 {
-	local int i;
-	i=0;
-	
+
 }
 
 singular event bool EncroachingOn(Actor Other)
@@ -750,7 +747,7 @@ defaultproperties
 	m_portrait=Texture2D'PGameHudIco.Topota_Icono'
 
 
-	ControllerClass=class'PEnemyBot'
+	//ControllerClass=class'PEnemyBot'
 	bDontPossess=false
 	//bNotifyStopFalling=true --> si quisiéramos controlar el fin del falling así, se ejecutaría StoppedFalling.
 	DamageAmount=10

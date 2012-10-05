@@ -80,7 +80,6 @@ var GFxObject tutoMC;
 
 function Init(optional LocalPlayer LocalPlayer)
 {
-	local ASDisplayInfo DI;
 	//Inicializar la pelicula Scaleform
 	super.Init(LocalPlayer);
 
