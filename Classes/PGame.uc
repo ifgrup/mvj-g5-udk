@@ -56,8 +56,6 @@ simulated function PostBeginPlay()
 
 	local Spawner SP;
 
-	local InteractiveFoliageActor IFA;
-
 	SONIDOS_JUEGO = spawn(class'PGameSonidos',,,,,,);
 
 

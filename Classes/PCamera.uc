@@ -21,12 +21,9 @@ var float m_despX_camara; //desp inicial en CamDirX a espaldas del robot
 
 function UpdateViewTarget(out TViewTarget OutVT, float DeltaTime)
 {
-   local vector      HitLocation, HitNormal;
    local CameraActor   CamActor;
    local PPawn          TPawn;
       
-   local vector CamStart, CamDirX, CamDirY, CamDirZ, CurrentCamOffset;
-   local float DesiredCameraZOffset;
    local PPlayerController ppc;
 
    ppc=PPlayerController(PCOwner);
@@ -78,15 +75,14 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
 
         local vector  CamDirX, CamDirY,CamDirZ;    
         local vector  HitLocation, HitNormal,CamStart,tmpCamStart,tmpCamEnd;
-        local Rotator rProta;
-        local float dist,fs;
+        local float dist;
 		local float despx;
 		local quat  qpitchY,qCamY;
 		local vector qX,qY,qZ;
 		local PPlayerController ppc;
 		local Rotator rot4cam;
 		local float deltaAnguloUD;
-		local float lookupFiltrado,factor,maxLookup;
+		local float lookupFiltrado,factor;
 		
 		ppc=PPlayerController(PCOwner);
 
@@ -118,7 +114,7 @@ function CamaraAndando( float fDeltaTime, out vector out_CamLoc, out rotator out
 				//0.003*lookup pasara de Pi/2 o -Pi/2,calculamos el factor del lookup respecto
 				//al lookup equivalente de +-Pi/2, hacemos el sin sobre ese, y al resultado, aplicamos
 				//el factor obtenido. 
-				if (abs(ppc.mUltimoLookup) > maxLookup)
+				if (abs(ppc.mUltimoLookup) > m_maxLookup)
 				{
 					factor = abs(ppc.mUltimoLookup) / m_maxLookup;
 					if (ppc.mUltimoLookup > 0)

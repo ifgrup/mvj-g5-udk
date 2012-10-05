@@ -369,8 +369,8 @@ defaultproperties
 	ColorMesh=PEnemySkeletalMeshComponent
 
 	GroundSpeed=50.0
-	m_defaultGroundSpeed=GroundSpeed
-	m_puntos_al_morir = 300
+	m_defaultGroundSpeed=50.0
+	m_puntos_al_morir=300
 	ira=0;
 	max_ira=50;
 	life=3;

@@ -224,13 +224,8 @@ auto state Idle_Inicial
 		//Debemos permanecer en este estado mientras el pawn esté cayendo,
 		//y no tengamos nodo objetivo.
 		//Lo comprobamos cada segundo
-		local vector antes,despues;
 
 		super.Tick(Deltatime);
-
-		
-			
-
 
 		if (m_tiempo_tick >= 1.0)
 		{
@@ -342,8 +337,6 @@ state GoToNextPath
 
 	event Tick (float DeltaTime)
 	{
-		local vector antes,despues;
-
 		super.Tick(DeltaTime);
 		
 		//tema ñordamiento 

@@ -653,7 +653,6 @@ exec function qbase()
  */
 singular event BaseChange()
 {
-	local vector direc;
 
 	if (Base!=None) 
 	{
@@ -988,14 +987,14 @@ state PawnFallingSky
 	event HitWall(Vector HitNormal,Actor Wall, PrimitiveComponent WallComp)
 	{
 		// switch pawn back to standard state
-		local PPlayerController PC;
+		//_DEBUG_local PPlayerController PC;
 
 
 		if (Wall.Name == 'PShield_0')
 		{
 			return; //Lo ignoramos, para que siga cayendo
 		}
-		PC = PPlayerController(Instigator.Controller);
+		//_DEBUG_PC = PPlayerController(Instigator.Controller);
 		//_DEBUG_PC.ClientMessage("HitWallPawn al caer del cielo_________________________________________");
 		
 		if (  PGame(Worldinfo.game).EsPlaneta(Wall))
@@ -1271,7 +1270,6 @@ event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocati
 
 function RecibidoDisparoMisil(vector HitLocation, vector Momentum,Projectile misil)
 {
-	local string str;
 
 	self.Life -= misil.Damage;
 	//_DEBUG `log("Toñazo recibido en Giru "@self.life);

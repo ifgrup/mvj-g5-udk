@@ -25,7 +25,6 @@ var ParticleSystem Kamikazepst,Kamikazetemtopota,Kamikazetemmoco;
 var bool eresmoko;
 function CambiaBicho()
 {
-	local Vector translation;
 	local bool bMaterialActivo;
 	minionId = Rand(2);
 	switch(minionId)
@@ -160,7 +159,6 @@ function SetColor(LinearColor Col)
 
 function PararEsperar()
 {
-	local Vector newLocation;
 	local Vector retroceso;
 
     
@@ -360,8 +358,8 @@ defaultproperties
 	ColorMesh=PEnemySkeletalMeshComponent
 
 	GroundSpeed=80.0
-	m_defaultGroundSpeed=GroundSpeed
+	m_defaultGroundSpeed=80
 	m_puntos_al_morir = 100
-	life=5
+	life=4
 	eresmoko=false
 }
