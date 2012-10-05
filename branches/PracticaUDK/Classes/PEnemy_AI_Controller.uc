@@ -129,11 +129,10 @@ function PPathNode AplicarOffsetNodo(PPathNode nodo)
 	local Quat ernion,ernion2;
 
 	local vector centro,hitlocation,hitnormal,fintrace;
-	local float maxdist,mindist;
+	local float maxdist;
 	local vector initlocation;
 
 	maxdist = Pgame(Worldinfo.Game).m_max_radiorandom;
-	mindist = Pgame(Worldinfo.Game).m_min_radiorandom;
 	initlocation = nodo.Location ; //antes de aplicarle el offset
 
 	

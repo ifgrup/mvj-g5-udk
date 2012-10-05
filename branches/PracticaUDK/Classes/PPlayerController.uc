@@ -186,7 +186,7 @@ state PlayerSpidering
      * */
 	function UpdateRotation(float DeltaTime)
 	{
-		local rotator ViewRotation,lRotation;
+		local rotator ViewRotation;//;,lRotation;
 		local vector MyFloor, CrossDir, FwdDir, OldFwdDir, RealFloor;
 		local bool bSaltando;
 		local Vector ViewX_4pawn,ViewY_4pawn;
@@ -674,8 +674,6 @@ state PlayerFlaying
 		local Vector pPosition,vAlCentro;
 		local vector Centro2Pawn; //del centro del planeta, a donde está el pawn
 		local rotator rotPawn;
-		local vector rX,rY,rZ;
-		local Quat paraRoll;
 
 		//Colocamos al Pawn volando, prolongando su Z actual:
         //_DEBUG_ ("PC Flaying 2");
@@ -1234,8 +1232,6 @@ state PlayerPreparandoFlaying
 
 	simulated event GetPlayerViewPoint(out vector out_Location, out Rotator out_Rotation)
 	{
-		local Vector alPlaneta;
-		local Vector pPosition;
 
 		if (m_initPosAlSaltar)
 		{
@@ -1389,7 +1385,6 @@ exec function vuela()
 {
 	local bool bTierraAire;
 	local PHUD pHUD;
-	local name estadoActualGiru;
 
 	//Si no estamos o andando o bien volando, no dejamos que se ejecute ni salto ni caída
 	if (GetStateName() != 'PlayerSpidering' && GetStateName() != 'PlayerFlaying')
@@ -1488,9 +1483,7 @@ exec function ice (int i=0)
 {
 	local pturretice ti;
 	local rotator r;
-	local Vector2D p1,p2;
-	local vector wp1,wp2,wp;
-	local vector newfloor;
+
 /*
 	local PHUD pHUD;
 	pHUD = PHUD(myHUD);
