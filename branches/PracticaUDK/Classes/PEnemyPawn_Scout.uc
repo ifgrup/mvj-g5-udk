@@ -206,7 +206,7 @@ function int NivelIra()
 {
 	//Devuelve el nivel de Ira en función de la ira actual respecto al máximo de ira
 	local int pct;
-	pct = (ira*100) / max_ira;
+	pct = (ira*max_ira) / max_ira;
 
 	if (pct < 30)
 	{
@@ -308,6 +308,7 @@ function Destruccion()
 {
 	ActivarParticulasMuerte();
 	self.escudo.mesh.SetHidden(true); //Ocultamos el escudo
+	PEnemy_AI_Scout(self.owner).EliminarCamino();
 	
 	//self.escudo.Destroy();
 	//escudo.Mesh.SetScale(7);
@@ -337,6 +338,7 @@ function MuerteScout()
 	self.Destroy(); //Qué poco ha durado la libertad...
 	
 }
+
 
 
 defaultproperties
@@ -371,7 +373,9 @@ defaultproperties
 	GroundSpeed=50.0
 	m_defaultGroundSpeed=50.0
 	m_puntos_al_morir=300
-	ira=0;
-	max_ira=50;
-	life=3;
+	ira=0
+	max_ira=100
+	life=5
+	MaxLife=5
+	
 }
