@@ -1535,6 +1535,15 @@ exec function rip()
 	PPAwn(self.pawn).GotoState('GiruMuerto');
 }
 
+exec function HouseLife(int vida)
+{
+	local PPlayerBase PB;
+
+	foreach DynamicActors(class'PPlayerBase', PB)
+		PB.life += vida;
+}
+
+
 defaultproperties
 {
 	

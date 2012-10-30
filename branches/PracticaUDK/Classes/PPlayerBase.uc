@@ -72,34 +72,39 @@ event Tick(float DeltaTime)
 
 event TakeDamage(int iDamageAmount, Controller EventInstigator, vector HitLocation, vector Momentum, class<DamageType> DamageType, optional TraceHitInfo HitInfo, optional Actor DamageCauser)
 {
-	
-    //_DEBUG `log("me tan dando");
+	pupitabase();
+}
+
+function pupitabase()
+{
+	local EmitterSpawnable particulas;
+
 	life--;
 	if(life == 0)
 	{
-		Destroy();
+		//lo destruimos en 3s para que se vean las partícul.l.l.las...
+		SetTimer(3,false,'DestruirCasa');
+
+		
+		particulas = Spawn(class'EmitterSpawnable',Self);
+		if (particulas != None)
+		{
+			particulas.SetTemplate(ParticleSystem'PGameParticles.Particles.P_DestruzziongCasa');
+			particulas.ParticleSystemComponent.SetActive(true);
+		}
+
 		if(PGame(WorldInfo.Game) != none)
 		{
 			PGame(WorldInfo.Game).basedestrozada();
 		}
 	}
-  
+
 }
 
-function pupitabase()
+function DestruirCasa()
 {
-	//_DEBUG_ ("man dao augthhh");
-	life--;
-	if(life <= 0)
-	{
-		
-		PGame(WorldInfo.Game).basedestrozada();
-		
-	}
-  
-
+	self.Destroy();
 }
-
 /** DefaultProperties
  * Propiedades por defecto del objeto físico dentro del juego
  * Inicializamos variables, asignamos la iluminación y el objeto
@@ -136,5 +141,5 @@ DefaultProperties
 	CantidadColor=0
 	bumped=false
 
-	life=5
+	life=30
 }
