@@ -216,6 +216,9 @@ event PostRender()
 
 	area.interruptor(!PGame(WorldInfo.Game).bEarthNotFlying);
 
+	//renderizar iconos en  pantalla 
+	iconosapantalla();
+
 	//SI estamos abajo, sólo nos interesa la gestión del disparo, no??
 	if(PGame(WorldInfo.Game).bEarthNotFlying)
 	{
@@ -229,8 +232,7 @@ event PostRender()
 	}
 
 
-	//renderizar iconos en  pantalla 
-	iconosapantalla();
+
 
 
 
@@ -580,36 +582,7 @@ function bool PuedocolocarTorreta(optional  Vector HitLocation, optional Vector 
 	return true;
 }
 
-/*
-function Vector GetMouseWorldLocation()
-{
-	local PPlayerInput pPlayerInput;
-	local Vector2D MousePosition;
-	local Vector MouseWorldOrigin, MouseWorldDirection, HitLocation, HitNormal;
 
-	//player owner y canvas validos?
-	if(Canvas == none || PlayerOwner == none)
-		return vect(0, 0, 0);
-
-	pPlayerInput = PPlayerInput(PlayerOwner.PlayerInput);
-
-	if(pPlayerInput == none)
-		return vect(0, 0, 0);
-
-	//Pasar la posicion del mouse de intPoint a Vector2D
-	MousePosition.X = pPlayerInput.MousePosition.X;
-	MousePosition.Y = pPlayerInput.MousePosition.Y;
-
-	`log("Coordenadas mouse " @MousePosition.X @MousePosition.Y);
-	//Deproyectar el mouse
-	Canvas.DeProject(MousePosition, MouseWorldOrigin, MouseWorldDirection);
-
-	//Hacer una traza para saber la posicion del mouse en el mundo
-	Trace(HitLocation, HitNormal, MouseWorldOrigin + MouseWorldDirection * 65536.f, MouseWorldOrigin, true,,, TRACEFLAG_Bullet);
-	`Log("Normal" @HitNormal);
-	return HitLocation;
-}
-*/
 
 function Vector GetMirillaWorldLocation()
 {
@@ -662,14 +635,6 @@ function Vector GetMirillaWorldLocation()
 
 
 
-//rr new
-/*function SetPauseMenu(bool val)
-{
-
-pauseMenu=val;
-pGFx.PauseMenu(pauseMenu);
-
-}*/
 
 function TogglePauseMenu()
 {
@@ -1169,30 +1134,25 @@ function float GetAngle(Vector PointB, Vector PointC)
 		switch (nivel_ira)
 		{
 			//SI es 0, no dibujamos nada obviamente ;)
-
-			case 1:
-		
-				Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
-				Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
-				playsound(irasonido1,true);
-				break;
-
-			case 2:
-				Canvas.SetPos(ScreenHUDLocation.X-98+ira2.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
-				Canvas.DrawTile(ira2, ira2.SizeX*0.25, ira2.SizeY*0.25, 0.f, 0.f, ira2.SizeX, ira2.SizeY,, true);
-				break;
+			//falltrough en los cases para que sea acumulativo y dibuje todos los iconos
 
 			case 3:
 				Canvas.SetPos(ScreenHUDLocation.X-98+ira1.SizeX*0.25+ira1.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
 				Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
-				break;
+			case 2:
+				Canvas.SetPos(ScreenHUDLocation.X-98+ira2.SizeX*0.25, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+				Canvas.DrawTile(ira2, ira2.SizeX*0.25, ira2.SizeY*0.25, 0.f, 0.f, ira2.SizeX, ira2.SizeY,, true);
+			case 1:
+				Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-ira2.SizeY*0.25-150);
+				Canvas.DrawTile(ira1, ira1.SizeX*0.25, ira1.SizeY*0.25, 0.f, 0.f, ira1.SizeX, ira1.SizeY,, true);
+				playsound(irasonido1,true);
 		}
 
 		
 		// Borde
 		Canvas.SetPos(ScreenHUDLocation.X-100, ScreenHUDLocation.Y-150);
 		Canvas.SetDrawColor(0,0,0, 200);
-		Canvas.DrawBox(102,20);
+		Canvas.DrawBox(104,20);
 
 		// Barra
 		Canvas.SetPos(ScreenHUDLocation.X-98, ScreenHUDLocation.Y-148);
