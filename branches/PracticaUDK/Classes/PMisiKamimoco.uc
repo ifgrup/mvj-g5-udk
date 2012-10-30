@@ -31,5 +31,5 @@ DefaultProperties
 	FlockStiffness=-40
 	FlockMaxForce=800
 	FlockCurlForce=650
-	
+	SpawnSound = SoundCue'PGameMusicrr.BanzaiMoco_Cue'
 }

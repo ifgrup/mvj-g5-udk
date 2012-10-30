@@ -153,13 +153,15 @@ function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 
 
 function kamikaze ()
-	{
+{
 		//local PPawn gppawn;
 		local PAutoTurret torreta;
 		local vector posenemigo;
 		local Projectile Proj;
 		local vector rx,ry,rz;
-	
+		local class<Actor> clasedisparo;
+		local vector posdisparo;
+		local LinearColor colordisparo;
 
 		if (vsize(self.theBase.Location-locaKamikazeini) < m_distancia_Base_kamikaze)
         {
@@ -189,27 +191,31 @@ function kamikaze ()
 
 
 		//lanzamos toñazo kamikaze
+		posdisparo = PEnemyPawn_Minion(self.pawn).GetFireLocation();
+		clasedisparo = PEnemyPawn_Minion(self.Pawn).m_ClaseMisilKamikaze;
+		colordisparo = PEnemyPawn_Minion(self.Pawn).Col1;
+	
 
-		Proj =Projectile(Spawn(PEnemyPawn_Minion(self.Pawn).m_ClaseMisilKamikaze,self,,self.Pawn.Location,,,True));
-		
+		//Eliminamos al Pawn
+		PEnemyPawn_Minion(self.Pawn).Destruccion();
+		self.Pawn=None;
+
+		Proj =Projectile(Spawn(clasedisparo,self,,posdisparo,,,True));
 		if (Proj!= None)
 		{
 			
 			if(PMisiKamimoco(Proj)!=None)
 			{
-				PMisiKamimoco(Proj).colormoco(PEnemyPawn_Minion(self.Pawn).Col1);
+				PMisiKamimoco(Proj).colormoco(colordisparo);
 			}
 			//Lanzamos el disparo
-			Proj.Init(Normal(posenemigo-self.Pawn.Location));
-			//Eliminamos al Pawn
-			PEnemyPawn_Minion(self.Pawn).Destruccion();
-			self.Pawn=None;
-			//Nos autoeliminamos
-			self.Destroy();
-		
+			Proj.Init(Normal(posenemigo-posdisparo));
+
 		}	
 
-	}
+		//Nos autoeliminamos
+		self.Destroy();
+}
 
 
 

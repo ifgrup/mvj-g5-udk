@@ -26,6 +26,7 @@ var int m_segundosQuieto;
 var float m_radio_escudo; //Radio de acción del escudo de los minions
 var float m_escudo; //cantidad de escudo proporcionada por los minions
 var float m_DistanciaAtaqueBase; //Distancia a la que considera que ha llegado a la base
+var array<DecalComponent> m_decalsCamino; //Decals que va dejando
 
 struct EscudoInfo
 {
@@ -54,7 +55,6 @@ simulated event PostBeginPlay()
 
 	/*Timer para gestión del escudo proporcionado por los minions*/
 	SetTimer(0.3, true, 'GestionEscudo');
-	
 }
 
 function GestionEscudo()
@@ -236,6 +236,14 @@ function ContraTorreta(Actor torreta, optional float dist=m_despContraTorreta)
 	m_ChocandoContraTorreta = false;
 }
 
+function EliminarCamino()
+{
+	local DecalComponent ladecal;
+	foreach self.m_decalsCamino(ladecal)
+	{
+		ladecal.SetHidden(true);
+	}
+}
 
 
 function SetColor(LinearColor Col)
@@ -349,11 +357,14 @@ state MoveToDestination
 		}
 	}
 
+
 	event Tick(float DeltaTime)
 	{
 		local PPathNode nodo;
 		local float distanciaBase;
 		local float distNodo;
+		local DecalComponent eldecal;
+		
 
 		//_DEBUG_DrawDebugInfo();
 		super.Tick(DeltaTime);
@@ -368,7 +379,7 @@ state MoveToDestination
 		if(VSize(OldDecalLocation - Pawn.Location) > (PGame(WorldInfo.Game).fDecalSize))
 		{
 			OldDecalLocation = Pawn.Location;
-			WorldInfo.MyDecalManager.SpawnDecal
+			eldecal = WorldInfo.MyDecalManager.SpawnDecal
 			(
 				Mat,
 				Pawn.Location,
@@ -378,24 +389,10 @@ state MoveToDestination
 				true,
 				0,,,,,,,100000
 			);
+
+			m_decalsCamino.AddItem(eldecal);
 		}
 		
-		/*******************************************************
-		 * ***************************************************** 
-		 * P E N D I E N T E   C O N F I R M A R   L U I S 
-		 * ********************************************************
-		foreach Pawn.OverlappingActors(class'Pawn', pDetectado, 200,,true)
-		{
-			// Me aseguro que no me estoy detectando a mi mismo
-			if(pDetectado != Pawn)
-			{
-				//DBG WorldInfo.Game.Broadcast(self, Name@"Ha chocado con"@pDetectado.Name);
-				//DBG DrawDebugSphere(pDetectado.Location, 200, 10, 255, 0, 0, false);
-				GotoState('MoveToDestination');
-			}
-		}
-		**************************************************************
-		* ************************************************************/
 
 		//Vamos guardando los puntos por donde vamos pasando con AddPathNode
 		if(VSize(OldLocation - Pawn.Location) > (Step/4))
